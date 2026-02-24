@@ -847,70 +847,61 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     // 3. Check URL for challenge code on startup
     async function checkUrlForChallenge() {
-        const params = new URLSearchParams(window.location.search);
-        const cId = params.get('c'); 
-        
-        if (!cId) {
-            dom.loadingScreen.classList.add('hidden');
-            dom.startScreen.classList.remove('hidden');
-            return;
-        }
+  const params = new URLSearchParams(window.location.search);
+  const cId = params.get('c');
 
-        const { data, error } = await supabase.from('challenges').select('*').eq('id', cId).single();
-        
-        if (data && !error) {
-            gameMode = data.config.mode;
-            selectedMode = data.config.pool;
-            eraMode = data.config.era;
-            selectedDecade = data.config.decade; 
-            
-            challengeQueue = data.matchups;
-            currentChallengeId = cId;
-            
-            // Update UI State
-            document.querySelectorAll('.gamemode-btn').forEach(b => {
-                if (b.dataset.mode === gameMode) {
-                    b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.remove('text-gray-500','dark:text-gray-400');
-                } else {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
-                }
-            });
+  // helper: show start screen and hide loader
+  const showStart = () => {
+    dom.loadingScreen.classList.add('hidden');
+    dom.startScreen.classList.remove('hidden');
+  };
 
-            // Update Pool Buttons (UNLOCKED FOR ALL)
-            const poolBtns = document.querySelectorAll('.mode-btn');
-            poolBtns.forEach(pb => {
-                pb.classList.remove('opacity-25', 'cursor-not-allowed', 'pointer-events-none');
-                
-                if(pb.dataset.mode === selectedMode) {
-                    pb.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    pb.classList.remove('text-gray-500','dark:text-gray-400');
-                } else {
-                    pb.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    pb.classList.add('text-gray-500','dark:text-gray-400');
-                }
-            });
+  // No challenge param => normal path
+  if (!cId) {
+    showStart();
+    return;
+  }
 
-            const eraTxt = document.getElementById('era-display-text');
-            let eraLabel = "Modern";
-            if(eraMode === 'allEras') eraLabel = "All";
-            else if(eraMode === 'select') eraLabel = `${selectedDecade}s`;
-            eraTxt.textContent = eraLabel;
-            
-            dom.loadingScreen.classList.add('hidden');
-            showAlert(`Challenge ${cId} Loaded!`, 'bg-purple-600');
-            startGame(); 
-            
-        } else {
-            dom.loadingScreen.classList.add('hidden');
-            dom.startScreen.classList.remove('hidden');
-            showAlert("Challenge not found", 'bg-red-500');
-            const url = new URL(window.location);
-            url.searchParams.delete('c');
-            window.history.pushState({}, '', url);
-        }
-    }
+  // Hard timeout so we never hang forever.
+  const timeoutMs = 6000;
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Challenge lookup timed out')), timeoutMs)
+  );
+
+  try {
+    const queryPromise = supabase
+      .from('challenges')
+      .select('*')
+      .eq('id', cId)
+      .single();
+
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+    if (error || !data) throw error || new Error('Challenge not found');
+
+    // Apply loaded config
+    gameMode = data.config.mode;
+    selectedMode = data.config.pool;
+    eraMode = data.config.era;
+    selectedDecade = data.config.decade;
+
+    challengeQueue = data.matchups;
+    currentChallengeId = cId;
+
+    dom.loadingScreen.classList.add('hidden');
+    showAlert(`Challenge ${cId} Loaded!`, 'bg-purple-600');
+    startGame();
+  } catch (e) {
+    console.error('Challenge load failed:', e);
+
+    // Strip ?c= so refreshes don’t keep trying a broken challenge
+    const url = new URL(window.location);
+    url.searchParams.delete('c');
+    window.history.replaceState({}, '', url);
+
+    showAlert('Challenge unavailable. Starting normal game.', 'bg-red-500');
+    showStart();
+  }
+}
     
     const BASE_CATS = {
         // --- HITTER COUNTING ---
