@@ -1,0 +1,3798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <title>MLB Matchups</title>
+
+    <link rel="icon" href="icon-192.png">
+
+    <!-- KEEP TWITTER TAGS (Ensures small card on Twitter) 
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="MLB Matchups">
+    <meta name="twitter:description" content="The greatest baseball stats game on the web.">
+    <meta name="twitter:image" content="https://mlbmatchups3.pages.dev/icon-180.png"> -->
+
+    <!-- OPEN GRAPH TAGS -->
+    <meta property="og:title" content="MLB Matchups">
+    <meta property="og:description" content="The greatest baseball stats game on the web.">
+    
+    <!-- REMOVE THESE LINES to force iOS to fallback to apple-touch-icon -->
+    <!-- <meta property="og:image" content="https://mlbmatchups3.pages.dev/icon-180.png"> -->
+    <!-- <meta property="og:image:width" content="180"> -->
+    <!-- <meta property="og:image:height" content="180"> -->
+    
+    <meta property="og:url" content="https://mlbmatchups3.pages.dev">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="manifest.json">
+    <!-- iOS uses this for the small thumbnail if og:image is missing -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Matchups">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* ... (Keep your existing styles exactly as they are below here) ... */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap');
+
+        :root {
+            --color-primary: #2563eb; /* Blue-600 */
+            --color-accent: #f59e0b;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f97316;
+            
+            /* Medal Colors */
+            --color-bronze: #cd7f32;
+            --color-silver: #708090;
+            --color-gold: #ffd700;
+            --color-platinum: #80e0e0;
+        }
+
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        /* Animations */
+        @keyframes fade-in { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .animate-toast { animation: fade-in 0.3s ease-out forwards; }
+        
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-enter { animation: fade-in-up 0.3s ease-out forwards; }
+        
+        @keyframes pulse-bull { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .animate-bullseye { animation: pulse-bull 0.6s infinite ease-in-out; }
+        
+        @keyframes score-pop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+        .animate-score-pop { animation: score-pop 0.4s ease-out; }
+
+        /* Score Color Classes */
+        .score-bronze { color: var(--color-bronze); }
+        .score-silver { color: var(--color-silver); }
+        .score-gold { color: var(--color-gold); }
+        .score-platinum { color: var(--color-platinum); }
+
+        /* Scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Number Line */
+        #number-line-track {
+            height: 16px;
+            border-radius: 999px;
+            position: relative;
+            overflow: hidden;
+            background-color: #e5e7eb;
+            transition: background-color 0.3s;
+        }
+        html.dark #number-line-track { background-color: #374151; }
+
+        #invalid-zone {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+            background: repeating-linear-gradient(45deg, #9ca3af, #9ca3af 2px, #d1d5db 2px, #d1d5db 8px);
+            opacity: 0.5;
+            z-index: 10;
+            border-right: 1px solid #6b7280;
+            transition: width 0.3s;
+        }
+        html.dark #invalid-zone {
+             background: repeating-linear-gradient(45deg, #4b5563, #4b5563 2px, #1f2937 2px, #1f2937 8px);
+        }
+
+        #number-line-range { position: absolute; top: 0; height: 100%; background: var(--color-primary); opacity: 0.6; z-index: 20; border-radius: 999px; transition: all 0.2s; display: none; }
+        #bullseye-band { position: absolute; top: 0; height: 100%; background: var(--color-accent); opacity: 0.9; z-index: 30; border-radius: 999px; transition: all 0.2s; display: none; }
+
+        #answer-pin {
+            position: absolute; top: -8px; width: 4px; height: 32px;
+            background-color: var(--color-success); border-radius: 2px;
+            transform: translateX(-50%); z-index: 40; display: none;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+        .answer-incorrect #answer-pin { background-color: var(--color-danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+        .answer-partial #answer-pin { background-color: var(--color-warning); box-shadow: 0 0 8px rgba(249, 115, 22, 0.6); }
+
+        /* Tick labels */
+        .tick-label { position: absolute; top: 22px; transform: translateX(-50%); font-size: 0.7rem; font-weight: 600; opacity: 1; color: #4b5563; }
+        html.dark .tick-label { color: #9ca3af; }
+        
+        .big-input { font-variant-numeric: tabular-nums; }
+        
+        /* --- UNIFIED BUTTON CLASS --- */
+        .primary-btn {
+            width: 100%;
+            padding: 1rem 0; /* py-4 */
+            background-color: var(--color-primary); /* blue-600 */
+            color: white;
+            font-weight: 700; /* bold */
+            font-size: 1.125rem; /* text-lg */
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            transition-property: transform, opacity, background-color;
+            transition-duration: 150ms;
+            border: none;
+            cursor: pointer;
+        }
+        .primary-btn:hover:not(:disabled) { background-color: var(--color-primary); }
+        .primary-btn:active:not(:disabled) { transform: scale(0.98); }
+        .primary-btn:disabled {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #6b7280; /* gray-500 */
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 1; 
+        }
+        html.dark .primary-btn:disabled {
+            background-color: #1f2937; /* gray-800 */
+            color: #9ca3af; /* gray-400 */
+        }
+        
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] > summary svg { transform: rotate(180deg); }
+
+        /* Leaderboard Styles */
+        .leaderboard-row:nth-child(even) { background-color: rgba(0,0,0,0.02); }
+        html.dark .leaderboard-row:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+        .leaderboard-new { background-color: rgba(16, 185, 129, 0.1) !important; font-weight: 800 !important; color: #059669 !important; }
+        html.dark .leaderboard-new { background-color: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; }
+        
+        /* Showdown Grid */
+        .sbs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.25rem; align-items: center; }
+        .sbs-row-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #6b7280; text-align: left; line-height: 1.1; }
+        html.dark .sbs-row-label { color: #9ca3af; }
+        
+        .sbs-cell {
+            height: 2rem; /* Smaller height */
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 500; /* Less bold */
+            font-size: 0.75rem; /* Smaller text */
+            color: #6b7280; /* Gray text */
+            transition: all 0.15s;
+        }
+        html.dark .sbs-cell { background-color: #1f2937; color: #9ca3af; }
+        
+        .sbs-cell.selected { 
+            border-color: var(--color-primary); 
+            background-color: #eff6ff; 
+            color: var(--color-primary);
+            font-weight: 700; /* Bold when selected */
+        }
+        html.dark .sbs-cell.selected { background-color: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+        
+        .sbs-cell.correct { background-color: #dcfce7 !important; border-color: #16a34a !important; color: #166534 !important; font-weight: 800; }
+        html.dark .sbs-cell.correct { background-color: rgba(22, 163, 74, 0.2) !important; border-color: #16a34a !important; color: #4ade80 !important; }
+        
+        .sbs-cell.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; font-weight: 800; }
+        html.dark .sbs-cell.incorrect { background-color: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; color: #f87171 !important; }
+
+        .sbs-cell.wrong { 
+            opacity: 1; 
+            font-weight: 800; 
+        }
+        /* --- NEW SLIDER STYLES --- */
+.slider-adj-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+.slider-adj-btn:active { background-color: #d1d5db; transform: scale(0.95); }
+html.dark .slider-adj-btn { background-color: #374151; color: #e5e7eb; }
+html.dark .slider-adj-btn:active { background-color: #4b5563; }
+
+#slider-touch-area { touch-action: none; }
+
+/* --- Animation Updates --- */
+
+/* Existing transitions for the pin */
+#slider-answer-pin {
+    transition-property: left, background-color;
+    transition-timing-function: ease-out; 
+}
+
+/* Text Pop Effect (for Feedback) */
+@keyframes text-pop {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.3); }
+    100% { opacity: 1; transform: scale(1); }
+}
+.animate-text-pop { 
+    animation: text-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+}
+
+/* Standard Score Pop (Single) */
+@keyframes score-pop-single { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.5); color: var(--color-primary); } 
+    100% { transform: scale(1); } 
+}
+.animate-score-pop { animation: score-pop-single 0.4s ease-out; }
+
+/* Level Up Score Pop (Triple Pulse) */
+@keyframes score-pop-multi { 
+    0% { transform: scale(1); } 
+    25% { transform: scale(1.4); } 
+    50% { transform: scale(1); } 
+    75% { transform: scale(1.4); } 
+    100% { transform: scale(1); } 
+}
+.animate-score-levelup { animation: score-pop-multi 1.2s ease-in-out; }
+
+.stripe-pattern {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 8px);
+}
+
+/* Smaller Thumbs */
+#thumb-min, #thumb-max {
+    width: 1.5rem !important; 
+    height: 1.5rem !important; 
+    top: 1.5rem !important; 
+}
+
+.thumb-active { transform: translate(-50%, -50%) scale(1.15) !important; cursor: grabbing !important; }
+
+/* Ticks Position - Moved UP closer to line (was 3.5rem) */
+#slider-ticks { top: 2.75rem !important; }
+
+/* Rounded Corners */
+#slider-fill-bar, #slider-bullseye-zone {
+    border-radius: 999px;
+}
+
+/* Result Popup Animation */
+@keyframes float-up { 
+    from { opacity: 0; transform: translate(-50%, 8px); } 
+    to { opacity: 1; transform: translate(-50%, -4px); } 
+}
+.animate-float-result { animation: float-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+/* Hide the old number line elements if they still exist */
+#number-line-container { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 h-[100dvh] flex flex-col overflow-hidden">
+
+    <header class="flex-none flex justify-between items-center px-5 py-3 z-50 w-full max-w-md mx-auto bg-gray-100/90 dark:bg-gray-950/90 backdrop-blur-sm">
+        <div class="flex items-center gap-1">
+            <!-- Home Icon (Moved to Far Left) -->
+            <button id="home-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400 hidden" aria-label="Home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </button>
+
+            <!-- Rules Button -->
+            <button id="rules-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Rules">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </button>
+            
+            <!-- Leaderboard Icon -->
+            <button id="leaderboard-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Leaderboard">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 relative">
+             <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" aria-label="Skip Question">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+            </button>
+
+            <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+
+            <div id="settings-popover" class="hidden absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 animate-enter p-2">
+                <!-- Theme Toggle -->
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer" id="theme-toggle-row">
+                    <span class="text-sm font-semibold">Theme</span>
+                    <div class="flex items-center">
+                        <svg id="icon-sun" class="w-5 h-5 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="icon-moon" class="hidden w-5 h-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </div>
+                </div>
+                
+                <!-- Format Toggle -->
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="format-toggle-row">
+                    <span class="text-sm font-semibold">Number Format</span>
+                    <div id="format-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">123</div>
+                </div>
+
+                <!-- Animation Toggle -->
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="anim-toggle-row">
+                    <span class="text-sm font-semibold">Animations</span>
+                    <div id="anim-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
+                </div>
+                <!-- Dead Zone Toggle -->
+<div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="dead-zone-toggle-row">
+    <span class="text-sm font-semibold">Dead Zone</span>
+    <div id="dead-zone-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
+</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-md mx-auto px-5 overflow-y-auto no-scrollbar relative">
+        
+        <canvas id="share-canvas" style="display: none;"></canvas>
+        
+        <div id="custom-alert" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white border border-blue-700 px-4 py-2 rounded-full shadow-xl z-[80] font-bold text-sm opacity-0 pointer-events-none transition-all duration-300 whitespace-nowrap flex items-center gap-2"></div>
+
+        <div id="loading-screen" class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-950 z-40">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-sm text-gray-500">Loading stats...</p>
+            </div>
+        </div>
+
+        <div id="start-screen" class="flex flex-col gap-6 w-full pt-4 hidden">
+            <div class="text-center space-y-1 mb-2 mt-4">
+    <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">MLB<span class="text-blue-600">Matchups</span></h2>
+    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
+</div>
+            <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
+                <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode</label>
+<div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="pickEm">Pick 'Em</button>
+</div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Player Pool</label>
+                    <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all mode-btn" data-mode="all">All</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="allStars">All Stars</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="batters">Batters</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="pitchers">Pitchers</button>
+                    </div>
+                </div>
+               <div class="relative w-fit">
+    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Era</label>
+    <button id="era-trigger-btn" class="w-auto min-w-[100px] flex justify-center items-center bg-white dark:bg-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-left px-3 py-2 rounded-xl transition-colors">
+        <span id="era-display-text" class="text-xs sm:text-sm font-semibold text-blue-600 dark:text-white">Modern</span>
+        <svg class="w-4 h-4 text-gray-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    </button>
+    
+    <div id="era-popover" class="hidden absolute top-0 left-full ml-2 w-56 z-50 grid grid-cols-3 gap-1 bg-white dark:bg-gray-900 p-2 rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl animate-enter">
+
+<button class="era-option col-span-1 py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent" data-era="allEras">All Eras</button>
+
+<button class="era-option col-span-2 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm" data-era="modern">Modern Era (1970+)</button>
+        
+        </div>
+</div>
+            </div>
+            <button id="start-game-btn" class="primary-btn mt-2">Start Game</button>
+            <div class="h-8"></div>
+        </div>
+
+        <div id="game-screen" class="hidden flex-col h-full w-full pb-8">
+            <!-- Game Header Info -->
+            <div class="flex justify-between items-start mb-2 px-1">
+                <!-- Left Side: Increased top margin (mt-1), removed gap (gap-0) to tighten text -->
+                <div class="flex flex-col gap-0 mt-0.5">
+                     <!-- Era Label -->
+                     <div class="h-4 flex items-center text-xs font-bold text-gray-400" id="game-era-label">Era</div>
+                     <!-- Pool Label -->
+                     <div id="game-cat-label" class="text-xs font-bold text-gray-400 leading-none">Category</div>
+                </div>
+                
+                <!-- Right Side: Kept gap-1 for spacing between Round and Score -->
+                <div class="text-right flex flex-col gap-1">
+                    <!-- Round Label -->
+                    <div class="h-4 flex items-center justify-end text-xs font-bold text-gray-400" id="round-display">Round 1/10</div>
+                    <!-- Score -->
+                    <div class="text-lg font-black leading-none transition-colors duration-300" id="score-display">0</div>
+                </div>
+            </div>
+
+            <div id="ui-how-much" class="w-full">
+                <!-- Removed 'uppercase' class -->
+                <div id="player-prompt" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
+
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                        <div id="name-A-container" class="w-full text-center z-10">
+                            <span id="name-A" class="text-sm sm:text-base font-black leading-tight text-center group-hover:scale-105 transition-transform block">Player A</span>
+                        </div>
+                        <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-A">--</div>
+                    </button>
+                    <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                        <div id="name-B-container" class="w-full text-center z-10">
+                            <span id="name-B" class="text-sm sm:text-base font-black leading-tight text-center group-hover:scale-105 transition-transform block">Player B</span>
+                        </div>
+                        <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-B">--</div>
+                    </button>
+                </div>
+
+                <!-- "By How Much?" Label -->
+                <div class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">By How Much?</div>
+
+<!-- SLIDER CONTAINER -->
+<div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4 select-none">
+    
+    <!-- Controls / Header -->
+    <div class="flex justify-center items-end mb-2 gap-4 sm:gap-8">
+        <!-- Min Control -->
+        <div class="flex flex-col items-center gap-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MIN DIFF</span>
+            <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                <button class="slider-adj-btn" onclick="adjustSlider('min', -1)">-</button>
+                <span id="slider-display-min" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
+                <button class="slider-adj-btn" onclick="adjustSlider('min', 1)">+</button>
+            </div>
+        </div>
+
+        <!-- Max Control -->
+        <div class="flex flex-col items-center gap-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MAX DIFF</span>
+            <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                <button class="slider-adj-btn" onclick="adjustSlider('max', -1)">-</button>
+                <span id="slider-display-max" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
+                <button class="slider-adj-btn" onclick="adjustSlider('max', 1)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slider Track Area - Increased top margin (mt-8) to push it down -->
+    <div class="relative h-12 mx-3 mt-8" id="slider-touch-area">
+        
+        <!-- The Track -->
+        <div class="absolute top-4 left-0 right-0 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <!-- Invalid Zone -->
+            <div id="slider-invalid-zone" class="absolute left-0 top-0 h-full bg-gray-300 dark:bg-gray-600 opacity-50 stripe-pattern w-0 border-r border-gray-400/30"></div>
+            
+            <!-- User Selection Bar -->
+            <div id="slider-fill-bar" class="absolute top-0 h-full bg-blue-500 opacity-90 transition-all duration-75"></div>
+
+            <!-- Bullseye Target -->
+            <div id="slider-bullseye-zone" class="absolute top-0 h-full bg-amber-400 opacity-90 hidden"></div>
+        </div>
+
+        <!-- Correct Answer Pin -->
+        <div id="slider-answer-pin" class="absolute top-[6px] w-1.5 h-7 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] hidden z-30 pointer-events-none transform -translate-x-1/2 transition-all duration-500 border border-white dark:border-gray-900">
+            <!-- Result Text Popup -->
+            <div id="result-diff-display" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 opacity-0 text-gray-900 dark:text-white"></div>
+        </div>
+
+        <!-- Ticks Row -->
+        <div id="slider-ticks" class="absolute top-12 w-full flex justify-between px-0"></div>
+
+        <!-- Draggable Thumbs -->
+        <div id="thumb-min" class="absolute top-6 w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-blue-600 z-20 cursor-grab active:cursor-grabbing transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center touch-manipulation transition-transform duration-75 hover:scale-105">
+            <div class="w-1 h-3 bg-gray-300 rounded-full pointer-events-none"></div>
+        </div>
+        
+        <div id="thumb-max" class="absolute top-6 w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-blue-600 z-20 cursor-grab active:cursor-grabbing transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center touch-manipulation transition-transform duration-75 hover:scale-105">
+            <div class="w-1 h-3 bg-gray-300 rounded-full pointer-events-none"></div>
+        </div>
+
+    </div>
+</div>
+               
+            </div>
+
+            <div id="ui-side-by-side" class="w-full hidden">
+                <div class="grid grid-cols-3 gap-1 mb-2 mt-4 text-center items-end">
+                    <div></div> <div class="text-sm font-black leading-tight" id="sbs-name-A">Player A</div>
+                    <div class="text-sm font-black leading-tight" id="sbs-name-B">Player B</div>
+                </div>
+                <div id="sbs-container" class="flex flex-col gap-1 mb-4">
+                    </div>
+            </div>
+            
+            <div id="ui-side-by-side" class="w-full hidden">
+    </div>
+
+<div id="ui-pick-em" class="w-full hidden">
+    <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">
+        </div>
+
+    <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
+        </div>
+</div>
+
+            <div class="mt-2">
+                <button id="submit-btn" disabled class="primary-btn">Lock In</button>
+                <button id="next-btn" disabled class="primary-btn mt-2 hidden">Next Round</button>
+            </div>
+            
+            <div id="round-feedback" class="mt-4 flex flex-col items-center space-y-1 min-h-[2rem]"></div>
+        </div>
+
+        <div id="game-over-screen" class="hidden flex-col items-center justify-center h-full text-center animate-enter pb-12">
+            <div id="ribbon-emoji" class="text-8xl mb-4">🏆</div>
+            <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-2">Game Over!</h2>
+            <p id="ribbon-text" class="text-lg text-gray-500 mb-8">Great effort!</p>
+            <div class="bg-white dark:bg-gray-900 px-10 py-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 mb-8 w-full max-w-xs">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
+                <div class="text-6xl font-black text-blue-600 dark:text-blue-400" id="final-score">0</div>
+            </div>
+            
+            <div id="highscore-input-container" class="hidden w-full max-w-xs mb-4">
+                <div class="text-green-600 dark:text-green-400 font-bold text-sm mb-2 animate-pulse">NEW HIGH SCORE!</div>
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
+                <button id="save-score-btn" class="primary-btn bg-green-600 hover:bg-green-700 mb-2">Save to Leaderboard</button>
+            </div>
+            <div class="flex gap-2 w-full max-w-xs">
+                <button id="share-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    <span>Share</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                </button>
+                <button id="play-again-btn" class="flex-[2] primary-btn w-auto">Play Again</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="rules-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="rules-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Rules &amp; Scoring</h3>
+                <button id="close-rules-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-0 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                
+                <!-- SECTION 1: HOW TO PLAY -->
+                <details open class="group border-b border-gray-100 dark:border-gray-800">
+                    <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                        <span>How to Play</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
+                        <div>
+                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Mode A: How Much? (Standard)</h4>
+                            <ol class="list-decimal ml-5 space-y-2">
+                                <li><strong>Analyze the Matchup:</strong> Review the Category (e.g., Career HR) and the two players displayed. Note if the prompt asks for the <em>Higher</em> or <em>Lower</em> stat.</li>
+                                <li><strong>Pick the Winner:</strong> Tap the card of the player you believe is the statistical leader in that category.</li>
+                                <li><strong>Estimate the Gap:</strong> Use the dual-slider controls to set a "Min" and "Max" range for the difference between the two players.
+                                    <ul class="list-disc ml-4 mt-1 text-xs opacity-90">
+                                        <li><em>Example:</em> If Player A has 500 HR and Player B has 400 HR, the difference is 100. You might set your range from 80 to 120.</li>
+                                        <li>The tighter your range, the more points you score—but you risk missing the answer entirely.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Lock In:</strong> Submit your guess to reveal the answer and score points.</li>
+                            </ol>
+                        </div>
+                        <hr class="border-gray-100 dark:border-gray-800">
+                        <div>
+                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Mode B: Showdown</h4>
+                            <ol class="list-decimal ml-5 space-y-2">
+                                <li><strong>The Face-Off:</strong> You are presented with two players and a list of 10 different statistical categories.</li>
+                                <li><strong>Pick 10 Winners:</strong> For each row, tap the name of the player you think has the better stat in that specific category.</li>
+                                <li><strong>Lock In:</strong> You must make a selection for all 10 categories before you can submit.</li>
+                                <li><strong>The Reveal:</strong> The game will reveal the actual stats row-by-row. You need at least 5 correct to score points, and 10/10 for a massive bonus.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- SECTION 2: SCORING BREAKDOWN -->
+                <details class="group border-b border-gray-100 dark:border-gray-800">
+                    <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                        <span>Scoring Breakdown</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
+                        <div>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Standard Mode (Max 1,000 pts/round)</h4>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>1. Correct Player</strong></span>
+                                    <span class="font-bold text-green-600 dark:text-green-400">+200 Pts</span>
+                                </li>
+                                <li class="text-xs mb-2">You earn these points simply for identifying the correct winner. If you pick the wrong player, you score 0 for the round.</li>
+                                
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>2. Range Accuracy</strong></span>
+                                    <span class="font-bold text-green-600 dark:text-green-400">0 to +800 Pts</span>
+                                </li>
+                                <li class="text-xs mb-2">Awarded only if the true difference falls strictly between your Min and Max sliders. The score is calculated exponentially based on how narrow your range is compared to the "Safe Zone" (the default wide range). A very tight, correct range yields max points.</li>
+                                
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>3. Bullseye Bonus</strong></span>
+                                    <span class="font-bold text-amber-500">+100 Pts</span>
+                                </li>
+                                <li class="text-xs">A bonus awarded if the true difference lands in the exact center (middle 40%) of your predicted range.</li>
+                            </ul>
+                        </div>
+                        <hr class="border-gray-100 dark:border-gray-800">
+                        <div>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown Mode (Max 1,000 pts/round)</h4>
+                            <p class="text-xs mb-2">Points are awarded based on the total number of correct selections (out of 10):</p>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>10/10 Correct</span> <span class="text-blue-600 font-bold">1,000 Pts</span></div>
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>9/10 Correct</span> <span class="text-green-600 font-bold">700 Pts</span></div>
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>8/10 Correct</span> <span class="text-green-600 font-bold">450 Pts</span></div>
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>7/10 Correct</span> <span class="text-orange-500 font-bold">250 Pts</span></div>
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>6/10 Correct</span> <span class="text-orange-500 font-bold">100 Pts</span></div>
+                                <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>0-5 Correct</span> <span class="text-gray-400 font-bold">0 Pts</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- SECTION 3: ELIGIBILITY CRITERIA -->
+                <details class="group border-b border-gray-100 dark:border-gray-800">
+                    <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                        <span>Eligibility Criteria</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 text-xs space-y-4">
+                        <p>Players are filtered based on the <strong>Player Pool</strong> selected on the home screen.</p>
+                        
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Standard / Batters / Pitchers Pools</h4>
+                            <p class="mb-1">Designed to include recognizable players with significant careers.</p>
+                            <ul class="list-disc ml-4 mb-2 space-y-1">
+                                <li><strong>Hitters:</strong> Must have 5,000+ Career Plate Appearances.</li>
+                                <li><strong>Pitchers:</strong> Must have 150+ Starts OR 500+ Games Played.</li>
+                            </ul>
+                            <p class="mb-1 italic">Additional Category-Specific Gates:</p>
+                            <ul class="list-disc ml-4 space-y-1 opacity-90">
+                                <li>Career Wins: ≥ 75</li>
+                                <li>Season SB: ≥ 25 (Career ≥ 50)</li>
+                                <li>Career WAR: ≥ 10.0</li>
+                                <li>ERA/Rate Stats: Minimum IP/PA requirements apply for rate stat qualification.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">2. All-Star Pool</h4>
+                            <p class="mb-1">A more exclusive list of the game's greatest players.</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><strong>Global Gate:</strong> Player must have ≥ 25.0 Career WAR (Wins Above Replacement).</li>
+                                <li>This allows for younger stars on a Hall of Fame track (e.g., Juan Soto) who might not yet meet the 5,000 PA longevity requirement of the Standard pool.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">3. Era Selection</h4>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><strong>Modern Era:</strong> Players who played a significant portion of their career from 1970 to present.</li>
+                                <li><strong>All Eras:</strong> Includes historical players dating back to 1871 (e.g., Ty Cobb, Cy Young).</li>
+                                <li><strong>Specific Decade:</strong> Players active during the selected decade (e.g., 1990s).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- SECTION 4: SPECIAL FEATURES -->
+                <details class="group border-b border-gray-100 dark:border-gray-800">
+                    <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                        <span>Special Features</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 text-xs space-y-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+                                <strong class="text-gray-900 dark:text-white">The Reroll Die</strong>
+                            </div>
+                            <p>Stumped by a matchup? Tap the die icon in the header to skip the current question and get a new one. You get <strong>one reroll per game</strong>. Using it does not penalize your score, but it cannot be undone.</p>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-gray-200 text-gray-600 px-1 rounded text-[9px] font-bold">123</span>
+                                <strong class="text-gray-900 dark:text-white">Number Format Toggle</strong>
+                            </div>
+                            <p>In the settings menu (top right), you can toggle between "123" (Whole Numbers) and ".12" (Decimals). This affects how stats like Batting Average are displayed (e.g., "300" vs "0.300").</p>
+                        </div>
+
+                        <div>
+                            <strong class="text-gray-900 dark:text-white block mb-1">Challenge & Share</strong>
+                            <p>At the end of a game, click "Share" to generate a unique Challenge Link. Send this to a friend, and they will play the <strong>exact same 10 matchups</strong> you just played. See who knows their history better!</p>
+                        </div>
+
+                        <div>
+                            <strong class="text-gray-900 dark:text-white block mb-1">Baseball Reference Links</strong>
+                            <p>After a round is locked in, player names become clickable links. Tap any player's name to visit their official Baseball-Reference page and verify their stats.</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="leaderboard-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 space-y-3">
+                <div class="flex justify-between items-center">
+                     <h3 class="text-sm font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">Leaderboard</h3>
+                     <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <select id="lb-filter-mode" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
+                        <option value="all">All Modes</option>
+                        <option value="howMuch">How Much?</option>
+                        <option value="sideBySide">Showdown</option>
+                    </select>
+
+                    <select id="lb-filter-pool" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
+                        <option value="all_pools">All Pools</option>
+                        <option value="all">Standard</option>
+                        <option value="allStars">All Stars</option>
+                        <option value="batters">Batters</option>
+                        <option value="pitchers">Pitchers</option>
+                    </select>
+
+                    <select id="lb-filter-date" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
+                        <option value="today">Today</option>
+                        <option value="all_time">All Time</option>
+                        </select>
+                </div>
+            </div>
+
+            <div class="p-0 overflow-y-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-center w-12 font-bold">#</th>
+                            <th class="px-4 py-3 text-left w-24 font-bold">Score</th>
+                            <th class="px-4 py-3 text-left font-bold">Player</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
+                </table>
+                <div id="empty-leaderboard-msg" class="hidden p-8 text-center text-gray-400 text-sm">
+                    No scores found for this filter.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // REPLACE THESE WITH YOUR ACTUAL SUPABASE KEYS
+    const SUPABASE_URL = 'https://rclygejapjgpnanwevmo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbHlnZWphcGpncG5hbndldm1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODY2ODcsImV4cCI6MjA3OTE2MjY4N30.WKYxJYmLNhm0SsxDeJBy7qGGdLddCuaVUrEN5684uFM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 1. Add this near the top with other state variables
+    let deadZoneEnabled = localStorage.getItem('deadZoneEnabled') !== 'false'; // Default true
+    let warLoaded={bat:false,pit:false};
+    // --- ANIMATION STATE ---
+    let useAnimations = localStorage.getItem('useAnimations') !== 'false'; // Default true
+    // --- SLIDER STATE VARIABLES ---
+    let sliderState = { min: 0, max: 0, rangeMax: 100, step: 1, minLimit: 0 };
+    let sliderDragging = null; // 'min' or 'max' or null
+    const players=new Map(), batSeasons=new Map(), warBatMap=new Map(), warPitMap=new Map(), pitSeasons=new Map();
+    let catKey=null, numberLineSpan=0, A=null, B=null, trueDiff=0, correctPick=null, score=0, round=1, roundResults = [];
+    let selectedMode='all', gameMode='howMuch', eraMode='modern', selectedDecade=null, useWholeNumbers=true, versusPick=null;
+    let categoryHistory = {}; 
+    let hasUsedReroll = false;
+    
+    // --- NEW: Track used players to prevent dupes ---
+    const usedPlayerIDs = new Set();
+    
+    // SBS Specific Vars
+    let sbsPicks = new Array(10).fill(null); 
+
+    let dom = {}; 
+    
+    // --- NEW CHALLENGE VARIABLES ---
+    let matchHistory = []; // Stores round data as you play
+    let challengeQueue = []; // Stores round data loaded from URL
+    let currentChallengeId = null; // Stores the ID if playing/sharing a challenge
+
+    // --- CHALLENGE HELPER FUNCTIONS ---
+    
+    // 1. Generate a random 5-character code
+    function generateId() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let result = '';
+        for (let i = 0; i < 5; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+        return result;
+    }
+
+    // 2. Save the current game to Supabase
+    async function saveChallenge() {
+        const id = generateId();
+        const payload = {
+            id: id,
+            config: { 
+                mode: gameMode, 
+                pool: selectedMode, 
+                era: eraMode, 
+                decade: selectedDecade // <--- This was missing before!
+            },
+            matchups: matchHistory
+        };
+        
+        const { error } = await supabase.from('challenges').insert([payload]);
+        if (error) { console.error('Save failed:', error); return null; }
+        return id;
+    }
+
+    // 3. Check URL for challenge code on startup
+    async function checkUrlForChallenge() {
+        const params = new URLSearchParams(window.location.search);
+        const cId = params.get('c'); 
+        
+        if (!cId) {
+            dom.loadingScreen.classList.add('hidden');
+            dom.startScreen.classList.remove('hidden');
+            return;
+        }
+
+        const { data, error } = await supabase.from('challenges').select('*').eq('id', cId).single();
+        
+        if (data && !error) {
+            gameMode = data.config.mode;
+            selectedMode = data.config.pool;
+            eraMode = data.config.era;
+            selectedDecade = data.config.decade; 
+            
+            challengeQueue = data.matchups;
+            currentChallengeId = cId;
+            
+            // Update UI State
+            document.querySelectorAll('.gamemode-btn').forEach(b => {
+                if (b.dataset.mode === gameMode) {
+                    b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.remove('text-gray-500','dark:text-gray-400');
+                } else {
+                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-500','dark:text-gray-400');
+                }
+            });
+
+            // Update Pool Buttons (UNLOCKED FOR ALL)
+            const poolBtns = document.querySelectorAll('.mode-btn');
+            poolBtns.forEach(pb => {
+                pb.classList.remove('opacity-25', 'cursor-not-allowed', 'pointer-events-none');
+                
+                if(pb.dataset.mode === selectedMode) {
+                    pb.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    pb.classList.remove('text-gray-500','dark:text-gray-400');
+                } else {
+                    pb.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    pb.classList.add('text-gray-500','dark:text-gray-400');
+                }
+            });
+
+            const eraTxt = document.getElementById('era-display-text');
+            let eraLabel = "Modern";
+            if(eraMode === 'allEras') eraLabel = "All";
+            else if(eraMode === 'select') eraLabel = `${selectedDecade}s`;
+            eraTxt.textContent = eraLabel;
+            
+            dom.loadingScreen.classList.add('hidden');
+            showAlert(`Challenge ${cId} Loaded!`, 'bg-purple-600');
+            startGame(); 
+            
+        } else {
+            dom.loadingScreen.classList.add('hidden');
+            dom.startScreen.classList.remove('hidden');
+            showAlert("Challenge not found", 'bg-red-500');
+            const url = new URL(window.location);
+            url.searchParams.delete('c');
+            window.history.pushState({}, '', url);
+        }
+    }
+    
+    const BASE_CATS = {
+        // --- HITTER COUNTING ---
+        careerHR: { label: 'Career HR', type: 'hitter', dMin: 30, step: 1, thresholds: [100, 150, 200, 250, 300, 350, 400, 450, 500, 550], tolerance: 0.30, minBuffer: 50 },
+        careerH: { label: 'Career Hits', type: 'hitter', dMin: 200, step: 1, thresholds: [1000, 1500, 2000, 2500, 3000, 3250], tolerance: 0.30, minBuffer: 500 },
+        careerRBI: { label: 'Career RBI', type: 'hitter', dMin: 100, step: 1, thresholds: [750, 1000, 1250, 1500], tolerance: 0.30, minBuffer: 250 },
+        
+        // RENAMED LABELS
+        careerSB: { label: 'Career SB', type: 'hitter', dMin: 50, step: 1, thresholds: [100, 200, 300, 400, 500, 600], tolerance: 0.40, minBuffer: 80 },
+        careerBB: { label: 'Career BB', type: 'hitter', dMin: 100, step: 1, thresholds: [500, 750, 1000, 1250, 1500, 1750], tolerance: 0.30, minBuffer: 250 },
+        careerBA: { label: 'Career BA', type: 'hitter', dMin: 0.008, step: 0.001, thresholds: [0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.320], tolerance: 0.15, minBuffer: 0.030 },
+        
+        // RATE
+        careerOPS: { label: 'Career OPS', type: 'hitter', dMin: 0.040, step: 0.001, thresholds: [0.750, 0.800, 0.850, 0.900, 0.950, 1.000], tolerance: 0.20, minBuffer: 0.100 },
+        careerXBHRate: { label: 'Career XBH%', type: 'hitter', dMin: 0.04, step: 0.001, thresholds: [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50], tolerance: 0.30, minBuffer: 0.05 },
+
+        // HITTER EXTRAS
+        careerWARBat: { label: 'Career WAR', type: 'hitter', dMin: 5, step: 0.1, thresholds: [10, 20, 30, 40, 50, 60, 70, 80], tolerance: 0.30, minBuffer: 5 },
+        seasonHighHR: { label: 'Highest Season HR', type: 'hitter', dMin: 5, step: 1, thresholds: [15, 20, 25, 30, 35, 40, 45, 50], tolerance: 0.30, minBuffer: 5 },
+        seasonHighSB: { label: 'Highest Season SB', type: 'hitter', dMin: 10, step: 1, thresholds: [10, 20, 30, 40, 50, 60, 70], tolerance: 0.40, minBuffer: 8 },
+        peakSeasonOPS: { label: 'Highest Season OPS', type: 'hitter', dMin: 0.05, step: 0.001, thresholds: [0.850, 0.900, 0.950, 1.000, 1.050, 1.100, 1.150], tolerance: 0.20, minBuffer: 0.150 },
+        
+        // RENAMED LABEL
+        seasonHighKBat: { label: 'Highest Season K', type: 'hitter', dMin: 20, step: 1, lowerBetter: true, thresholds: [200, 175, 150, 125, 100, 75], tolerance: 0.30, minBuffer: 30 },
+
+        // --- PITCHER ---
+        careerW: { label: 'Career W', type: 'pitcher', dMin: 20, step: 1, thresholds: [75, 100, 125, 150, 175, 200, 250, 275, 300], tolerance: 0.30, minBuffer: 30 },
+        
+        // RENAMED LABEL
+        careerSO: { label: 'Career K', type: 'pitcher', dMin: 200, step: 1, thresholds: [1000, 1500, 2000, 2500, 2750, 3000], tolerance: 0.30, minBuffer: 500 },
+        
+        careerWARPit: { label: 'Career WAR', type: 'pitcher', dMin: 5, step: 0.1, thresholds: [10, 20, 30, 40, 50, 60, 70], tolerance: 0.30, minBuffer: 5 },
+        careerIP: { label: 'Career IP', type: 'pitcher', dMin: 200, step: 1, thresholds: [1000, 1500, 2000, 2500, 3000, 3500, 4000], tolerance: 0.30, minBuffer: 500 },
+        careerERA: { label: 'Career ERA', type: 'pitcher', dMin: 0.30, step: 0.01, lowerBetter: true, thresholds: [4.50, 4.25, 4.00, 3.75, 3.50, 3.25, 3.00, 2.75, 2.50], tolerance: 0.25, minBuffer: 0.75 },
+        careerWHIP: { label: 'Career WHIP', type: 'pitcher', dMin: 0.08, step: 0.01, lowerBetter: true, thresholds: [1.40, 1.35, 1.30, 1.25, 1.20, 1.15, 1.10, 1.05], tolerance: 0.20, minBuffer: 0.20 },
+        careerKBB: { label: 'Career K/BB', type: 'pitcher', dMin: 0.40, step: 0.01, thresholds: [1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 4.50], tolerance: 0.30, minBuffer: 0.50 },
+        
+        // RENAMED LABELS
+        seasonHighW: { label: 'Highest Season W', type: 'pitcher', thresholds: [16, 18, 20, 22, 24, 26], tolerance: 0.25, minBuffer: 4 },
+        seasonHighK: { label: 'Highest Season K', type: 'pitcher', dMin: 20, step: 1, thresholds: [150, 175, 200, 225, 250, 275, 300], tolerance: 0.30, minBuffer: 50 },
+        bestSeasonERA: { label: 'Best Season ERA', type: 'pitcher', dMin: 0.20, step: 0.01, lowerBetter: true, thresholds: [4.00, 3.75, 3.50, 3.25, 3.00, 2.75, 2.50, 2.25, 2.00, 1.75], tolerance: 0.25, minBuffer: 0.50 },
+        seasonHighHRPit: { label: 'Season High HR Allowed', type: 'pitcher', lowerBetter: true, thresholds: [40, 35, 30, 25, 20], tolerance: 0.30, minBuffer: 10 },
+
+        // MISC
+        seasons: { label: 'Seasons Played', type: 'both', thresholds: [8, 10, 12, 15, 18, 20, 24], tolerance: 0.30, minBuffer: 3 },
+        teams: { label: 'Teams Played For', type: 'both', thresholds: [7, 5, 4, 3, 2], tolerance: 0.60, minBuffer: 2 },
+    };
+    
+    const BASE_BULL={ 
+        careerHR:12, careerBA:0.0032, careerOPS:0.016, careerERA:0.12, careerW:8, careerSB:20, 
+        seasonHighHR:2, careerKBB:0.16, careerXBHRate:0.016, peakSeasonOPS:0.02, 
+        seasonHighK:8, seasonHighKBat:8, seasonHighSB:4, 
+        bestSeasonERA:0.08, careerWARBat:2.0, careerWARPit:2.0, careerIP:80,
+        
+        // NEW VALUES
+        careerH: 80,
+        careerBB: 40,
+        careerWHIP: 0.032
+    };
+
+    // UPDATED HITTER SHOWDOWN LIST
+    const SBS_CATS_BAT = [
+       {key:'careerWARBat', label:'Career WAR'},
+       {key:'careerH', label:'Career Hits'},
+       {key:'careerBA', label:'Career BA'},
+       {key:'careerOPS', label:'Career OPS'},
+       {key:'careerHR', label:'Career HR'},
+       {key:'careerXBHRate', label:'Career XBH%'},
+       {key:'careerBB', label:'Career BB'},
+       {key:'peakSeasonOPS', label:'High Season OPS'},
+       {key:'seasonHighHR', label:'High Season HR'},
+       {key:'seasonHighKBat', label:'High Season K', lowerBetter:true}
+    ];
+
+    // UPDATED PITCHER SHOWDOWN LIST
+    const SBS_CATS_PIT = [
+       {key:'careerWARPit', label:'Career WAR'},
+       {key:'careerIP', label:'Career IP'},
+       {key:'careerW', label:'Career W'},
+       {key:'careerERA', label:'Career ERA', lowerBetter:true},
+       {key:'careerWHIP', label:'Career WHIP', lowerBetter:true},
+       {key:'careerKBB', label:'Career K/BB'},
+       {key:'seasonHighW', label:'High Season W'}, 
+       {key:'bestSeasonERA', label:'Low Season ERA', lowerBetter:true},
+       {key:'seasonHighK', label:'High Season K'},
+       {key:'seasonHighHRPit', label:'High Season HR', lowerBetter:true}
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        dom = {
+            startScreen: document.getElementById('start-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            overScreen: document.getElementById('game-over-screen'),
+            loadingScreen: document.getElementById('loading-screen'),
+            rulesModal: document.getElementById('rules-modal'),
+            leaderboardModal: document.getElementById('leaderboard-modal'),
+            rulesBtn: document.getElementById('rules-btn'),
+            leaderboardBtn: document.getElementById('leaderboard-btn'),
+            themeBtn: document.getElementById('theme-toggle-row'), 
+            formatBtn: document.getElementById('format-toggle-row'), 
+            settingsBtn: document.getElementById('settings-btn'),
+            settingsPopover: document.getElementById('settings-popover'),
+            startBtn: document.getElementById('start-game-btn'),
+            homeBtn: document.getElementById('home-btn'),
+            submitBtn: document.getElementById('submit-btn'),
+            playAgainBtn: document.getElementById('play-again-btn'),
+            closeRulesBtn: document.getElementById('close-rules-btn'),
+            closeLeaderboardBtn: document.getElementById('close-leaderboard-btn'),
+            uiPickEm: document.getElementById('ui-pick-em'),
+            nextBtn: document.getElementById('next-btn'),
+            eraTriggerBtn: document.getElementById('era-trigger-btn'),
+            cardA: document.getElementById('card-A'),
+            cardB: document.getElementById('card-B'),
+            roundDisp: document.getElementById('round-display'),
+            scoreDisp: document.getElementById('score-display'),
+            catLabel: document.getElementById('game-cat-label'),
+            eraLabel: document.getElementById('game-era-label'),
+            nameA: document.getElementById('name-A'),
+            nameB: document.getElementById('name-B'),
+            statA: document.getElementById('stat-A'),
+            statB: document.getElementById('stat-B'),
+            feedback: document.getElementById('round-feedback'),
+            diffDisplay: document.getElementById('diff-display'),
+            eraDisplay: document.getElementById('era-display-text'),
+            eraPopover: document.getElementById('era-popover'),
+            iconSun: document.getElementById('icon-sun'),
+            iconMoon: document.getElementById('icon-moon'),
+            playerPrompt: document.getElementById('player-prompt'),
+            rerollBtn: document.getElementById('reroll-btn'),
+            formatInd: document.getElementById('format-indicator'),
+            
+// 2. Add these lines inside the "dom" object definition within 'DOMContentLoaded'
+        deadZoneBtn: document.getElementById('dead-zone-toggle-row'),
+        deadZoneInd: document.getElementById('dead-zone-indicator'),
+            
+            // --- NEW SLIDER ELEMENTS ---
+            sliderDisplayMin: document.getElementById('slider-display-min'),
+            sliderDisplayMax: document.getElementById('slider-display-max'),
+            sliderGapText: document.getElementById('slider-gap-text'),
+            sliderResultText: document.getElementById('result-diff-display'),
+            thumbMin: document.getElementById('thumb-min'),
+            thumbMax: document.getElementById('thumb-max'),
+            sliderFill: document.getElementById('slider-fill-bar'),
+            sliderTrackArea: document.getElementById('slider-touch-area'),
+            sliderInvalid: document.getElementById('slider-invalid-zone'),
+            sliderBullseye: document.getElementById('slider-bullseye-zone'),
+            sliderPin: document.getElementById('slider-answer-pin'),
+            sliderTicks: document.getElementById('slider-ticks'),
+
+            // UI Sections
+            uiHowMuch: document.getElementById('ui-how-much'),
+            uiSideBySide: document.getElementById('ui-side-by-side'),
+            sbsContainer: document.getElementById('sbs-container'),
+            sbsNameA: document.getElementById('sbs-name-A'),
+            sbsNameB: document.getElementById('sbs-name-B'),
+
+            // Leaderboard DOM
+            hsContainer: document.getElementById('highscore-input-container'),
+            nameInput: document.getElementById('player-name-input'),
+            saveScoreBtn: document.getElementById('save-score-btn'),
+            leaderboardBody: document.getElementById('leaderboard-body'),
+            emptyLeaderboardMsg: document.getElementById('empty-leaderboard-msg'),
+            lbFilterMode: document.getElementById('lb-filter-mode'),
+            lbFilterPool: document.getElementById('lb-filter-pool'),
+            lbFilterDate: document.getElementById('lb-filter-date')
+        };
+        
+        // Add these to your DOM object (or verify they are there)
+        dom.animBtn = document.getElementById('anim-toggle-row');
+        dom.animInd = document.getElementById('anim-indicator');
+
+// 3. Add these lines further down in 'DOMContentLoaded' (where event listeners are attached)
+        updateDeadZoneUI();
+        dom.deadZoneBtn.onclick = toggleDeadZone;
+
+        // Initialize UI State
+        updateAnimUI(); 
+        
+        // Add Listener
+        dom.animBtn.onclick = toggleAnimations;
+
+        // --- SLIDER EVENT LISTENERS (Moved OUTSIDE the dom object) ---
+        const handleStart = (e, type) => {
+            if(dom.submitBtn.textContent !== "Lock In") return; 
+            // Only allow interaction if we haven't locked in yet
+            
+            // e.preventDefault(); // Optional: uncomment if scrolling is an issue
+            sliderDragging = type;
+            const thumb = type === 'min' ? dom.thumbMin : dom.thumbMax;
+            thumb.classList.add('thumb-active');
+        };
+        
+        // Mouse Events
+        dom.thumbMin.addEventListener('mousedown', (e) => handleStart(e, 'min'));
+        dom.thumbMax.addEventListener('mousedown', (e) => handleStart(e, 'max'));
+        
+        // Touch Events (passive: false is important to prevent scrolling while dragging)
+        dom.thumbMin.addEventListener('touchstart', (e) => handleStart(e, 'min'), {passive: false});
+        dom.thumbMax.addEventListener('touchstart', (e) => handleStart(e, 'max'), {passive: false});
+
+        // Global Move/End Listeners (Attached to window to catch drags outside the box)
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('touchend', handleEnd);
+        
+        
+        // --- REMAINING INITIALIZATION CODE ---
+        
+        // 1. Populate Date Dropdown (Last 7 Days)
+        const populateDates = () => {
+            const opts = dom.lbFilterDate.options;
+            // Keep "Today" and "All Time"
+            while(opts.length > 2) opts.remove(2);
+            
+            for(let i=1; i<=7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const val = d.toLocaleDateString();
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.text = val; 
+                dom.lbFilterDate.add(opt);
+            }
+        };
+        populateDates();
+
+        // 2. Add Listeners to refresh table when filters change
+        dom.lbFilterMode.onchange = () => renderLeaderboard();
+        dom.lbFilterPool.onchange = () => renderLeaderboard();
+        dom.lbFilterDate.onchange = () => renderLeaderboard();
+
+        const isDark = localStorage.getItem('darkMode') !== 'disabled';
+        if(isDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        updateThemeIcon();
+        
+        loadAll(() => {
+            buildAgg();
+            renderDecadeGrid();
+            
+            // Let the URL checker decide which screen to show
+            checkUrlForChallenge();
+        });
+
+        dom.themeBtn.onclick = toggleTheme;
+        dom.formatBtn.onclick = toggleFormat;
+        
+        dom.settingsBtn.onclick = (e) => { e.stopPropagation(); dom.settingsPopover.classList.toggle('hidden'); };
+        document.addEventListener('click', (e) => {
+            if(!dom.settingsBtn.contains(e.target) && !dom.settingsPopover.contains(e.target)) {
+                dom.settingsPopover.classList.add('hidden');
+            }
+        });
+
+        // Modal Handlers
+        dom.rulesBtn.onclick = () => dom.rulesModal.classList.remove('hidden');
+        dom.closeRulesBtn.onclick = () => dom.rulesModal.classList.add('hidden');
+        document.getElementById('rules-overlay').onclick = () => dom.rulesModal.classList.add('hidden');
+        
+        dom.leaderboardBtn.onclick = () => { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); };
+        // Define the close function
+        const closeLeaderboard = () => {
+            dom.leaderboardModal.classList.add('hidden');
+            
+            // Reset Filters to Defaults
+            if(dom.lbFilterMode) dom.lbFilterMode.value = 'all';
+            if(dom.lbFilterPool) dom.lbFilterPool.value = 'all_pools';
+            if(dom.lbFilterDate) dom.lbFilterDate.value = 'today';
+        };
+
+        // Attach to buttons
+        dom.closeLeaderboardBtn.onclick = closeLeaderboard;
+        document.getElementById('leaderboard-overlay').onclick = closeLeaderboard;
+
+        document.querySelectorAll('details').forEach((det) => {
+            det.ontoggle = (e) => {
+                if(det.open) document.querySelectorAll('details').forEach(d => { if(d!==det) d.open=false; });
+            };
+        });
+        
+        // Share Button Listener
+        document.getElementById('share-btn').onclick = shareGame;
+
+        dom.rerollBtn.onclick = skipQuestion;
+        dom.startBtn.onclick = startGame;
+        dom.homeBtn.onclick = goHome;
+        
+        dom.playAgainBtn.onclick = goHome;
+        
+        dom.saveScoreBtn.onclick = saveHighScore;
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                // LOCK: Do nothing if disabled (Pick Em Mode)
+                if (e.target.disabled) return; 
+
+                document.querySelectorAll('.mode-btn').forEach(b => {
+                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-500','dark:text-gray-400');
+                });
+                e.target.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                e.target.classList.remove('text-gray-500','dark:text-gray-400');
+                selectedMode = e.target.dataset.mode;
+            }
+        });
+
+        document.querySelectorAll('.gamemode-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                // Visual Selection
+                document.querySelectorAll('.gamemode-btn').forEach(b => {
+                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-500','dark:text-gray-400');
+                });
+                e.target.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                e.target.classList.remove('text-gray-500','dark:text-gray-400');
+                
+                gameMode = e.target.dataset.mode;
+
+                // REMOVED LOCKING LOGIC FOR PICK EM
+                // Buttons stay enabled for all modes now.
+                const poolBtns = document.querySelectorAll('.mode-btn');
+                poolBtns.forEach(pb => {
+                    pb.classList.remove('opacity-25', 'cursor-not-allowed', 'pointer-events-none');
+                });
+            }
+        });
+
+        dom.eraTriggerBtn.onclick = (e) => { e.stopPropagation(); dom.eraPopover.classList.toggle('hidden'); };
+        document.onclick = (e) => { if(!dom.eraTriggerBtn.contains(e.target)) dom.eraPopover.classList.add('hidden'); };
+
+        dom.cardA.onclick = (e) => { if(dom.submitBtn.textContent === "Lock In" && !e.target.closest('a')) selectPlayer('A'); };
+        dom.cardB.onclick = (e) => { if(dom.submitBtn.textContent === "Lock In" && !e.target.closest('a')) selectPlayer('B'); };
+
+        // Removed old dom.minInput.oninput listeners
+        
+        dom.submitBtn.onclick = () => {
+             if (dom.submitBtn.textContent === "Lock In") {
+                 if(gameMode === 'howMuch') submitGuess();
+                 else submitSideBySide();
+             }
+             else nextRound();
+        };
+    });
+
+    function updateScoreColor(currentScore) {
+        const el = dom.scoreDisp;
+        el.classList.remove('score-bronze','score-silver','score-gold','score-platinum');
+        if (currentScore >= 5000) { el.classList.add('score-platinum'); }
+        else if (currentScore >= 4000) { el.classList.add('score-gold'); }
+        else if (currentScore >= 3000) { el.classList.add('score-silver'); }
+        else if (currentScore >= 2000) { el.classList.add('score-bronze'); }
+    }
+    
+    function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'enabled' : 'disabled');
+        updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+        if(document.documentElement.classList.contains('dark')){
+            dom.iconSun.classList.add('hidden');
+            dom.iconMoon.classList.remove('hidden');
+        } else {
+            dom.iconSun.classList.remove('hidden');
+            dom.iconMoon.classList.add('hidden');
+        }
+    }
+
+    function renderDecadeGrid() {
+        const grid = dom.eraPopover;
+        // Remove existing decade buttons to prevent duplicates
+        grid.querySelectorAll('button[data-decade]').forEach(b => b.remove());
+        
+        for(let d=2020; d>=1880; d-=10) {
+            const btn = document.createElement('button');
+            // Unselected style: Gray text, medium weight, small font
+            btn.className = "era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent";
+            btn.textContent = `${d}s`;
+            btn.dataset.era = 'select';
+            btn.dataset.decade = d;
+            grid.appendChild(btn);
+        }
+        
+        document.querySelectorAll('.era-option').forEach(opt => {
+            opt.onclick = (e) => {
+                // 1. Update the TRIGGER BUTTON to "Selected" style (White BG, Shadow)
+            const btn = document.getElementById('era-trigger-btn');
+            btn.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'hover:bg-gray-200', 'dark:hover:bg-gray-700');
+            btn.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm');
+
+            // 2. Update the DISPLAY TEXT to "Selected" style (Blue/White, Bold)
+            const txt = document.getElementById('era-display-text');
+            txt.classList.remove('text-gray-500', 'dark:text-gray-400', 'font-medium');
+            txt.classList.add('text-blue-600', 'dark:text-white', 'font-semibold');
+
+            // ... continue with existing logic (highlighting options, setting vars) ...
+                // Reset all to unselected style
+                // 1. RESET ALL BUTTONS (Gray/Unselected)
+            document.querySelectorAll('.era-option').forEach(b => {
+                // Base unselected style
+                let cls = "era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent";
+                
+                // IMPORTANT: Re-apply the column spans so the grid doesn't break
+                if(b.dataset.era === 'allEras') cls += " col-span-1";
+                else if(b.dataset.era === 'modern') cls += " col-span-2";
+                
+                b.className = cls;
+            });
+
+            // 2. STYLE THE CLICKED BUTTON (Active/Blue)
+            // Base active style
+            let activeCls = "era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
+            
+            // Re-apply the column span for the active button too
+            if(e.target.dataset.era === 'allEras') activeCls += " col-span-1";
+            else if(e.target.dataset.era === 'modern') activeCls += " col-span-2";
+            
+            e.target.className = activeCls;
+                
+                // Set clicked to selected style (Blue background, Bold/Semibold, White/Blue text)
+                e.target.className = "era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
+                
+                if(e.target.dataset.era === 'allEras') {
+                     // Specific styling for 'All Eras' when selected (matches pool buttons)
+                     e.target.className = "era-option col-span-1 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
+                } else if (e.target.dataset.era === 'modern') {
+                     // Specific styling for 'Modern' when selected
+                     e.target.className = "era-option col-span-2 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
+                }
+
+                const type = e.target.dataset.era;
+                if(type === 'allEras') { eraMode = 'allEras'; selectedDecade = null; dom.eraDisplay.textContent = "All"; }
+                else if(type === 'modern') { eraMode = 'modern'; selectedDecade = null; dom.eraDisplay.textContent = "Modern"; }
+                else { eraMode = 'select'; selectedDecade = parseInt(e.target.dataset.decade); dom.eraDisplay.textContent = `${selectedDecade}s`; }
+                
+                // Close popover after selection
+                dom.eraPopover.classList.add('hidden');
+            };
+        });
+    }
+
+    function selectPlayer(who) {
+        if(dom.submitBtn.textContent !== "Lock In") return; 
+        versusPick = who;
+        [dom.cardA, dom.cardB].forEach(c => {
+            c.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+        });
+        const sel = who === 'A' ? dom.cardA : dom.cardB;
+        sel.classList.add('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+        updateSliderUI();
+    }
+
+    // ==========================================
+// 1. TOGGLE DEAD ZONE (Fixes Pin Location & Disappearing)
+// ==========================================
+function toggleDeadZone() {
+    deadZoneEnabled = !deadZoneEnabled;
+    localStorage.setItem('deadZoneEnabled', deadZoneEnabled);
+    updateDeadZoneUI();
+
+    // Only proceed if active in "How Much" mode
+    if (!dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
+        const curCat = getCurrentCat(catKey);
+        
+        // 1. SAVE CURRENT USER VALUES
+        let savedMin = sliderState.min;
+        let savedMax = sliderState.max;
+
+        // Recalculate range limits 
+        let dMin = curCat.dMin;
+        let dMax = dMin * 5;
+        let step = curCat.step; // Get base step
+
+        if (catKey === 'careerXBHRate') {
+            dMax = dMax * 100;
+            dMin = dMin * 100; 
+            step = step * 100; // NEW: Scale step for XBH re-init
+        } 
+        
+        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) step = 1;
+
+        // 2. RE-INITIALIZE SLIDER 
+        initSlider(dMax, dMin, step);
+
+        // 3. RESTORE USER VALUES (Clamp to new limits)
+        if (savedMin < dMin) savedMin = dMin;
+        if (savedMax > dMax) savedMax = dMax;
+        
+        sliderState.min = savedMin;
+        sliderState.max = savedMax;
+        
+        updateSliderUI();
+
+        // 4. HANDLE LOCKED-IN STATE
+        if (dom.submitBtn.textContent !== "Lock In") {
+            // A. Hide Thumbs (Fixes reappearance)
+            dom.thumbMin.style.display = 'none';
+            dom.thumbMax.style.display = 'none';
+
+            // B. Force Unhide Pin/Text
+            dom.sliderPin.classList.remove('hidden');
+            dom.sliderResultText.classList.remove('opacity-0');
+            dom.sliderResultText.classList.add('opacity-1'); 
+
+            // C. Recalculate Pin Position
+            const { rangeMax, visualMin } = sliderState;
+            const span = rangeMax - visualMin;
+            
+            let vTD = trueDiff;
+            if(catKey === 'careerXBHRate') vTD = trueDiff * 100;
+            
+            let pinPct = ((vTD - visualMin) / span) * 100;
+            pinPct = Math.max(0, Math.min(100, pinPct));
+            
+            // D. Apply Position
+            dom.sliderPin.style.transition = 'none'; 
+            dom.sliderPin.style.left = pinPct + '%';
+        }
+    }
+}
+
+// ==========================================
+// 2. SUBMIT GUESS (Fixes Wrong Pin Location on Submit)
+// ==========================================
+function submitGuess() {
+    dom.submitBtn.disabled = true; 
+    dom.rerollBtn.disabled = true; 
+    dom.thumbMin.style.display = 'none'; 
+    dom.thumbMax.style.display = 'none';
+
+    dom.submitBtn.textContent = (round === 10) ? "Finish Game" : "Next Round";
+
+    let low = sliderState.min;
+    let high = sliderState.max;
+    
+    if (catKey === 'careerXBHRate') { 
+        low = low / 100; 
+        high = high / 100; 
+    }
+    
+    const playerCorrect = (versusPick === correctPick);
+    const rangeCorrect = (trueDiff >= low && trueDiff <= high);
+    
+    let pts = 0;
+    const oldScore = score;
+    let resultEmoji = '🟥'; 
+
+    // --- CALCULATE POINTS ---
+    if (playerCorrect) {
+        pts += 200;
+        resultEmoji = '🟧'; // CHANGED: Orange for Range Miss
+        if (rangeCorrect) {
+            resultEmoji = '🟩';
+            const curCat = getCurrentCat(catKey);
+            const scoringSpan = (curCat.dMin*5) - curCat.dMin;
+            const rangeWidth = high - low;
+            const safeSpan = scoringSpan > 0 ? scoringSpan : 1;
+            const norm = Math.max(0, Math.min(1, (safeSpan - rangeWidth)/safeSpan));
+            const rangePts = Math.round(800 * Math.pow(norm, 2));
+            pts += rangePts;
+
+            const bw = getCurrentBull(catKey)||0;
+            const mid=(low+high)/2, eps=1e-5;
+            if(trueDiff >= mid-bw/2 - eps && trueDiff <= mid+bw/2 + eps) {
+                    pts += 100;
+                    resultEmoji = '🎯';
+            }
+        }
+    }
+    roundResults.push(resultEmoji);
+    const roundTotal = Math.min(1000, Math.max(0, pts));
+
+    // Formatters
+    let sA=A.stats[catKey], sB=B.stats[catKey];
+    if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { sA=Math.round(sA*1000); sB=Math.round(sB*1000); }
+    
+    const fmt = (v) => {
+            if (catKey==='careerXBHRate') return (v*100).toFixed(1)+'%'; 
+            if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey) && useWholeNumbers) return Math.round(v);
+            if (['careerBA','careerOPS','peakSeasonOPS', 'careerWHIP'].includes(catKey)) return v.toFixed(3);
+            if (['careerERA','bestSeasonERA','careerKBB'].includes(catKey)) return v.toFixed(2);
+            if (['careerWARBat','careerWARPit'].includes(catKey)) return v.toFixed(1);
+            return Math.round(v);
+    };
+
+    const getLink = (p) => typeof makeLink === 'function' ? makeLink(p) : p.name;
+
+    // Score Rolling Animation Helper
+    const animateValue = (obj, start, end, duration, crossedThreshold) => {
+        if (!useAnimations) {
+            obj.textContent = end;
+            updateScoreColor(end);
+            return;
+        }
+
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.textContent = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.textContent = end;
+                updateScoreColor(end); 
+                if (crossedThreshold) {
+                    obj.classList.add('animate-score-levelup');
+                    setTimeout(()=> obj.classList.remove('animate-score-levelup'), 1200);
+                } 
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+
+    // UI Helpers
+    const setCardStyles = () => {
+        [dom.cardA, dom.cardB].forEach(c => {
+            c.classList.remove('bg-white', 'dark:bg-gray-900', 'border-transparent', 'shadow-sm', 'ring-4', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            c.classList.add('border-2');
+        });
+
+        const styleGreen = ['bg-green-100', 'dark:bg-green-900/40', 'border-green-600', 'dark:border-green-500', 'text-green-800', 'dark:text-green-300'];
+        const styleRed = ['bg-red-100', 'dark:bg-red-900/40', 'border-red-500', 'dark:border-red-500', 'text-red-800', 'dark:text-red-300'];
+
+        if(correctPick === 'A') {
+            dom.cardA.classList.add(...styleGreen);
+            if(versusPick === 'B') dom.cardB.classList.add(...styleRed);
+            else dom.cardB.classList.add('opacity-50', 'bg-gray-100', 'dark:bg-gray-800', 'border-transparent');
+        } else {
+            dom.cardB.classList.add(...styleGreen);
+            if(versusPick === 'A') dom.cardA.classList.add(...styleRed);
+            else dom.cardA.classList.add('opacity-50', 'bg-gray-100', 'dark:bg-gray-800', 'border-transparent');
+        }
+    };
+
+    let vTD = trueDiff;
+    if(catKey === 'careerXBHRate') vTD = trueDiff * 100;
+    
+    // Pin Calc
+    const { rangeMax, visualMin } = sliderState;
+    const span = rangeMax - visualMin;
+    let pinPct = ((vTD - visualMin) / span) * 100;
+    pinPct = Math.max(0, Math.min(100, pinPct));
+
+    let diffText = (catKey==='careerXBHRate') ? (trueDiff*100).toFixed(1)+'%' : fmt(trueDiff);
+
+    // --- INSTANT MODE ---
+    if (!useAnimations) {
+        setCardStyles();
+        score += roundTotal;
+        dom.scoreDisp.textContent = score;
+        updateScoreColor(score);
+        
+        dom.statA.textContent = fmt(sA); dom.statA.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+        dom.statB.textContent = fmt(sB); dom.statB.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+        dom.nameA.innerHTML = getLink(A); dom.nameB.innerHTML = getLink(B);
+        
+        dom.sliderPin.style.transition = 'none';
+        dom.sliderPin.style.left = pinPct + '%';
+        dom.sliderPin.classList.remove('hidden');
+        
+        let pinColor = (playerCorrect && rangeCorrect) ? 'bg-green-500' : (playerCorrect ? 'bg-orange-500' : 'bg-red-500');
+        let txtColor = (playerCorrect && rangeCorrect) ? 'text-green-500' : (playerCorrect ? 'text-orange-500' : 'text-red-500');
+        
+        dom.sliderPin.className = `absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 ${pinColor}`;
+        
+        dom.sliderResultText.textContent = diffText;
+        dom.sliderResultText.className = `absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 opacity-1 ${txtColor}`; 
+        
+        let fb = "";
+        let colorClass = "";
+        
+        if (playerCorrect) {
+            colorClass = "text-green-600 dark:text-green-400";
+            fb = "Correct Player +200";
+            
+            if (rangeCorrect) {
+                const rangePts = roundTotal - 200 - (resultEmoji === '🎯' ? 100 : 0);
+                fb += `<div class="text-green-600 dark:text-green-400 font-bold text-sm mt-1">Within Range +${rangePts}</div>`;
+            }
+            if (resultEmoji === '🎯') {
+                fb += `<div class="text-amber-500 font-black text-lg mt-1">BULLSEYE! +100</div>`;
+            }
+        } else {
+            colorClass = "text-red-500";
+            fb = "Incorrect Player";
+        }
+        dom.feedback.innerHTML = `<div class="${colorClass} font-bold text-sm">${fb}</div>`;
+        dom.submitBtn.disabled = false;
+        return;
+    }
+
+    // --- ANIMATED MODE ---
+    const winnerCard = correctPick === 'A' ? dom.cardA : dom.cardB;
+    const loserCard = correctPick === 'A' ? dom.cardB : dom.cardA;
+    const winnerStat = correctPick === 'A' ? dom.statA : dom.statB;
+    const loserStat = correctPick === 'A' ? dom.statB : dom.statA;
+    const winnerVal = correctPick === 'A' ? sA : sB;
+    const loserVal = correctPick === 'A' ? sB : sA;
+
+    const styleGreen = ['bg-green-100', 'dark:bg-green-900/40', 'border-green-600', 'dark:border-green-500', 'text-green-800', 'dark:text-green-300'];
+    
+    if (!playerCorrect) {
+        setCardStyles();
+        score += roundTotal;
+        dom.scoreDisp.textContent = score;
+        
+        dom.statA.textContent = fmt(sA); dom.statA.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+        dom.statB.textContent = fmt(sB); dom.statB.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+        dom.nameA.innerHTML = getLink(A); dom.nameB.innerHTML = getLink(B);
+        
+        dom.sliderPin.style.transition = 'none'; 
+        dom.sliderPin.style.left = pinPct + '%';
+        dom.sliderPin.classList.remove('hidden');
+        dom.sliderPin.className = `absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 bg-red-500`;
+        
+        dom.sliderResultText.textContent = diffText;
+        dom.sliderResultText.className = `absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 opacity-0 text-red-500 animate-float-result`;
+        
+        dom.feedback.innerHTML = `<div class="text-red-500 font-bold text-sm animate-enter">Incorrect Player</div>`;
+        setTimeout(() => { dom.submitBtn.disabled = false; }, 1000);
+        return;
+    }
+
+    // Correct Sequence
+    winnerCard.classList.remove('bg-white', 'dark:bg-gray-900', 'border-transparent', 'shadow-sm', 'ring-4', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+    winnerCard.classList.add('border-2', ...styleGreen);
+    loserCard.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20'); 
+    loserCard.classList.add('opacity-50', 'bg-gray-100', 'dark:bg-gray-800', 'border-transparent'); 
+
+    winnerStat.textContent = fmt(winnerVal);
+    winnerStat.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+    dom.feedback.innerHTML = ''; 
+
+    setTimeout(() => {
+        const line1 = document.createElement('div');
+        line1.className = "text-green-600 dark:text-green-400 font-bold text-sm animate-text-pop";
+        line1.textContent = "Correct Player +200";
+        dom.feedback.appendChild(line1);
+    }, 500);
+
+    setTimeout(() => {
+        let duration = pinPct / 25; 
+        if (duration < 0.5) duration = 0.5;
+        
+        dom.sliderPin.style.transition = 'none';
+        dom.sliderPin.style.left = '0%';
+        dom.sliderPin.classList.remove('hidden');
+        dom.sliderPin.className = `absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 bg-gray-400`;
+        
+        void dom.sliderPin.offsetWidth;
+        
+        dom.sliderPin.style.transition = `left ${duration}s ease-out`;
+        dom.sliderPin.style.left = pinPct + '%';
+        
+        setTimeout(() => {
+            let pinColor = rangeCorrect ? 'bg-green-500' : 'bg-orange-500';
+            let txtColor = rangeCorrect ? 'text-green-500' : 'text-orange-500';
+            dom.sliderPin.classList.remove('bg-gray-400');
+            dom.sliderPin.classList.add(pinColor);
+            
+            dom.sliderResultText.textContent = diffText;
+            dom.sliderResultText.className = `absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 opacity-0 ${txtColor} animate-float-result`;
+            
+            loserStat.textContent = fmt(loserVal);
+            loserStat.classList.remove('hidden', 'text-gray-600', 'dark:text-gray-300');
+            dom.nameA.innerHTML = getLink(A); 
+            dom.nameB.innerHTML = getLink(B);
+            
+            if (rangeCorrect) {
+                const rangePts = roundTotal - 200 - (resultEmoji === '🎯' ? 100 : 0);
+                const line2 = document.createElement('div');
+                line2.className = "text-green-600 dark:text-green-400 font-bold text-sm animate-text-pop";
+                line2.textContent = `Within Range +${rangePts}`;
+                dom.feedback.appendChild(line2);
+            }
+            
+            let nextDelay = 1000;
+
+            if (resultEmoji === '🎯') {
+                setTimeout(() => {
+                    const line3 = document.createElement('div');
+                    line3.className = "text-amber-500 font-black text-lg animate-bullseye mt-1";
+                    line3.textContent = "BULLSEYE! +100";
+                    dom.feedback.appendChild(line3);
+                }, 1000);
+                nextDelay += 1000;
+            }
+            
+            setTimeout(() => {
+                const newScore = score + roundTotal;
+                score = newScore; 
+                const crossedThreshold = [5000, 4000, 3000, 2000].some(t => oldScore < t && newScore >= t);
+                animateValue(dom.scoreDisp, oldScore, newScore, 1000, crossedThreshold);
+                dom.submitBtn.disabled = false;
+            }, nextDelay); 
+
+        }, duration * 1000);
+
+    }, 1000); 
+}
+
+
+// ==========================================
+// 3. INIT SLIDER (Sets up visualMin)
+// ==========================================
+function initSlider(rangeMax, dMin, step) {
+    sliderState.rangeMax = rangeMax;
+    sliderState.minLimit = dMin;
+    sliderState.step = step;
+    
+    // NEW: Determine visual start point
+    // If Dead Zone is ON, we start at 0. If OFF, we start at dMin.
+    sliderState.visualMin = deadZoneEnabled ? 0 : dMin;
+    
+    // Set initial positions
+    sliderState.min = dMin; 
+    sliderState.max = rangeMax; 
+    
+    // Draw/Hide Invalid Zone Graphic
+    if (deadZoneEnabled) {
+         // Grayed out area from 0 to dMin
+         dom.sliderInvalid.style.width = (dMin / rangeMax * 100) + '%';
+         dom.sliderInvalid.style.display = 'block';
+    } else {
+         // No gray area, bar starts at dMin
+         dom.sliderInvalid.style.width = '0%';
+         dom.sliderInvalid.style.display = 'none';
+    }
+    
+    // Reset Results (Hide by default)
+    dom.sliderPin.classList.add('hidden');
+    dom.sliderResultText.classList.remove('animate-float-result');
+    dom.sliderResultText.classList.add('opacity-0');
+    dom.sliderResultText.classList.remove('opacity-1');
+    
+    // Show Thumbs
+    dom.thumbMin.style.display = 'flex';
+    dom.thumbMax.style.display = 'flex';
+    
+    dom.sliderBullseye.classList.remove('hidden');
+    
+    updateSliderUI();
+    renderSliderTicks();
+}
+
+
+// ==========================================
+// 4. UPDATE SLIDER UI (Draws thumbs using visualMin)
+// ==========================================
+function updateSliderUI() {
+    const { min, max, rangeMax, visualMin } = sliderState;
+    const span = rangeMax - visualMin;
+    
+    // Helper: Map Value -> CSS %
+    const getPct = (v) => ((v - visualMin) / span) * 100;
+    
+    dom.thumbMin.style.left = getPct(min) + '%';
+    dom.thumbMax.style.left = getPct(max) + '%';
+    
+    dom.sliderFill.style.left = getPct(min) + '%';
+    dom.sliderFill.style.width = (getPct(max) - getPct(min)) + '%';
+    
+    const fmt = (v) => {
+        if(catKey === 'careerXBHRate') return v.toFixed(1) + '%'; 
+        if(['careerBA','careerOPS','peakSeasonOPS'].includes(catKey) && !useWholeNumbers) return v.toFixed(3);
+        if(['careerERA','bestSeasonERA','careerKBB', 'careerWHIP'].includes(catKey)) return v.toFixed(2);
+        if(['careerWARBat','careerWARPit'].includes(catKey)) return v.toFixed(1);
+        return Math.round(v);
+    };
+    
+    dom.sliderDisplayMin.textContent = fmt(min);
+    dom.sliderDisplayMax.textContent = fmt(max);
+
+    const bw = getCurrentBull(catKey) || 0;
+    let bwScaled = bw;
+    if(catKey === 'careerXBHRate') bwScaled = bw * 100; 
+
+    const mid = (min + max) / 2;
+    // Constrain bullseye to visible area
+    let bL = Math.max(visualMin, mid - bwScaled/2);
+    let bR = Math.min(rangeMax, mid + bwScaled/2);
+    
+    dom.sliderBullseye.style.left = getPct(bL) + '%';
+    dom.sliderBullseye.style.width = (getPct(bR) - getPct(bL)) + '%';
+
+    const ok = versusPick !== null;
+    dom.submitBtn.disabled = !ok;
+}
+
+
+// ==========================================
+// 5. HANDLE MOVE (Calculates value using visualMin)
+// ==========================================
+function handleMove(e) {
+    if(!sliderDragging) return;
+    
+    let clientX;
+    if(e.touches) clientX = e.touches[0].clientX;
+    else clientX = e.clientX;
+    
+    const rect = dom.sliderTrackArea.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    
+    // NEW: Map Percentage -> Value using visualMin
+    const { rangeMax, visualMin, step, minLimit } = sliderState;
+    const span = rangeMax - visualMin;
+    
+    let val = visualMin + (pct * span);
+    
+    // Snap to step
+    val = Math.round(val / step) * step;
+    
+    if(sliderDragging === 'min') {
+        if(val < minLimit) val = minLimit;
+        // CHANGED: Allow val to equal max (was val > sliderState.max - step)
+        if(val > sliderState.max) val = sliderState.max;
+        sliderState.min = val;
+    } else {
+        // CHANGED: Allow val to equal min (was val < sliderState.min + step)
+        if(val < sliderState.min) val = sliderState.min;
+        if(val > rangeMax) val = rangeMax;
+        sliderState.max = val;
+    }
+    
+    updateSliderUI();
+}
+
+
+// ==========================================
+// 6. TOGGLE FORMAT (Updates Pin if revealed)
+// ==========================================
+function toggleFormat() {
+    useWholeNumbers = !useWholeNumbers;
+    dom.formatInd.textContent = useWholeNumbers ? "123" : ".12";
+    
+    // --- HANDLE PICK EM UPDATE ---
+    if (!dom.uiPickEm.classList.contains('hidden')) {
+        const threshEl = document.getElementById('pickem-thresh-val');
+        if (threshEl && catKey) {
+            const val = pickEmState.threshold;
+            let displayThresh;
+            
+            if (catKey === 'careerXBHRate') {
+                displayThresh = (val*100).toFixed(0) + '%';
+            } else if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+                 displayThresh = useWholeNumbers ? Math.round(val*1000) : val.toFixed(3);
+            } else if (['careerERA','careerWHIP','bestSeasonERA','careerKBB'].includes(catKey)) {
+                 displayThresh = val.toFixed(2);
+            } else {
+                 displayThresh = Math.round(val).toLocaleString();
+            }
+            
+            const catConfig = BASE_CATS[catKey];
+            const op = catConfig.lowerBetter ? "≤" : "≥";
+            threshEl.textContent = `${op} ${displayThresh}`;
+        }
+
+        const grid = document.getElementById('pickem-grid');
+        const revealedCards = grid.querySelectorAll('.revealed');
+        revealedCards.forEach(card => {
+            const rawVal = parseFloat(card.dataset.val);
+            card.querySelector('.stat-val').textContent = formatStat(rawVal, catKey);
+        });
+        return; 
+    }
+    // -----------------------------
+
+    if (catKey === 'careerXBHRate') return;
+    if (gameMode === 'sideBySide') return; 
+
+    if(!dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
+            // FIX: getCurrentCat ALREADY scales dMin/dMax if useWholeNumbers is true.
+            // We do NOT need to multiply by 1000 again here.
+            const curCat = getCurrentCat(catKey);
+            
+            const dMin = curCat.dMin;
+            const dMax = curCat.dMin * 5; // Use the scaled dMin
+            
+            // Just use dMax directly, it is already scaled correctly by getCurrentCat
+            numberLineSpan = dMax; 
+            
+            sliderState.rangeMax = numberLineSpan;
+            sliderState.step = curCat.step;
+            sliderState.minLimit = dMin;
+            sliderState.visualMin = deadZoneEnabled ? 0 : dMin;
+
+            let sA = A.stats[catKey];
+            let sB = B.stats[catKey];
+            if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { 
+                sA = Math.round(sA * 1000); 
+                sB = Math.round(sB * 1000); 
+            }
+            trueDiff = Math.abs(sA - sB);
+
+            // Scale existing user selection
+            if(useWholeNumbers) {
+                if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+                    sliderState.min = Math.round(sliderState.min * 1000);
+                    sliderState.max = Math.round(sliderState.max * 1000);
+                }
+            } else {
+                if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+                    sliderState.min = sliderState.min / 1000;
+                    sliderState.max = sliderState.max / 1000;
+                }
+            }
+            
+            if(sliderState.min < dMin) sliderState.min = dMin;
+            if(sliderState.max > sliderState.rangeMax) sliderState.max = sliderState.rangeMax;
+            
+            if (deadZoneEnabled) {
+                dom.sliderInvalid.style.width = (dMin / sliderState.rangeMax * 100) + '%';
+                dom.sliderInvalid.style.display = 'block';
+            } else {
+                dom.sliderInvalid.style.width = '0%';
+                dom.sliderInvalid.style.display = 'none';
+            }
+            
+            updateSliderUI();
+            renderSliderTicks();
+            
+            const isRevealed = dom.submitBtn.textContent !== "Lock In";
+            
+            if (isRevealed) {
+                let rawA = A.stats[catKey];
+                let rawB = B.stats[catKey];
+                
+                dom.sliderResultText.textContent = formatStat(Math.abs(rawA - rawB), catKey);
+                dom.statA.textContent = formatStat(rawA, catKey);
+                dom.statB.textContent = formatStat(rawB, catKey);
+
+                const span = sliderState.rangeMax - sliderState.visualMin;
+                let vTD = trueDiff;
+                if(catKey === 'careerXBHRate') vTD = trueDiff * 100;
+                
+                let pinPct = ((vTD - sliderState.visualMin) / span) * 100;
+                dom.sliderPin.style.left = Math.max(0, Math.min(100, pinPct)) + '%';
+            }
+    }
+}
+
+async function shareGame() {
+        const shareBtn = document.getElementById('share-btn');
+        const originalText = shareBtn.innerHTML;
+        shareBtn.innerHTML = `<span class="animate-pulse">Generating...</span>`;
+        shareBtn.disabled = true;
+
+        try {
+            let baseDomain = "https://mlbmatchups3.pages.dev"; 
+            let shareUrl = baseDomain;
+            
+            if (!currentChallengeId) {
+                const newId = await saveChallenge();
+                if (newId) currentChallengeId = newId;
+            }
+            if (currentChallengeId) shareUrl += `?c=${currentChallengeId}`;
+
+            // 1. MODE TEXT
+            let modeText = 'Standard';
+            if (gameMode === 'sideBySide') modeText = 'Showdown';
+            if (gameMode === 'pickEm') modeText = "Pick 'Em";
+
+            // 2. POOL TEXT (New)
+            const poolMap = {
+                'all': 'Standard',
+                'allStars': 'All Stars',
+                'batters': 'Batters',
+                'pitchers': 'Pitchers'
+            };
+            const poolText = poolMap[selectedMode] || 'Standard';
+
+            // 3. ERA TEXT
+            const eraText = eraMode === 'allEras' ? 'All Eras' : (eraMode === 'modern' ? 'Modern Era' : `${selectedDecade}s`);
+            
+            // COMBINED SUBTITLE
+            const subtitleText = `${modeText} • ${poolText} • ${eraText}`;
+
+            let shareTitle = "MLB Matchups";
+            if (currentChallengeId) shareTitle = `Challenge ${currentChallengeId}`;
+
+            const canvas = document.getElementById('share-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 800;
+            const centerX = canvas.width / 2;
+
+            // Background
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, 800);
+            bgGrad.addColorStop(0, '#0f172a'); 
+            bgGrad.addColorStop(1, '#1e3a8a'); 
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 800, 800);
+
+            // Header
+            ctx.font = '900 65px Inter, sans-serif'; 
+            ctx.textAlign = 'left';
+            const text1 = "MLB";
+            const text2 = "Matchups";
+            const width1 = ctx.measureText(text1).width;
+            const totalWidth = width1 + ctx.measureText(text2).width;
+            let startX = centerX - (totalWidth / 2);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text1, startX, 120);
+            ctx.fillStyle = '#3b82f6'; 
+            ctx.fillText(text2, startX + width1, 120);
+
+            // Tagline & Subtitle
+            ctx.textAlign = 'center'; 
+            ctx.fillStyle = '#9ca3af'; 
+            ctx.font = '500 24px Inter, sans-serif';
+            ctx.fillText("The Ultimate Stat Estimation Game", centerX, 165);
+
+            ctx.fillStyle = '#d1d5db'; 
+            // Adjusted font size slightly to ensure 3 items fit
+            ctx.font = '600 24px Inter, sans-serif'; 
+            ctx.fillText(subtitleText.toUpperCase(), centerX, 230);
+
+            // Score
+            ctx.fillStyle = '#60a5fa'; 
+            ctx.font = '900 150px Inter, sans-serif';
+            ctx.shadowColor = "rgba(96, 165, 250, 0.6)"; ctx.shadowBlur = 30;
+            ctx.fillText(score.toLocaleString(), centerX, 380);
+            ctx.shadowBlur = 0;
+
+            // Grid
+            const boxSize = 60; gap = 15;
+            const totalRowWidth = (5 * boxSize) + (4 * gap);
+            const rowStartX = centerX - (totalRowWidth / 2);
+            let y = 460; let x = rowStartX;
+            
+            const emojiColors = {
+                '🟩': '#22c55e', 
+                '🟥': '#ef4444', 
+                '🟨': '#eab308',
+                '🟧': '#f97316'
+            };
+            
+            roundResults.forEach((res, i) => {
+                if (i > 0 && i % 5 === 0) { y += boxSize + gap; x = rowStartX; }
+                
+                if (res === '💎' || res === '🎯') {
+                    ctx.fillStyle = '#22c55e'; // Green BG for icons
+                    ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize, 12); ctx.fill();
+                    
+                    ctx.font = '40px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(res, x + (boxSize/2), y + (boxSize/2) + 3);
+                } else {
+                    let fill = '#374151'; 
+                    if (typeof res === 'number') {
+                        if (res === 5) fill = '#22c55e';      
+                        else if (res === 4) fill = '#f97316'; 
+                        else if (res >= 2) fill = '#eab308';  
+                        else fill = '#ef4444';                
+                    } else {
+                        fill = emojiColors[res] || '#374151';
+                    }
+                    ctx.fillStyle = fill;
+                    ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize, 12); ctx.fill();
+                }
+                x += boxSize + gap;
+            });
+
+            // Footer
+            if (currentChallengeId) {
+                 ctx.fillStyle = '#e5e7eb'; 
+                 ctx.font = '700 36px Inter, sans-serif';
+                 ctx.fillText(`CHALLENGE ${currentChallengeId}`, centerX, 660);
+            }
+
+            ctx.fillStyle = '#2563eb'; 
+            ctx.fillRect(0, 700, 800, 100); 
+
+            ctx.fillStyle = '#bfdbfe'; 
+            ctx.font = '700 20px Inter, sans-serif';
+            ctx.fillText("TAP LINK BELOW TO BEAT MY SCORE AT", centerX, 735); 
+            
+            ctx.fillStyle = '#ffffff'; 
+            ctx.font = '900 32px Inter, sans-serif';
+            ctx.fillText("MLBMATCHUPS3.PAGES.DEV", centerX, 775); 
+
+            // Share
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], 'mlb-matchups-score.png', { type: 'image/png' });
+                
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ 
+                            title: shareTitle, 
+                            url: shareUrl, 
+                            files: [file] 
+                        });
+                        showAlert('Image Shared!', 'bg-indigo-600');
+                    } catch (err) { console.log("Share cancelled/failed:", err); }
+                } else {
+                    copyToClipboard(shareUrl);
+                    const a = document.createElement('a'); a.href = canvas.toDataURL(); a.download = 'mlb-matchups-score.png'; a.click();
+                    showAlert('Image downloaded & Link copied!', 'bg-indigo-600');
+                }
+                
+                shareBtn.innerHTML = originalText; 
+                shareBtn.disabled = false;
+            }, 'image/png');
+
+        } catch (e) {
+            console.error("Share Error:", e); 
+            showAlert('Share Error', 'bg-red-500');
+            shareBtn.innerHTML = originalText; 
+            shareBtn.disabled = false;
+        }
+    }
+
+    function goHome() {
+        // 1. Wipe Challenge Data
+        currentChallengeId = null;
+        challengeQueue = [];
+        matchHistory = [];
+        roundResults = [];
+        
+        // 2. FORCE RESET Internal State
+        gameMode = 'howMuch';
+        selectedMode = 'all';
+        eraMode = 'modern';
+        selectedDecade = null;
+        
+        // 3. Reset UI: Game Mode Buttons
+        document.querySelectorAll('.gamemode-btn').forEach(b => {
+            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-500','dark:text-gray-400');
+            if(b.dataset.mode === 'howMuch') {
+                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-500','dark:text-gray-400');
+            }
+        });
+        
+        // 4. Reset UI: Pool Buttons (UNLOCK & RESET)
+        document.querySelectorAll('.mode-btn').forEach(b => {
+            // CRITICAL FIX: Unlock buttons
+            b.disabled = false;
+            b.classList.remove('opacity-25', 'cursor-not-allowed', 'pointer-events-none');
+
+            // Reset Styles
+            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-500','dark:text-gray-400');
+            if(b.dataset.mode === 'all') {
+                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-500','dark:text-gray-400');
+            }
+        });
+
+        // 5. Reset UI: Era Button
+        dom.eraDisplay.textContent = "Modern";
+        document.querySelectorAll('.era-option').forEach(b => {
+             let cls = "era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent";
+             if(b.dataset.era === 'allEras') cls += " col-span-1"; 
+             else if(b.dataset.era === 'modern') cls += " col-span-2";
+             
+             if(b.dataset.era === 'modern') {
+                 cls = "era-option col-span-2 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
+             }
+             b.className = cls;
+        });
+
+        // 6. Clear URL
+        const url = new URL(window.location);
+        url.searchParams.delete('c');
+        window.history.pushState({}, '', url);
+
+        // 7. Reset Start Button
+        dom.startBtn.textContent = "Start Game";
+        dom.startBtn.classList.remove('bg-purple-600'); 
+        dom.startBtn.classList.add('bg-blue-600'); 
+        dom.startBtn.disabled = false;
+
+        // 8. Manage Screens
+        dom.gameScreen.classList.add('hidden');
+        dom.nextBtn.classList.add('hidden'); 
+        dom.overScreen.classList.add('hidden');
+        dom.startScreen.classList.remove('hidden'); 
+        dom.homeBtn.classList.add('hidden');
+        dom.rerollBtn.classList.add('hidden'); 
+    }
+    
+    function skipQuestion() {
+        if (hasUsedReroll) return;
+        if (dom.submitBtn.textContent !== "Lock In") return; 
+
+        hasUsedReroll = true;
+        
+        // --- NEW: Remove the skipped question from history ---
+        if (matchHistory.length > 0) {
+            matchHistory.pop();
+        }
+        // ----------------------------------------------------
+        
+        dom.rerollBtn.classList.remove('text-emerald-600', 'bg-emerald-100', 'hover:bg-emerald-200', 'dark:bg-emerald-900/30', 'dark:text-emerald-400');
+        dom.rerollBtn.classList.add('text-red-400', 'bg-red-100', 'dark:bg-red-900/20', 'dark:text-red-500', 'cursor-not-allowed', 'opacity-60');
+        dom.rerollBtn.disabled = true;
+        
+        showAlert('Question skipped!', 'bg-blue-600');
+        if(gameMode === 'howMuch') categoryHistory[catKey] = Math.max(0, (categoryHistory[catKey] || 1) - 1);
+        
+        startRound();
+    }
+
+    function getCurrentCat(key) {
+        if (key === 'careerXBHRate') {
+             let cat = JSON.parse(JSON.stringify(BASE_CATS[key]));
+             return cat;
+        }
+
+        let cat = JSON.parse(JSON.stringify(BASE_CATS[key])); 
+        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(key)) { cat.dMin = Math.round(cat.dMin * 1000); cat.step = 1; }
+        if (key === 'seasonHighSB' || key === 'seasonHighKBat') { cat.dMax = cat.dMin * 5; }
+        return cat;
+    }
+    function getCurrentBull(key) {
+        let bull = BASE_BULL[key];
+        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(key)) bull = Math.round(bull * 1000);
+        return bull;
+    }
+
+    function startGame() {
+        score = 0; 
+        round = 1; 
+        hasUsedReroll = false; 
+        roundResults = []; 
+        matchHistory = []; 
+        categoryHistory = {}; 
+        usedPlayerIDs.clear();
+        
+        if (challengeQueue.length === 0) {
+            currentChallengeId = null;
+        }
+        
+        dom.scoreDisp.textContent = "0";
+        dom.scoreDisp.className = "text-lg font-black leading-none transition-colors duration-300"; 
+        
+        dom.startScreen.classList.add('hidden');
+        dom.gameScreen.classList.remove('hidden');
+        dom.gameScreen.classList.add('flex');
+        dom.homeBtn.classList.remove('hidden');
+        
+        // --- FIX: ROBUST REROLL RESET ---
+        dom.rerollBtn.disabled = false;
+        dom.rerollBtn.classList.remove(
+            'hidden', 
+            'text-red-400', 'bg-red-100', 'dark:bg-red-900/20', 'dark:text-red-500', 
+            'cursor-not-allowed', 'opacity-60', 'opacity-50', 'opacity-25' // Added opacity-50/25 to cleanup list
+        );
+        dom.rerollBtn.classList.add(
+            'text-emerald-600', 'bg-emerald-100', 'hover:bg-emerald-200', 
+            'dark:bg-emerald-900/30', 'dark:text-emerald-400'
+        );
+
+        startRound();
+    }
+
+    function startRound() {
+        dom.submitBtn.disabled = true; 
+        dom.submitBtn.textContent = "Lock In"; 
+        dom.submitBtn.className = "primary-btn"; 
+        
+        // Reset Feedback/Header
+        dom.feedback.innerHTML = ''; 
+        dom.roundDisp.textContent = `Round ${round}/10`;
+        
+        // Era Label Logic
+        if (eraMode === 'modern') { 
+            dom.eraLabel.textContent = "Modern Era (1970+)"; 
+        } else if (eraMode === 'allEras') { 
+            dom.eraLabel.textContent = "All Eras"; 
+        } else if (eraMode === 'select' && selectedDecade) { 
+            dom.eraLabel.textContent = `${selectedDecade}s`; 
+        } else {
+            dom.eraLabel.textContent = dom.eraDisplay.textContent; 
+        }
+
+        // Handle Reroll Button State
+        if (currentChallengeId) {
+             dom.rerollBtn.classList.add('hidden');
+        } else {
+             dom.rerollBtn.classList.remove('hidden'); 
+             if(hasUsedReroll) {
+                 dom.rerollBtn.classList.remove('text-emerald-600', 'bg-emerald-100', 'hover:bg-emerald-200', 'dark:bg-emerald-900/30', 'dark:text-emerald-400');
+                 dom.rerollBtn.classList.add('text-red-400', 'bg-red-100', 'dark:bg-red-900/20', 'dark:text-red-500', 'cursor-not-allowed', 'opacity-60');
+                 dom.rerollBtn.disabled = true;
+             } else {
+                 dom.rerollBtn.classList.remove('text-red-400', 'bg-red-100', 'dark:bg-red-900/20', 'dark:text-red-500', 'cursor-not-allowed', 'opacity-60');
+                 dom.rerollBtn.classList.add('text-emerald-600', 'bg-emerald-100', 'hover:bg-emerald-200', 'dark:bg-emerald-900/30', 'dark:text-emerald-400');
+                 dom.rerollBtn.disabled = false;
+             }
+        }
+
+        // --- VISIBILITY LOGIC ---
+        if(gameMode === 'howMuch') { 
+            dom.uiHowMuch.classList.remove('hidden'); 
+            dom.uiSideBySide.classList.add('hidden'); 
+            dom.uiPickEm.classList.add('hidden');
+            
+            // FIX: Ensure Next Button is HIDDEN for this mode
+            dom.nextBtn.classList.add('hidden');
+            dom.submitBtn.classList.remove('hidden'); // Ensure Lock In is visible
+            
+            startRoundHowMuch(); 
+        } else if (gameMode === 'sideBySide') { 
+            dom.uiHowMuch.classList.add('hidden'); 
+            dom.uiSideBySide.classList.remove('hidden'); 
+            dom.uiPickEm.classList.add('hidden');
+            
+            // FIX: Ensure Next Button is HIDDEN for this mode
+            dom.nextBtn.classList.add('hidden');
+            dom.submitBtn.classList.remove('hidden'); // Ensure Lock In is visible
+            
+            startRoundSideBySide(); 
+        } else {
+            // PICK EM MODE
+            dom.uiHowMuch.classList.add('hidden'); 
+            dom.uiSideBySide.classList.add('hidden');
+            dom.uiPickEm.classList.remove('hidden');
+            
+            // Submit button is hidden in startRoundPickEm, Next btn is shown there
+            startRoundPickEm();
+        }
+    }
+
+    function startRoundHowMuch() {
+    versusPick = null;
+    
+    const defaultCardClass = "player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]";
+    dom.cardA.className = defaultCardClass; 
+    dom.cardB.className = defaultCardClass;
+    
+    dom.nameA.innerHTML = ""; dom.nameA.textContent = "Player A"; 
+    dom.nameB.innerHTML = ""; dom.nameB.textContent = "Player B";
+    
+    dom.statA.classList.add('hidden', 'text-gray-600', 'dark:text-gray-300'); 
+    dom.statB.classList.add('hidden', 'text-gray-600', 'dark:text-gray-300');
+    
+    let pairFound = false;
+
+    if (challengeQueue.length > 0) {
+        const data = challengeQueue.shift(); 
+        A = players.get(data.pA);
+        B = players.get(data.pB);
+        catKey = data.cat;
+        pairFound = true;
+    } else {
+        const allPool = ['careerHR','careerBA','careerOPS','careerERA','careerW','careerSB','seasonHighHR','careerXBHRate','peakSeasonOPS','careerKBB','careerIP','seasonHighK','bestSeasonERA','seasonHighKBat','seasonHighSB', 'careerH', 'careerBB', 'careerWHIP'];
+        if(warLoaded.bat) allPool.push('careerWARBat'); if(warLoaded.pit) allPool.push('careerWARPit');
+        let poolCats = (selectedMode === 'all' || selectedMode === 'allStars') ? allPool : selectedMode === 'batters' ? allPool.filter(k => BASE_CATS[k].type === 'hitter') : allPool.filter(k => BASE_CATS[k].type === 'pitcher');
+        if (selectedMode === 'allStars') { poolCats = poolCats.filter(k => !['seasonHighKBat'].includes(k)); }
+        const maxUsage = (selectedMode === 'all' || selectedMode === 'allStars') ? 1 : 2;
+        let validCats = poolCats.filter(k => (categoryHistory[k] || 0) < maxUsage); if (validCats.length === 0) validCats = poolCats; 
+
+        let attempts = 0; 
+        while (attempts < 500) { 
+            attempts++; catKey = validCats[Math.floor(Math.random()*validCats.length)]; 
+            const curCat = getCurrentCat(catKey); 
+            
+            const pool=[];
+            players.forEach(p=>{
+                if(usedPlayerIDs.has(p.id)) return;
+                if(!passesGlobal(p) || !rolePass(p) || p.type!==BASE_CATS[catKey].type || !eraPass(p)) return;
+                const s=p.stats;
+                if (selectedMode !== 'allStars') { if (catKey==='careerW' && s.careerW < 75) return; if (catKey==='seasonHighSB' && s.seasonHighSB < 25) return; if (catKey==='careerWARBat' && s.careerWARBat < 25) return; if (catKey==='careerWARPit' && s.careerWARPit < 25) return; }
+                if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKey) && s.PA<=0) return; if (['careerERA','careerIP'].includes(catKey) && s.IP<=0) return; if (catKey==='bestSeasonERA' && (!s.bestSeasonERA || s.bestSeasonERA <= 0)) return;
+                if (selectedMode === 'allStars') { if (catKey === 'peakSeasonOPS' && s.peakSeasonOPS <= 0) return; if (catKey === 'bestSeasonERA' && s.bestSeasonERA <= 0) return; }
+                pool.push(p);
+            });
+            if(pool.length<2) continue; 
+            let pair=null;
+            for(let i=0; i<50; i++){ 
+                let a=pool[Math.floor(Math.random()*pool.length)], b=pool[Math.floor(Math.random()*pool.length)]; if(a===b) continue;
+                let sA = a.stats[catKey], sB = b.stats[catKey];
+                if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { sA=Math.round(sA*1000); sB=Math.round(sB*1000); }
+                
+                let d=Math.abs(sA-sB);
+                if (d >= curCat.dMin && d <= curCat.dMin*5) { pair=[a,b,d]; break; }
+            }
+            if(pair) { [A,B,trueDiff] = pair; pairFound = true; break; }
+        }
+    }
+    
+    if (!pairFound) { showAlert("Could not find a valid matchup.", 'bg-blue-600'); goHome(); return; }
+    
+    usedPlayerIDs.add(A.id); usedPlayerIDs.add(B.id);
+    matchHistory.push({ pA: A.id, pB: B.id, cat: catKey });
+
+    categoryHistory[catKey] = (categoryHistory[catKey] || 0) + 1; 
+    
+    let sA = A.stats[catKey], sB = B.stats[catKey];
+    if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { 
+        sA = Math.round(sA*1000); 
+        sB = Math.round(sB*1000); 
+    }
+    trueDiff = Math.abs(sA - sB);
+    
+    const isLowerBetter = !!BASE_CATS[catKey].lowerBetter;
+    correctPick = isLowerBetter ? (sA < sB ? 'A' : 'B') : (sA > sB ? 'A' : 'B');
+
+    dom.nameA.textContent = A.name; 
+    dom.nameB.textContent = B.name;
+
+    const poolMap = {
+        'all': 'All Players',
+        'allStars': 'All Stars',
+        'batters': 'Batters',
+        'pitchers': 'Pitchers'
+    };
+    dom.catLabel.textContent = poolMap[selectedMode] || 'Standard';
+    dom.catLabel.className = "text-xs font-bold text-gray-400 tracking-wide mt-1"; 
+
+    const catName = getCurrentCat(catKey).label; 
+    
+    if (isLowerBetter) {
+        dom.playerPrompt.innerHTML = `Whose <span class="text-blue-600 dark:text-blue-400 font-black">${catName}</span> is <span class="text-red-500 dark:text-purple-400">LOWER</span>?`;
+    } else {
+        dom.playerPrompt.innerHTML = `Whose <span class="text-blue-600 dark:text-blue-400 font-black">${catName}</span> is HIGHER?`;
+    }
+    
+    dom.playerPrompt.className = "text-center text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 mt-4";
+    
+    updateScoreColor(score);
+    
+    const curCat = getCurrentCat(catKey);
+    let limit = curCat.dMin;
+    let step = curCat.step; // NEW: Capture step here
+    
+    if (catKey === 'careerXBHRate') { 
+        numberLineSpan = curCat.dMin * 5 * 100; 
+        limit = limit * 100; 
+        step = step * 100; // NEW: Scale step from 0.001 to 0.1
+    } else {
+        const dMax = curCat.dMin * 5;
+        numberLineSpan = (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) ? dMax : dMax;
+    }
+    
+    initSlider(numberLineSpan, limit, step); // NEW: Pass the scaled step
+}
+    
+function startRoundSideBySide() {
+        // --- NEW LABEL LOGIC (MATCHING HOW MUCH MODE) ---
+        const poolMap = {
+            'all': 'All Players',
+            'allStars': 'All Stars',
+            'batters': 'Batters',
+            'pitchers': 'Pitchers'
+        };
+        dom.catLabel.textContent = poolMap[selectedMode] || 'Standard';
+        
+        // APPLIED SAME CLASSES AS HOW MUCH MODE:
+        dom.catLabel.className = "text-xs font-bold text-gray-400 tracking-wide mt-1"; 
+
+        dom.playerPrompt.textContent = ""; 
+        sbsPicks = new Array(10).fill(null);
+        
+        let targetType = 'hitter';
+        
+        if (challengeQueue.length > 0) {
+             const data = challengeQueue.shift();
+             if (data && data.pA && data.pB) {
+                 A = players.get(data.pA);
+                 B = players.get(data.pB);
+                 if (A) targetType = A.type; 
+             }
+        } else {
+            if(selectedMode === 'pitchers') targetType = 'pitcher'; 
+            else if(selectedMode === 'batters') targetType = 'hitter'; 
+            else targetType = Math.random() < 0.5 ? 'hitter' : 'pitcher'; 
+            
+            const pool = [];
+            players.forEach(p => {
+                 if(usedPlayerIDs.has(p.id)) return;
+                 if(!passesGlobal(p) || !eraPass(p) || p.type !== targetType || !p.stats) return;
+                 if(targetType === 'hitter' && p.stats.PA < 5000 && selectedMode !== 'allStars') return; 
+                 if(targetType === 'pitcher' && p.GS < 150 && selectedMode !== 'allStars') return; 
+                 pool.push(p);
+            });
+
+            if(pool.length < 2) { 
+                showAlert("Not enough players found for this filter. Try All Eras.", 'bg-red-500'); 
+                goHome(); 
+                return; 
+            }
+
+            let attempts = 0; 
+            let validPair = false;
+            
+            while (!validPair && attempts < 100) {
+                attempts++; 
+                let idxA = Math.floor(Math.random() * pool.length); 
+                let idxB = Math.floor(Math.random() * pool.length); 
+                while(idxA === idxB) idxB = Math.floor(Math.random() * pool.length);
+                
+                const pA = pool[idxA]; 
+                const pB = pool[idxB];
+                
+                const cats = targetType === 'hitter' ? SBS_CATS_BAT : SBS_CATS_PIT;
+                let winsA = 0; 
+                let winsB = 0;
+                
+                for (let i = 0; i < 10; i++) {
+                     if (i >= cats.length) break; 
+                     const cat = cats[i]; 
+                     let valA, valB;
+                     
+                     if (cat.key === 'seasons') { valA = pA.years.size; valB = pB.years.size; } 
+                     else if (cat.key === 'teams') { valA = pA.teams.size; valB = B.teams.size; } 
+                     else if (cat.key === 'careerW' && cat.label.includes('Highest Season')) { valA = pA.stats.seasonHighW; valB = pB.stats.seasonHighW; } 
+                     else { valA = pA.stats[cat.key]; valB = pB.stats[cat.key]; }
+                     
+                     if (valA === valB) continue; 
+                     let aBetter = valA > valB; 
+                     if (cat.lowerBetter) aBetter = valA < valB;
+                     if (aBetter) winsA++; else winsB++;
+                }
+                
+                if (winsA <= 8 && winsB <= 8) { A = pA; B = pB; validPair = true; }
+            }
+            
+            if (!validPair && !A) { 
+                let idxA = Math.floor(Math.random()*pool.length); 
+                let idxB = Math.floor(Math.random()*pool.length); 
+                while(idxA === idxB) idxB = Math.floor(Math.random()*pool.length); 
+                A = pool[idxA]; 
+                B = pool[idxB]; 
+            }
+        }
+        
+        if (!A || !B) {
+            showAlert("Error: Could not load players.", 'bg-red-500');
+            goHome();
+            return;
+        }
+
+        usedPlayerIDs.add(A.id); 
+        usedPlayerIDs.add(B.id);
+        matchHistory.push({ pA: A.id, pB: B.id, type: targetType }); 
+
+        dom.sbsNameA.textContent = A.name; 
+        dom.sbsNameB.textContent = B.name;
+        
+        renderSideBySideTable(targetType);
+    }
+
+    function renderSideBySideTable(type) {
+        dom.sbsContainer.innerHTML = '';
+        const cats = type === 'hitter' ? SBS_CATS_BAT : SBS_CATS_PIT;
+        
+        cats.forEach((cat, i) => {
+            if(i >= 10) return; 
+
+            const row = document.createElement('div');
+            row.className = 'sbs-grid';
+            row.innerHTML = `
+                <div class="sbs-row-label">${cat.label}</div>
+                <div class="sbs-cell" onclick="toggleSbsPick(${i}, 'A', this)">${A.name.split(' ').pop()}</div>
+                <div class="sbs-cell" onclick="toggleSbsPick(${i}, 'B', this)">${B.name.split(' ').pop()}</div>
+            `;
+            dom.sbsContainer.appendChild(row);
+        });
+        checkSbsLock();
+    }
+
+    // Global func for inline onclick
+    window.toggleSbsPick = function(rowIdx, player, el) {
+        if(dom.submitBtn.textContent !== "Lock In") return; 
+        
+        const parent = el.parentElement;
+        const cells = parent.querySelectorAll('.sbs-cell');
+        cells.forEach(c => c.classList.remove('selected'));
+        
+        if(sbsPicks[rowIdx] === player) {
+            sbsPicks[rowIdx] = null; // toggle off
+        } else {
+            el.classList.add('selected');
+            sbsPicks[rowIdx] = player;
+        }
+        checkSbsLock();
+    }
+
+    function checkSbsLock() {
+        const count = sbsPicks.filter(p => p).length;
+        dom.submitBtn.disabled = count < 10; // MUST have all 10
+    }
+
+    function submitSideBySide() {
+        dom.submitBtn.disabled = true; 
+        dom.rerollBtn.disabled = true; 
+        dom.submitBtn.textContent = "Revealing...";
+
+        let correctCount = 0;
+        const type = A.type === 'hitter' ? 'hitter' : 'pitcher';
+        const cats = type === 'hitter' ? SBS_CATS_BAT : SBS_CATS_PIT;
+        const rows = dom.sbsContainer.querySelectorAll('.sbs-grid');
+        
+        const oldScore = score;
+        const stepDelay = useAnimations ? 300 : 0; 
+
+        rows.forEach((row, i) => {
+             if(i >= 10) return;
+             
+             const cat = cats[i];
+             let valA, valB;
+             
+             if(cat.key === 'seasons') { valA = A.years.size; valB = B.years.size; }
+             else if(cat.key === 'teams') { valA = A.teams.size; valB = B.teams.size; } 
+             else if(cat.key === 'careerW' && cat.label.includes('Highest Season')) {
+                 valA = A.stats.seasonHighW; valB = B.stats.seasonHighW; 
+             } else {
+                 valA = A.stats[cat.key]; valB = B.stats[cat.key];
+             }
+
+             let winA = false, winB = false;
+             if(valA === valB) { winA = true; winB = true; } 
+             else if(cat.lowerBetter) {
+                 if(valA < valB) winA = true; else winB = true;
+             } else {
+                 if(valA > valB) winA = true; else winB = true;
+             }
+
+             const userPick = sbsPicks[i];
+             let userCorrect = false;
+             if(userPick === 'A' && winA) userCorrect = true;
+             if(userPick === 'B' && winB) userCorrect = true;
+             
+             if(userCorrect) correctCount++;
+
+             setTimeout(() => {
+                 const cells = row.querySelectorAll('.sbs-cell');
+                 const cellA = cells[0];
+                 const cellB = cells[1];
+                 
+                 const txtA = formatStat(valA, cat.key);
+                 const txtB = formatStat(valB, cat.key);
+                 
+                 cellA.textContent = txtA;
+                 cellB.textContent = txtB;
+                 
+                 cellA.classList.remove('selected');
+                 cellB.classList.remove('selected');
+
+                 if(winA) cellA.classList.add('correct', 'scale-105', 'transition-transform');
+                 else if(userPick === 'A') cellA.classList.add('incorrect'); 
+                 else cellA.classList.add('wrong');
+                 
+                 if(winB) cellB.classList.add('correct', 'scale-105', 'transition-transform');
+                 else if(userPick === 'B') cellB.classList.add('incorrect'); 
+                 else cellB.classList.add('wrong');
+                 
+                 setTimeout(() => {
+                     cellA.classList.remove('scale-105');
+                     cellB.classList.remove('scale-105');
+                 }, 200);
+
+             }, i * stepDelay); 
+        });
+
+        const finalDelay = (10 * stepDelay) + (useAnimations ? 200 : 0);
+        
+        setTimeout(() => {
+            dom.submitBtn.textContent = (round === 10) ? "Finish Game" : "Next Round";
+            
+            const scores = [0, 0, 0, 0, 0, 0, 100, 250, 450, 700, 1000];
+            let roundScore = scores[correctCount];
+            
+            // CHANGED: New Showdown Color Grading
+            let sbsEmoji = '🟥'; // 0-5
+            if(correctCount === 10) sbsEmoji = '💎';      
+            else if(correctCount === 9) sbsEmoji = '🟩';
+            else if(correctCount === 8) sbsEmoji = '🟧'; // Orange
+            else if(correctCount >= 6) sbsEmoji = '🟨';
+            
+            roundResults.push(sbsEmoji);
+            
+            const newScore = score + roundScore;
+            score = newScore;
+            
+            const crossedThreshold = [5000, 4000, 3000, 2000].some(t => oldScore < t && newScore >= t);
+            animateValue(dom.scoreDisp, oldScore, newScore, 1000, crossedThreshold);
+
+            dom.feedback.innerHTML = `<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">${correctCount}/10 Correct (+${roundScore})</div>`;
+            dom.sbsNameA.innerHTML = makeLink(A);
+            dom.sbsNameB.innerHTML = makeLink(B);
+            dom.submitBtn.disabled = false;
+            
+        }, finalDelay); 
+    }
+
+    function formatStat(v, k) {
+        // 1. Percentages (Tenths place)
+        if(k==='careerXBHRate') return (v*100).toFixed(1) + '%'; 
+
+        // 2. WHIP (3 Decimals) - NEW
+        if (k === 'careerWHIP') return v.toFixed(3);
+
+        // 3. Toggleable Stats (BA, OPS)
+        if (['careerBA','careerOPS','peakSeasonOPS'].includes(k)) {
+            if (useWholeNumbers) return Math.round(v * 1000);
+            return v.toFixed(3);
+        }
+
+        // 4. Fixed Decimals (ERA, K/BB)
+        if (['careerERA','bestSeasonERA','careerKBB'].includes(k)) {
+            return v.toFixed(2);
+        }
+
+        // 5. One Decimal (WAR)
+        if (['careerWARBat','careerWARPit'].includes(k)) {
+            return v.toFixed(1);
+        }
+
+        // 6. Standard Integers
+        return Math.round(v).toLocaleString();
+    }
+    
+    function makeLink(p) {
+        if(!p.bbrefID) return p.name;
+        return `<a href="https://www.baseball-reference.com/players/${p.bbrefID[0]}/${p.bbrefID}.shtml" target="_blank" class="text-inherit no-underline cursor-pointer relative z-20 hover:opacity-75 transition-opacity">${p.name}</a>`;
+    }
+
+    function updateState() {
+        const mi=parseFloat(dom.minInput.value), ma=parseFloat(dom.maxInput.value);
+        let low=mi, high=ma;
+        
+        if (catKey==='careerXBHRate') { low=mi/100; high=ma/100; }
+        
+        const ok = Number.isFinite(low) && Number.isFinite(high) && high>=low && versusPick;
+        dom.submitBtn.disabled = !ok;
+
+        if(!ok) { dom.rangeEl.style.display='none'; dom.bullEl.style.display='none'; return; }
+
+        const visStart = Math.max(0, (catKey==='careerXBHRate') ? mi : low);
+        const visEnd = Math.min(numberLineSpan, (catKey==='careerXBHRate') ? ma : high);
+        const span = numberLineSpan>0?numberLineSpan:1;
+
+        dom.rangeEl.style.display = 'block';
+        dom.rangeEl.style.left = (visStart/span*100)+'%';
+        dom.rangeEl.style.width = ((visEnd-visStart)/span*100)+'%';
+
+        const bw = getCurrentBull(catKey) || 0;
+        const mid = (low+high)/2;
+        let bL = Math.max(0, mid - bw/2), bR = Math.min(numberLineSpan, mid + bw/2);
+        let vBL = bL, vBR = bR;
+        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { }
+        
+        else if (catKey==='careerXBHRate') { vBL = bL*100; vBR = bR*100; }
+
+        dom.bullEl.style.display = 'block';
+        dom.bullEl.style.left = (vBL/span*100)+'%';
+        dom.bullEl.style.width = ((vBR-vBL)/span*100)+'%';
+    }
+        
+    function nextRound() {
+        if(round>=10) {
+            dom.gameScreen.classList.add('hidden');
+            dom.overScreen.classList.remove('hidden');
+            dom.overScreen.classList.add('flex');
+            document.getElementById('final-score').textContent = score;
+            const emoji = document.getElementById('ribbon-emoji');
+            const txt = document.getElementById('ribbon-text');
+            
+            if(score>=5000){ emoji.textContent='🏆'; txt.textContent='Platinum Trophy! Legendary!'; txt.className='text-lg score-platinum font-bold'; } 
+            else if(score>=4000){ emoji.textContent='🥇'; txt.textContent='Gold Medal! All-Time Great!'; txt.className='text-lg score-gold font-bold'; }
+            else if(score>=3000){ emoji.textContent='🥈'; txt.textContent='Silver Medal! All-Star Performance!'; txt.className='text-lg score-silver font-bold'; }
+            else if(score>=2000){ emoji.textContent='🥉'; txt.textContent='Bronze Medal! Solid Season.'; txt.className='text-lg score-bronze font-bold'; }
+            else { emoji.textContent='🧢'; txt.textContent='Back to the minors...'; txt.className='text-lg text-gray-500 font-bold'; }
+            
+            dom.rerollBtn.classList.add('hidden');
+            
+            // Check High Score
+            checkHighScoreTrigger();
+        } else {
+            round++;
+            dom.rerollBtn.disabled = hasUsedReroll; 
+            startRound();
+        }
+    }
+
+function updateDeadZoneUI() {
+    if(deadZoneEnabled) {
+        dom.deadZoneInd.textContent = "ON";
+        dom.deadZoneInd.className = "text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded";
+    } else {
+        dom.deadZoneInd.textContent = "OFF";
+        dom.deadZoneInd.className = "text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded";
+    }
+}
+
+    // --- SUPABASE LEADERBOARD LOGIC ---
+    
+    let cachedLeaderboard = [];
+
+    async function fetchLeaderboard() {
+        try {
+            let query = supabase
+                .from('leaderboard')
+                .select('*')
+                .order('score', { ascending: false })
+                .limit(50); 
+
+            // Apply Filters
+            const fMode = dom.lbFilterMode.value;
+            const fPool = dom.lbFilterPool.value;
+            const fDate = dom.lbFilterDate.value;
+
+            if (fMode !== 'all') query = query.eq('game_mode', fMode);
+            
+            // Mapping "Standard" pool option to 'all' in DB
+            if (fPool !== 'all_pools') {
+                query = query.eq('player_pool', fPool);
+            }
+
+            if (fDate === 'today') {
+                query = query.eq('date', new Date().toLocaleDateString());
+            } else if (fDate !== 'all_time') {
+                // Specific past date
+                query = query.eq('date', fDate);
+            }
+
+            const { data, error } = await query;
+                
+            if (error) throw error;
+            cachedLeaderboard = data || [];
+            return cachedLeaderboard;
+        } catch (e) {
+            console.error("Error fetching leaderboard:", e);
+            return [];
+        }
+    }
+
+    async function renderLeaderboard(highlightNew = false, newName = null, newScore = null) {
+        dom.leaderboardBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">Loading...</td></tr>';
+        
+        const lb = await fetchLeaderboard();
+        const tbody = dom.leaderboardBody;
+        tbody.innerHTML = '';
+        
+        if (lb.length === 0) {
+            dom.emptyLeaderboardMsg.classList.remove('hidden');
+        } else {
+            dom.emptyLeaderboardMsg.classList.add('hidden');
+            
+            // Only show top 10 AFTER filtering
+            const top10 = lb.slice(0, 10);
+            
+            top10.forEach((entry, i) => {
+                const tr = document.createElement('tr');
+                const isMatch = highlightNew && entry.name === newName && entry.score === newScore;
+                tr.className = `leaderboard-row border-b border-gray-100 dark:border-gray-800 ${isMatch ? 'leaderboard-new' : ''}`;
+                
+                let rankStr = '';
+                if(i===0) rankStr = '🥇';
+                else if(i===1) rankStr = '🥈';
+                else if(i===2) rankStr = '🥉';
+                else rankStr = (i+1)+'.';
+                
+                // Wider Name Column, No Date Column
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-center font-bold w-12 text-gray-500">${rankStr}</td>
+                    <td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">${entry.score}</td>
+                    <td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">${entry.name}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+    
+    async function isHighScore(s) {
+        if (s === 0) return false;
+        const lb = await fetchLeaderboard();
+        if (lb.length < 10) return true;
+        return s > lb[lb.length-1].score;
+    }
+    
+    async function saveHighScore() {
+        const name = dom.nameInput.value.trim() || "Anonymous";
+        
+        dom.saveScoreBtn.textContent = "Saving...";
+        dom.saveScoreBtn.disabled = true;
+
+        const entry = {
+            name: name,
+            score: score,
+            date: new Date().toLocaleDateString(),
+            game_mode: gameMode,       // Now saving "howMuch" or "sideBySide"
+            player_pool: selectedMode  // Now saving "all", "batters", etc.
+        };
+        
+        try {
+            const { error } = await supabase.from('leaderboard').insert([entry]);
+            if (error) throw error;
+            await fetchLeaderboard();
+            renderLeaderboard(true, name, score); 
+            dom.leaderboardModal.classList.remove('hidden');
+            dom.hsContainer.classList.add('hidden');
+        } catch (e) {
+            alert("Error saving score. Please try again.");
+            console.error(e);
+            dom.saveScoreBtn.disabled = false;
+            dom.saveScoreBtn.textContent = "Save to Leaderboard";
+        }
+    }
+    
+    async function checkHighScoreTrigger() {
+        const isHigh = await isHighScore(score);
+        if(isHigh) {
+            dom.hsContainer.classList.remove('hidden');
+            dom.saveScoreBtn.disabled = false;
+            dom.saveScoreBtn.textContent = "Save to Leaderboard";
+        } else {
+            dom.hsContainer.classList.add('hidden');
+        }
+    }
+
+    function renderTicks() {
+        dom.labelsEl.innerHTML='';
+        const N=5; 
+        const isPct = catKey==='careerXBHRate';
+        const isInt = (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKey)) || ['careerHR','careerW','careerSB','seasonHighHR','seasonHighK','seasonHighKBat','seasonHighSB','careerIP'].includes(catKey);
+        
+        for(let i=0;i<=N;i++){
+            const v = numberLineSpan * (i/N);
+            const s = document.createElement('span');
+            s.className = 'tick-label text-gray-600 dark:text-gray-400 font-bold'; 
+            s.style.left = (i/N*100)+'%';
+            
+            if (isPct) s.textContent = Math.round(v) + '%'; 
+            else if (isInt) s.textContent = Math.round(v);
+            
+            else if (['careerWARBat','careerWARPit'].includes(catKey)) s.textContent = Math.round(v);
+            
+            else if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) s.textContent = v.toFixed(3);
+            else if (['careerERA','bestSeasonERA','careerKBB'].includes(catKey)) s.textContent = v.toFixed(2);
+            else if (['careerWARBat','careerWARPit'].includes(catKey)) s.textContent = v.toFixed(1);
+            else s.textContent = v.toFixed(1);
+            
+            dom.labelsEl.appendChild(s);
+        }
+    }
+    
+    function loadAll(cb){
+        let d = 0; const totalFiles = 7;
+        const safeNext = () => { d++; if(d === totalFiles) cb(); };
+
+        const p = (f, c) => {
+            Papa.parse(f, {
+                download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+                complete: (r) => { 
+                    try { if(r.data && r.data.length) c(r.data); } 
+                    catch(e) { console.warn(f, e); } 
+                    finally { safeNext(); } 
+                },
+                error: () => safeNext()
+            });
+        };
+        
+        p('People.csv', d => window._people = d); 
+        p('Batting.csv', d => window._bat = d); 
+        p('Pitching.csv', d => window._pit = d);
+        p('Batting_2025.csv', d => window._bat25 = d); 
+        p('Pitching_2025.csv', d => window._pit25 = d); 
+        
+        const loadWar = (data, map, type) => {
+            if(!data || !data[0]) return;
+            try {
+                const keys = Object.keys(data[0]);
+                const idKey = keys.find(k=>k.toLowerCase().includes('id'));
+                const warKey = keys.find(k=>k.toLowerCase().includes('war'));
+                if(idKey && warKey){
+                    let count = 0;
+                    data.forEach(r => {
+                        const id = (r[idKey]||'').toString().trim();
+                        const val = Number(r[warKey]);
+                        if(id && !isNaN(val)) { map.set(id, val); count++; }
+                    });
+                    if(count > 0) warLoaded[type] = true;
+                }
+            } catch(e){}
+        };
+
+        p('career_war_bat.csv', d => loadWar(d, warBatMap, 'bat'));
+        p('career_war_pit.csv', d => loadWar(d, warPitMap, 'pit'));
+    }
+
+    function buildAgg(){
+        // 1. Process People (Historical)
+        if(window._people) {
+            for(const r of window._people){ 
+                if(!r.playerID) continue; 
+                const p=P(r.playerID); 
+                p.name=(r.nameFirst&&r.nameLast)?`${r.nameFirst} ${r.nameLast}`:r.playerID; 
+                p.bbrefID = (r.bbrefID || '').toString().trim(); 
+            }
+        }
+        
+        const isValidRow = (r) => r.teamID !== 'TOT';
+
+        // 2. Process Historical Batting
+        if(window._bat) {
+            for(const r of window._bat){ 
+                if(!isValidRow(r)) continue; 
+                const p=P(r.playerID); if(!p)continue; 
+                p.AB+=r.AB||0; p.H+=r.H||0; p.BB+=r.BB||0; p.HBP+=r.HBP||0; p.SF+=r.SF||0; p.HR+=r.HR||0; p.RBI+=r.RBI||0; 
+                p._2B+=r['2B']||0; p._3B+=r['3B']||0; p.SB+=r.SB||0; 
+                if(r.yearID){ 
+                    p.years.add(r.yearID); 
+                    p.decades.add(Math.floor(r.yearID/10)*10); 
+                    if(!batSeasons.has(p.id))batSeasons.set(p.id,[]); 
+                    batSeasons.get(p.id).push(r); 
+                    if(r.teamID) p.teams.add(r.teamID);
+                } 
+            }
+        }
+        
+        // 3. Process Historical Pitching
+        if(window._pit) {
+            for(const r of window._pit){ 
+                if(!isValidRow(r)) continue; 
+                const p=P(r.playerID); if(!p)continue; 
+                p.W+=r.W||0; p.G+=r.G||0; p.GS+=r.GS||0; p.ER+=r.ER||0; p.IPouts+=r.IPouts||0; 
+                p.pitchSO=(p.pitchSO||0)+(r.SO||0); p.pitchBB=(p.pitchBB||0)+(r.BB||0); 
+                p.pitchH=(p.pitchH||0)+(r.H||0); 
+                if(r.yearID){ 
+                    p.years.add(r.yearID); 
+                    p.decades.add(Math.floor(r.yearID/10)*10); 
+                    if(!pitSeasons.has(p.id))pitSeasons.set(p.id,[]); 
+                    pitSeasons.get(p.id).push(r); 
+                    if(r.teamID) p.teams.add(r.teamID);
+                } 
+            }
+        }
+
+        // 4. Process 2025 Batting
+        if(window._bat25) {
+            for(const r of window._bat25) {
+                const id = r['Player-additional'];
+                if(!id) continue;
+                if(r.Team && r.Team.includes('TM')) continue;
+
+                const p = P(id);
+                if(!p.name || p.name === id) p.name = r.Player.replace(/[*#]/g, '');
+                
+                p.AB += r.AB||0; p.H += r.H||0; p.BB += r.BB||0; p.HBP += r.HBP||0; p.SF += r.SF||0; p.HR += r.HR||0; p.RBI += r.RBI||0;
+                p._2B += r['2B']||0; p._3B += r['3B']||0; p.SB += r.SB||0;
+                
+                p.years.add(2025); p.decades.add(2020);
+                if(r.Team) p.teams.add(r.Team);
+
+                const seasonObj = {
+                    yearID: 2025, AB: r.AB, H: r.H, BB: r.BB, HBP: r.HBP, SF: r.SF, HR: r.HR,
+                    '2B': r['2B'], '3B': r['3B'], SB: r.SB, SO: r.SO
+                };
+                if(!batSeasons.has(id)) batSeasons.set(id, []);
+                batSeasons.get(id).push(seasonObj);
+            }
+        }
+
+        // 5. Process 2025 Pitching
+        if(window._pit25) {
+            for(const r of window._pit25) {
+                const id = r['Player-additional'];
+                if(!id) continue;
+                if(r.Team && r.Team.includes('TM')) continue;
+
+                const p = P(id);
+                if(!p.name || p.name === id) p.name = r.Player.replace(/[*#]/g, '');
+
+                const rawIP = r.IP || 0;
+                const ipOuts = Math.floor(rawIP) * 3 + Math.round((rawIP % 1) * 10);
+
+                p.W += r.W||0; p.G += r.G||0; p.GS += r.GS||0; p.ER += r.ER||0; p.IPouts += ipOuts;
+                p.pitchSO += r.SO||0; p.pitchBB += r.BB||0; p.pitchH += r.H||0;
+
+                p.years.add(2025); p.decades.add(2020);
+                if(r.Team) p.teams.add(r.Team);
+
+                const seasonObj = {
+                    yearID: 2025, SO: r.SO, ER: r.ER, IPouts: ipOuts, W: r.W, HR: r.HR // Added HR tracking
+                };
+                if(!pitSeasons.has(id)) pitSeasons.set(id, []);
+                pitSeasons.get(id).push(seasonObj);
+            }
+        }
+        
+        // 6. Calculate Final Stats (Aggregated)
+        for(const p of players.values()){
+            const IP=p.IPouts/3, PA=p.AB+p.BB+p.HBP+p.SF;
+            let sHR=0, sK=0, bERA=0, peakOPS=0, sSB=0, sKBat=0, sW=0, sHRPit=0;
+            
+            // Aggregate Batting Seasons
+            if(batSeasons.has(p.id)) {
+                const aggBat = {}; 
+                batSeasons.get(p.id).forEach(y => {
+                    const yr = y.yearID;
+                    if(!aggBat[yr]) aggBat[yr] = { AB:0, H:0, BB:0, HBP:0, SF:0, HR:0, _2B:0, _3B:0, SB:0, SO:0 };
+                    aggBat[yr].AB += y.AB||0; aggBat[yr].H += y.H||0; aggBat[yr].BB += y.BB||0;
+                    aggBat[yr].HBP += y.HBP||0; aggBat[yr].SF += y.SF||0; aggBat[yr].HR += y.HR||0;
+                    aggBat[yr]._2B += y['2B']||0; aggBat[yr]._3B += y['3B']||0; aggBat[yr].SB += y.SB||0;
+                    aggBat[yr].SO += y.SO||0;
+                });
+
+                for (const yr in aggBat) {
+                    const d = aggBat[yr];
+                    if(d.HR > sHR) sHR = d.HR;
+                    if(d.SB > sSB) sSB = d.SB;
+                    
+                    // UPDATED: Check Max K regardless of PA (Global Gate applied later)
+                    if(d.SO > sKBat) sKBat = d.SO; 
+
+                    const yPA = d.AB + d.BB + d.HBP + d.SF;
+                    // Eligibility for Peak OPS remains PA >= 400
+                    if(yPA >= 400) {
+                         const obp = (d.H + d.BB + d.HBP) / yPA;
+                         const slg = ((d.H - d._2B - d._3B - d.HR) + (2*d._2B) + (3*d._3B) + (4*d.HR)) / (d.AB || 1);
+                         if(obp + slg > peakOPS) peakOPS = obp + slg;
+                    }
+                }
+            }
+
+            // Aggregate Pitching Seasons
+            if(pitSeasons.has(p.id)) {
+                const aggPit = {}; 
+                pitSeasons.get(p.id).forEach(y => {
+                    const yr = y.yearID;
+                    if(!aggPit[yr]) aggPit[yr] = { SO:0, ER:0, IPouts:0, W:0, HR:0 }; 
+                    aggPit[yr].SO += y.SO||0;
+                    aggPit[yr].ER += y.ER||0;
+                    aggPit[yr].IPouts += y.IPouts||0;
+                    aggPit[yr].W += y.W||0;
+                    aggPit[yr].HR += y.HR||0; 
+                });
+
+                for (const yr in aggPit) {
+                    const d = aggPit[yr];
+                    if(d.SO > sK) sK = d.SO;
+                    if(d.W > sW) sW = d.W;
+                    if(d.HR > sHRPit) sHRPit = d.HR; 
+                    
+                    const yIP = d.IPouts / 3;
+                    // UPDATED: Changed from 130 to 100 IP
+                    if(yIP >= 100) {
+                        const e = (d.ER * 9) / yIP;
+                        if(bERA === 0 || e < bERA) bERA = e;
+                    }
+                }
+            }
+
+            const warBat = warBatMap.get(p.bbrefID) || warBatMap.get(p.id) || 0;
+            const warPit = warPitMap.get(p.bbrefID) || warPitMap.get(p.id) || 0;
+            const whip = IP > 0 ? (p.pitchBB + (p.pitchH||0)) / IP : 0;
+
+            p.stats={
+                careerHR:p.HR, careerBA:p.AB>0?p.H/p.AB:0, careerOPS:(p.AB+p.BB+p.HBP+p.SF>0?(p.H+p.BB+p.HBP)/(p.AB+p.BB+p.HBP+p.SF):0)+(p.AB>0?((p.H-p._2B-p._3B-p.HR)+2*p._2B+3*p._3B+4*p.HR)/p.AB:0),
+                careerW:p.W, careerERA:IP>0?p.ER*9/IP:0, PA, IP, careerSB:p.SB, 
+                seasonHighHR:sHR, seasonHighK:sK, bestSeasonERA:bERA, peakSeasonOPS:peakOPS,
+                seasonHighSB:sSB, seasonHighKBat:sKBat, seasonHighW:sW, seasonHighHRPit:sHRPit,
+                careerKBB:(p.pitchBB>0?p.pitchSO/p.pitchBB:0), careerXBHRate:p.H>0?(p._2B+p._3B+p.HR)/p.H:0, careerIP:IP,
+                careerWARBat: warBat, 
+                careerWARPit: warPit + warBat,
+                careerBB: p.BB,
+                careerWHIP: whip,
+                careerH: p.H,
+                careerRBI: p.RBI,
+                careerSO: p.pitchSO
+            };
+            p.type = (IP + p.W*3 + p.GS*2) > (PA + p.HR*10 + p.AB) ? 'pitcher' : 'hitter';
+        }
+    }
+
+    function passesGlobal(p){ 
+        // 1. If in All-Star Mode, use WAR as the only gate
+        if (selectedMode === 'allStars') {
+            if (p.type === 'hitter') return p.stats.careerWARBat >= 20;
+            if (p.type === 'pitcher') return p.stats.careerWARPit >= 20;
+        }
+
+        // 2. For all other modes, use the standard longevity gates
+        if (p.type === 'hitter') return p.stats.PA >= 5000;
+        
+        // SIDE BY SIDE STICTER RULE FOR PITCHERS IN REGULAR MODE
+        if (gameMode === 'sideBySide' && p.type === 'pitcher') {
+            return p.GS >= 150; 
+        }
+
+        return p.GS >= 150 || p.G >= 500; 
+    }
+    function rolePass(p){ return selectedMode==='all' || selectedMode==='allStars' || (selectedMode==='batters'&&p.type==='hitter') || (selectedMode==='pitchers'&&p.type==='pitcher'); }
+    function eraPass(p){ 
+        if(eraMode==='allEras')return true; 
+        if(eraMode==='modern'){ return [1970,1980,1990,2000,2010,2020].some(d=>p.decades.has(d)); }
+        return p.decades.has(selectedDecade);
+    }
+    
+    // --- PICK 'EM MODE LOGIC ---
+    let pickEmState = {
+        threshold: 0,
+        correctIDs: new Set(),
+        picksMade: 0,
+        totalRoundPts: 0,
+        lastVal: null,
+        chainActive: true
+    };
+
+    function startRoundPickEm(retryCount = 0) {
+        // Reset State
+        pickEmState = { threshold: 0, correctIDs: new Set(), picksMade: 0, totalRoundPts: 0, lastVal: null, chainActive: true, chainCount: 0, roundOver: false };
+        
+        // UI Setup
+        dom.submitBtn.classList.add('hidden'); 
+        dom.nextBtn.classList.remove('hidden');
+        dom.nextBtn.disabled = true;
+        dom.nextBtn.textContent = (round === 10) ? "Finish Game" : "Next Round";
+
+        if (!hasUsedReroll) {
+            dom.rerollBtn.className = "p-2 rounded-full transition text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400";
+            dom.rerollBtn.disabled = false;
+        }
+
+        // 1. Select Category & Challenge Logic
+        let gridPlayers = [];
+        let targetSubRole = 'all';
+
+        // --- PATH A: CHALLENGE (Replay) ---
+        if (challengeQueue.length > 0) {
+            const data = challengeQueue.shift();
+            catKey = data.cat;
+            pickEmState.threshold = data.thresh;
+            targetSubRole = data.subRole || 'all';
+            
+            gridPlayers = data.ids.map(id => players.get(String(id))).filter(p => p); 
+            
+            const catConfig = BASE_CATS[catKey];
+            gridPlayers.forEach(p => {
+                let val = p.stats[catKey];
+                if (catKey === 'teams') val = p.teams.size;
+                if (catKey === 'seasons') val = p.years.size;
+                if (catKey === 'careerSO') val = p.stats.careerSO;
+                if (catKey === 'careerRBI') val = p.stats.careerRBI;
+                
+                let isCorrect = catConfig.lowerBetter ? (val <= pickEmState.threshold) : (val >= pickEmState.threshold);
+                if (isCorrect) pickEmState.correctIDs.add(p.id);
+            });
+        } 
+        // --- PATH B: NEW RANDOM ROUND ---
+        else {
+            let validCats = Object.keys(BASE_CATS).filter(k => BASE_CATS[k].thresholds);
+            
+            // POOL FILTERING
+            if (selectedMode === 'batters') {
+                validCats = validCats.filter(k => BASE_CATS[k].type === 'hitter' || BASE_CATS[k].type === 'both');
+            } else if (selectedMode === 'pitchers') {
+                validCats = validCats.filter(k => BASE_CATS[k].type === 'pitcher' || BASE_CATS[k].type === 'both');
+            }
+
+            const unusedCats = validCats.filter(k => !categoryHistory[k]);
+            if (unusedCats.length > 0) validCats = unusedCats;
+
+            catKey = validCats[Math.floor(Math.random() * validCats.length)];
+            categoryHistory[catKey] = (categoryHistory[catKey] || 0) + 1;
+
+            const catConfig = BASE_CATS[catKey];
+            
+            // 2. Determine Threshold (UPDATED LOGIC)
+            let availableThresh = catConfig.thresholds;
+            
+            // Since thresholds are sorted Easy -> Hard in config (even for ERA, where lower is harder/better):
+            if (selectedMode === 'allStars') {
+                // ALL STARS: Pick from only the BEST 2 values (The end of the array)
+                if (availableThresh.length >= 2) {
+                    availableThresh = availableThresh.slice(-2);
+                }
+            } else {
+                // STANDARD POOLS: Pick from ALL EXCEPT the BEST value
+                // (Remove the single hardest option to keep it accessible)
+                if (availableThresh.length > 1) {
+                    availableThresh = availableThresh.slice(0, -1);
+                }
+            }
+            
+            const threshVal = availableThresh[Math.floor(Math.random() * availableThresh.length)];
+            pickEmState.threshold = threshVal;
+
+            // 3. Determine Pitcher Sub-Role
+            if (catConfig.type === 'hitter') {
+                targetSubRole = 'all'; 
+            } else if (catConfig.type === 'pitcher') {
+                const isStarter = Math.random() < 0.75; 
+                targetSubRole = isStarter ? 'starter' : 'reliever';
+            }
+
+            // 4. Difficulty Curve
+            let numCorrect;
+            if (round <= 3) numCorrect = 7;
+            else if (round <= 6) numCorrect = 6;
+            else numCorrect = 5;
+            let numIncorrect = 10 - numCorrect;
+
+            // 5. Generate Pool
+            const correctPool = [];
+            const distractorPool = [];
+            
+            let buffer = threshVal * catConfig.tolerance;
+            if (catConfig.minBuffer) buffer = Math.max(buffer, catConfig.minBuffer);
+            
+            let goodMin, goodMax, badMin, badMax;
+
+            if (catConfig.lowerBetter) {
+                goodMax = threshVal;
+                goodMin = Math.max(0, threshVal - buffer);
+                badMin = threshVal + 0.0001;
+                badMax = threshVal + buffer;
+            } else {
+                goodMin = threshVal;
+                goodMax = threshVal + buffer; 
+                badMax = threshVal - (catConfig.step || 0.01); 
+                badMin = threshVal - buffer;
+            }
+
+            players.forEach(p => {
+                if (usedPlayerIDs.has(p.id)) return;
+                if (!eraPass(p)) return; 
+                if (!p.stats) return;
+
+                // --- GLOBAL GATE ---
+                if (p.type === 'hitter') {
+                    if (p.stats.PA < 3000) return;
+                }
+                if (p.type === 'pitcher') {
+                    if (p.GS < 150 && p.G < 500) return;
+                }
+
+                // --- POOL / ROLE FILTERING ---
+                if (selectedMode === 'batters' && p.type !== 'hitter') return;
+                if (selectedMode === 'pitchers' && p.type !== 'pitcher') return;
+
+                if (catConfig.type === 'hitter' && p.type !== 'hitter') return;
+                if (catConfig.type === 'pitcher') {
+                    if (p.type !== 'pitcher') return;
+                    if (targetSubRole === 'starter' && p.GS < 150) return;
+                    if (targetSubRole === 'reliever' && (p.G < 500 || p.GS >= 150)) return;
+                }
+
+                // --- SEASON GATES ---
+                if (['peakSeasonOPS'].includes(catKey)) {
+                    if (!p.stats[catKey] || p.stats[catKey] <= 0) return;
+                }
+                if (catKey === 'bestSeasonERA') {
+                    if (!p.stats.bestSeasonERA || p.stats.bestSeasonERA <= 0) return;
+                }
+                
+                let val;
+                if (catKey === 'careerSO') val = p.stats.careerSO; 
+                else if (catKey === 'careerRBI') val = p.stats.careerRBI;
+                else if (catKey === 'teams') val = p.teams.size;
+                else if (catKey === 'seasons') val = p.years.size;
+                else val = p.stats[catKey];
+                
+                if (val === undefined || isNaN(val)) return;
+
+                if (val >= goodMin && val <= goodMax) correctPool.push(p);
+                else if (val >= badMin && val <= badMax) distractorPool.push(p);
+            });
+
+            if (correctPool.length < numCorrect || distractorPool.length < numIncorrect) {
+                if (retryCount > 20) {
+                    showAlert("Error finding valid Pick 'Em matchup.", "bg-red-500");
+                    goHome();
+                    return;
+                }
+                delete categoryHistory[catKey]; 
+                return startRoundPickEm(retryCount + 1);
+            }
+
+            const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+            const selectedCorrect = shuffle(correctPool).slice(0, numCorrect);
+            const selectedDistractors = shuffle(distractorPool).slice(0, numIncorrect);
+            
+            selectedCorrect.forEach(p => pickEmState.correctIDs.add(p.id));
+            gridPlayers = shuffle([...selectedCorrect, ...selectedDistractors]);
+
+            // Save History
+            matchHistory.push({
+                cat: catKey,
+                thresh: threshVal,
+                subRole: targetSubRole,
+                ids: gridPlayers.map(p => p.id)
+            });
+        }
+
+        // --- RENDER UI ---
+        const catConfig = BASE_CATS[catKey];
+        const threshVal = pickEmState.threshold;
+
+        let headerText = 'All Players';
+        if (catConfig.type === 'hitter') headerText = 'Batters';
+        else if (catConfig.type === 'pitcher') headerText = (targetSubRole === 'starter') ? 'Starters' : 'Relievers';
+        
+        if (selectedMode === 'allStars') headerText = 'All Stars (' + headerText + ')';
+
+        dom.catLabel.textContent = headerText;
+        dom.catLabel.className = "text-xs font-bold text-gray-400 tracking-wide mt-1"; 
+
+        const op = catConfig.lowerBetter ? "≤" : "≥";
+        let displayThresh;
+        if (catKey === 'careerXBHRate') displayThresh = (threshVal*100).toFixed(0) + '%';
+        else if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+             displayThresh = useWholeNumbers ? Math.round(threshVal*1000) : threshVal.toFixed(3);
+        } else if (['careerERA','careerWHIP','bestSeasonERA','careerKBB'].includes(catKey)) {
+             displayThresh = threshVal.toFixed(2);
+        } else {
+             displayThresh = Math.round(threshVal).toLocaleString();
+        }
+        
+        const promptContainer = document.getElementById('pickem-prompt-container');
+        if(promptContainer) {
+            promptContainer.innerHTML = `Whose <span class="text-blue-600 dark:text-blue-400 font-black">${catConfig.label}</span> is <span class="text-gray-900 dark:text-white" id="pickem-thresh-val">${op} ${displayThresh}</span>?`;
+        }
+
+        const grid = document.getElementById('pickem-grid');
+        grid.innerHTML = '';
+        
+        // Ensure grid is clickable
+        grid.classList.remove('pointer-events-none');
+
+        gridPlayers.forEach(p => {
+            const card = document.createElement('div');
+            card.className = "bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border-2 border-transparent cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex flex-col items-center justify-center h-16 relative active:scale-95";
+            
+            card.innerHTML = `
+                <div class="pickem-name text-sm sm:text-base font-black leading-tight text-center pointer-events-none">${p.name}</div>
+                <div class="stat-val text-xs font-black mt-0.5 hidden pointer-events-none"></div>
+                <div class="base-pts-tag absolute bottom-1 left-1 text-[9px] font-black text-green-600 dark:text-green-400 hidden pointer-events-none"></div>
+                <div class="bonus-tag absolute bottom-1 right-1 text-[9px] font-black text-amber-500 hidden pointer-events-none"></div>
+            `;
+            
+            card.onclick = () => handlePickEm(p, card);
+            
+            let val = p.stats[catKey];
+            if(catKey === 'teams') val = p.teams.size;
+            if(catKey === 'seasons') val = p.years.size;
+            if(catKey === 'careerSO') val = p.stats.careerSO;
+            if(catKey === 'careerRBI') val = p.stats.careerRBI;
+
+            card.dataset.id = p.id;
+            card.dataset.val = val;
+            
+            grid.appendChild(card);
+        });
+    }
+
+    function handlePickEm(p, card) {
+        if (pickEmState.roundOver || card.classList.contains('revealed') || !dom.nextBtn.disabled) return;
+        
+        const val = parseFloat(card.dataset.val);
+        const isCorrect = pickEmState.correctIDs.has(p.id);
+        const valEl = card.querySelector('.stat-val');
+        
+        if (pickEmState.picksMade === 0) {
+             dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+             dom.rerollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+             dom.rerollBtn.disabled = true;
+        }
+
+        card.classList.add('revealed', 'border-2');
+        card.classList.remove('bg-white', 'dark:bg-gray-800', 'hover:bg-gray-50', 'dark:hover:bg-gray-700'); 
+
+        valEl.textContent = formatStat(val, catKey);
+        valEl.classList.remove('hidden');
+        
+        const styleGreen = ['bg-green-100', 'dark:bg-green-900/40', 'border-green-600', 'dark:border-green-500', 'text-green-800', 'dark:text-green-300'];
+        const styleRed = ['bg-red-100', 'dark:bg-red-900/40', 'border-red-500', 'dark:border-red-500', 'text-red-800', 'dark:text-red-300'];
+
+        if (isCorrect) {
+            // CORRECT
+            card.classList.add(...styleGreen);
+            pickEmState.picksMade++;
+            
+            // 1. Base Points (+100)
+            let pts = 100;
+            const baseTag = card.querySelector('.base-pts-tag');
+            baseTag.textContent = `+100`;
+            baseTag.classList.remove('hidden');
+            
+            // FIX: Only animate if enabled
+            if (useAnimations) baseTag.classList.add('animate-text-pop');
+
+            // 2. Chain Bonus (+50, +100...)
+            if (pickEmState.chainActive && pickEmState.lastVal !== null) {
+                const distCurrent = Math.abs(val - pickEmState.threshold);
+                const distLast = Math.abs(pickEmState.lastVal - pickEmState.threshold);
+                
+                if (distCurrent <= distLast) { 
+                    pickEmState.chainCount = (pickEmState.chainCount || 0) + 1;
+                    const bonusVal = pickEmState.chainCount * 50; 
+                    pts += bonusVal;
+                    
+                    const bonusEl = card.querySelector('.bonus-tag');
+                    bonusEl.textContent = `+${bonusVal}`;
+                    bonusEl.classList.remove('hidden');
+                    
+                    // FIX: Only animate if enabled
+                    if (useAnimations) bonusEl.classList.add('animate-text-pop');
+                } else {
+                    pickEmState.chainActive = false;
+                }
+            }
+            
+            pickEmState.totalRoundPts += pts;
+            pickEmState.lastVal = val;
+            
+            const oldScore = score;
+            const newScore = score + pts;
+            score = newScore;
+            
+            const crossedThreshold = [2000, 3000, 4000, 5000].some(t => oldScore < t && newScore >= t);
+            animateValue(dom.scoreDisp, oldScore, newScore, 500, crossedThreshold);
+
+            if (pickEmState.picksMade >= 5) endPickEmRound(true);
+            
+        } else {
+            // INCORRECT
+            card.classList.add(...styleRed);
+            endPickEmRound(false);
+        }
+    }
+
+    function endPickEmRound(won) {
+        // 1. LOCK ROUND STATE
+        pickEmState.roundOver = true;
+        
+        const grid = document.getElementById('pickem-grid');
+        // Lock UI immediately to prevent double-taps during reveal
+        grid.classList.add('pointer-events-none'); 
+
+        const allCards = Array.from(grid.querySelectorAll('div[data-id]'));
+        const hiddenCards = allCards.filter(c => !c.classList.contains('revealed'));
+        
+        dom.nextBtn.disabled = true; 
+
+        // Define Styles
+        const styleGreenUnpicked = ['bg-green-100', 'dark:bg-green-900/40', 'border-transparent', 'text-gray-600', 'dark:text-gray-400'];
+        const styleRedUnpicked = ['bg-red-100', 'dark:bg-red-900/40', 'border-transparent', 'text-gray-600', 'dark:text-gray-400'];
+
+        // Helper to finalize round
+        const finalize = () => {
+            // FIX: UNLOCK GRID so links become clickable
+            grid.classList.remove('pointer-events-none');
+
+            allCards.forEach(c => {
+                const id = c.dataset.id;
+                const p = players.get(id);
+                const nameEl = c.querySelector('.pickem-name');
+                
+                // Remove pointer cursor from card to show it's inactive
+                c.style.cursor = 'default'; 
+                
+                if (!nameEl.querySelector('a')) {
+                    nameEl.innerHTML = makeLink(p);
+                    // Ensure the link itself receives pointer events
+                    const link = nameEl.querySelector('a');
+                    if(link) {
+                        link.style.pointerEvents = 'auto';
+                        link.style.cursor = 'pointer';
+                    }
+                }
+            });
+
+            dom.nextBtn.disabled = false;
+            dom.nextBtn.onclick = nextRound;
+            
+            if (pickEmState.totalRoundPts >= 1000) roundResults.push('💎');
+            else roundResults.push(pickEmState.picksMade); 
+            
+            dom.feedback.innerHTML = `<div class="font-black text-lg animate-enter ${won?'text-green-600 dark:text-green-400':'text-red-500'}">Round Over! (+${pickEmState.totalRoundPts})</div>`;
+        };
+
+        // --- PATH A: INSTANT (Animations OFF) ---
+        if (!useAnimations) {
+            hiddenCards.forEach(c => {
+                const id = c.dataset.id;
+                const isCorrect = pickEmState.correctIDs.has(id);
+                const val = parseFloat(c.dataset.val);
+                
+                c.classList.add('revealed', 'border-2'); 
+                c.classList.remove('bg-white', 'dark:bg-gray-800', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                
+                c.querySelector('.stat-val').textContent = formatStat(val, catKey);
+                c.querySelector('.stat-val').classList.remove('hidden');
+                
+                if (isCorrect) c.classList.add(...styleGreenUnpicked);
+                else c.classList.add(...styleRedUnpicked);
+            });
+
+            finalize();
+            return;
+        }
+
+        // --- PATH B: ANIMATED CASCADE ---
+        setTimeout(() => {
+            hiddenCards.forEach((c, i) => {
+                setTimeout(() => {
+                    const id = c.dataset.id;
+                    const isCorrect = pickEmState.correctIDs.has(id);
+                    const val = parseFloat(c.dataset.val);
+                    
+                    c.classList.add('revealed', 'border-2'); 
+                    c.classList.remove('bg-white', 'dark:bg-gray-800', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    
+                    c.querySelector('.stat-val').textContent = formatStat(val, catKey);
+                    c.querySelector('.stat-val').classList.remove('hidden');
+                    
+                    if (isCorrect) c.classList.add(...styleGreenUnpicked);
+                    else c.classList.add(...styleRedUnpicked);
+                    
+                    c.classList.add('animate-enter');
+                }, i * 300); 
+            });
+
+            setTimeout(() => {
+                finalize();
+            }, hiddenCards.length * 300);
+
+        }, 500); 
+    }
+    
+    function P(id){ 
+    if(!players.has(id)) {
+        players.set(id,{
+            id,name:'',years:new Set(),decades:new Set(),teams:new Set(),
+            AB:0,H:0,BB:0,HBP:0,SF:0,HR:0,_2B:0,_3B:0,SB:0,
+            RBI:0, // <--- ADDED THIS
+            W:0,G:0,GS:0,ER:0,IPouts:0,pitchSO:0,pitchBB:0,pitchH:0
+        }); 
+    }
+    return players.get(id); 
+}
+
+    function showAlert(message, classes = 'bg-blue-600') {
+        const alertBox = document.getElementById('custom-alert');
+        if (!alertBox) return; 
+        
+        alertBox.textContent = message;
+        alertBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded-full shadow-xl z-[80] font-bold text-sm transition-all duration-300 whitespace-nowrap flex items-center gap-2 opacity-0 pointer-events-none ${classes}`;
+        
+        void alertBox.offsetWidth;
+
+        alertBox.classList.remove('opacity-0', 'pointer-events-none');
+        
+        clearTimeout(window.alertTimeout);
+        window.alertTimeout = setTimeout(() => {
+            alertBox.classList.add('opacity-0', 'pointer-events-none');
+        }, 3000);
+    }
+    // --- NEW SLIDER LOGIC FUNCTIONS ---
+
+    function handleEnd() {
+        if(sliderDragging) {
+            dom.thumbMin.classList.remove('thumb-active');
+            dom.thumbMax.classList.remove('thumb-active');
+            sliderDragging = null;
+        }
+    }
+
+    // Called by the +/- buttons
+    // Window assignment is needed because this is called via onclick in HTML
+window.adjustSlider = function(type, dir) {
+    if(dom.submitBtn.textContent !== "Lock In") return;
+    
+    const step = sliderState.step;
+    
+    if(type === 'min') {
+        let newVal = sliderState.min + (dir * step);
+        // Round to avoid floating point errors
+        newVal = Math.round(newVal / step) * step;
+        
+        // CHANGED: Allow equality (<=) instead of (<)
+        if(newVal >= sliderState.minLimit && newVal <= sliderState.max) {
+            sliderState.min = newVal;
+        }
+    } else {
+        let newVal = sliderState.max + (dir * step);
+        newVal = Math.round(newVal / step) * step;
+        
+        // CHANGED: Allow equality (>=) instead of (>)
+        if(newVal >= sliderState.min && newVal <= sliderState.rangeMax) {
+            sliderState.max = newVal;
+        }
+    }
+    updateSliderUI();
+}
+
+    function renderSliderTicks() {
+    dom.sliderTicks.innerHTML = '';
+    const N = 5;
+    const { rangeMax, visualMin } = sliderState;
+    const span = rangeMax - visualMin;
+    
+    for(let i=0; i<=N; i++) {
+        // Tick value based on visual start point
+        const val = visualMin + (span * (i/N));
+        
+        const spanEl = document.createElement('span');
+        spanEl.className = 'text-xs text-gray-400 font-bold w-10 text-center tabular-nums';
+        
+        let txt = Math.round(val);
+        
+        if(catKey === 'careerXBHRate') {
+            txt = Math.round(val) + '%'; 
+        } else if (['careerBA','careerOPS','peakSeasonOPS'].includes(catKey) && !useWholeNumbers) {
+            txt = val.toFixed(3).replace('0.', '.');
+        } else if (['careerERA','bestSeasonERA','careerKBB', 'careerWHIP'].includes(catKey)) {
+            txt = val.toFixed(2);
+        } else if (['careerWARBat','careerWARPit'].includes(catKey)) {
+            txt = Math.round(val);
+        }
+        
+        spanEl.textContent = txt;
+        spanEl.style.position = 'absolute';
+        spanEl.style.left = `calc(${(i/N)*100}% - 20px)`; 
+        
+        dom.sliderTicks.appendChild(spanEl);
+    }
+}
+    
+    // --- ANIMATION HELPERS ---
+    function toggleAnimations() {
+        useAnimations = !useAnimations;
+        localStorage.setItem('useAnimations', useAnimations);
+        updateAnimUI();
+    }
+
+    function updateAnimUI() {
+        if(useAnimations) {
+            dom.animInd.textContent = "ON";
+            dom.animInd.className = "text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded";
+        } else {
+            dom.animInd.textContent = "OFF";
+            dom.animInd.className = "text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded";
+        }
+    }
+    
+    const animateValue = (obj, start, end, duration, crossedThreshold) => {
+        // If animations are OFF, update immediately and exit
+        if (!useAnimations) {
+            obj.textContent = end;
+            updateScoreColor(end);
+            return;
+        }
+        
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            
+            // Rolling Number
+            obj.textContent = Math.floor(progress * (end - start) + start);
+            
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.textContent = end;
+                updateScoreColor(end);
+                
+                // Flash ONLY if threshold crossed
+                if (crossedThreshold) {
+                    obj.classList.add('animate-score-levelup');
+                    setTimeout(()=> obj.classList.remove('animate-score-levelup'), 1200);
+                } 
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+    
+    </script>
+</body>
+</html>
