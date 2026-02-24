@@ -1140,12 +1140,21 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         updateThemeIcon();
         
         loadAll(() => {
-            buildAgg();
-            renderDecadeGrid();
-            
-            // Let the URL checker decide which screen to show
-            checkUrlForChallenge();
-        });
+  try {
+    buildAgg();
+    renderDecadeGrid();
+  } catch (e) {
+    console.error('Init error (build/render):', e);
+    // fail open so you're not stuck on the loader
+    dom.loadingScreen.classList.add('hidden');
+    dom.startScreen.classList.remove('hidden');
+    showAlert('Init error. Check console.', 'bg-red-500');
+    return;
+  }
+
+  // Let challenge logic decide which screen
+  checkUrlForChallenge();
+});
 
         dom.themeBtn.onclick = toggleTheme;
         dom.formatBtn.onclick = toggleFormat;
@@ -2952,48 +2961,81 @@ function updateDeadZoneUI() {
     }
     
     function loadAll(cb){
-        let d = 0; const totalFiles = 7;
-        const safeNext = () => { d++; if(d === totalFiles) cb(); };
+  let d = 0;
+  const totalFiles = 7;
+  let finished = false;
 
-        const p = (f, c) => {
-            Papa.parse(f, {
-                download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
-                complete: (r) => { 
-                    try { if(r.data && r.data.length) c(r.data); } 
-                    catch(e) { console.warn(f, e); } 
-                    finally { safeNext(); } 
-                },
-                error: () => safeNext()
-            });
-        };
-        
-        p('People.csv', d => window._people = d); 
-        p('Batting.csv', d => window._bat = d); 
-        p('Pitching.csv', d => window._pit = d);
-        p('Batting_2025.csv', d => window._bat25 = d); 
-        p('Pitching_2025.csv', d => window._pit25 = d); 
-        
-        const loadWar = (data, map, type) => {
-            if(!data || !data[0]) return;
-            try {
-                const keys = Object.keys(data[0]);
-                const idKey = keys.find(k=>k.toLowerCase().includes('id'));
-                const warKey = keys.find(k=>k.toLowerCase().includes('war'));
-                if(idKey && warKey){
-                    let count = 0;
-                    data.forEach(r => {
-                        const id = (r[idKey]||'').toString().trim();
-                        const val = Number(r[warKey]);
-                        if(id && !isNaN(val)) { map.set(id, val); count++; }
-                    });
-                    if(count > 0) warLoaded[type] = true;
-                }
-            } catch(e){}
-        };
+  const done = () => {
+    if (finished) return;
+    finished = true;
+    cb();
+  };
 
-        p('career_war_bat.csv', d => loadWar(d, warBatMap, 'bat'));
-        p('career_war_pit.csv', d => loadWar(d, warPitMap, 'pit'));
+  const safeNext = () => {
+    d++;
+    if (d === totalFiles) done();
+  };
+
+  // Watchdog: proceed even if a download hangs
+  setTimeout(() => {
+    if (!finished) {
+      console.warn('CSV load watchdog fired; proceeding with partial data');
+      done();
     }
+  }, 12000);
+
+  const p = (f, c) => {
+    Papa.parse(f, {
+      download: true,
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: (r) => {
+        try {
+          if (r.data && r.data.length) c(r.data);
+          else console.warn(`CSV empty or no rows: ${f}`);
+        } catch(e) {
+          console.warn(`Error processing CSV: ${f}`, e);
+        } finally {
+          safeNext();
+        }
+      },
+      error: (err) => {
+        console.warn(`PapaParse download error: ${f}`, err);
+        safeNext();
+      }
+    });
+  };
+
+  p('People.csv', d => window._people = d);
+  p('Batting.csv', d => window._bat = d);
+  p('Pitching.csv', d => window._pit = d);
+  p('Batting_2025.csv', d => window._bat25 = d);
+  p('Pitching_2025.csv', d => window._pit25 = d);
+
+  const loadWar = (data, map, type) => {
+    if(!data || !data[0]) return;
+    try {
+      const keys = Object.keys(data[0]);
+      const idKey = keys.find(k=>k.toLowerCase().includes('id'));
+      const warKey = keys.find(k=>k.toLowerCase().includes('war'));
+      if(idKey && warKey){
+        let count = 0;
+        data.forEach(r => {
+          const id = (r[idKey]||'').toString().trim();
+          const val = Number(r[warKey]);
+          if(id && !isNaN(val)) { map.set(id, val); count++; }
+        });
+        if(count > 0) warLoaded[type] = true;
+      }
+    } catch(e) {
+      console.warn('WAR load error', type, e);
+    }
+  };
+
+  p('career_war_bat.csv', d => loadWar(d, warBatMap, 'bat'));
+  p('career_war_pit.csv', d => loadWar(d, warPitMap, 'pit'));
+}
 
     function buildAgg(){
         // 1. Process People (Historical)
