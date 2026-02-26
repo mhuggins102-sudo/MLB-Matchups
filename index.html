@@ -41,24 +41,39 @@
       d.style.cssText='position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow:auto;background:#111;color:#0f0;font:12px monospace;padding:8px;z-index:99999;white-space:pre-wrap;';
       function log(msg,color){d.innerHTML+='<div style="color:'+(color||'#0f0')+';border-bottom:1px solid #333;padding:2px 0">'+msg+'</div>';d.scrollTop=d.scrollHeight;}
       window._dbg=log;
-      window.addEventListener('error',function(e){log('ERROR: '+e.message+' @ '+(e.filename||'inline')+':'+e.lineno,'#f55');});
-      window.addEventListener('unhandledrejection',function(e){log('REJECTION: '+e.reason,'#f55');});
+      window.addEventListener('error',function(e){
+        var detail=e.message||'unknown';
+        if(e.error&&e.error.stack) detail=e.error.stack;
+        else if(e.error&&e.error.message) detail=e.error.message;
+        log('ERROR: '+detail+' @ '+(e.filename||'inline')+':'+e.lineno+':'+e.colno,'#f55');
+      });
+      window.addEventListener('unhandledrejection',function(e){
+        var detail=e.reason;
+        if(e.reason&&e.reason.stack) detail=e.reason.stack;
+        log('REJECTION: '+detail,'#f55');
+      });
       document.addEventListener('DOMContentLoaded',function(){
         document.body.appendChild(d);
         log('DOMContentLoaded fired','#5f5');
         log('Papa: '+(typeof window.Papa),'#ff5');
         log('supabase: '+(typeof window.supabase),'#ff5');
         log('tailwind: '+(typeof window.tailwind),'#ff5');
-        var btn=document.getElementById('start-game-btn');
-        log('start-btn found: '+!!btn,'#ff5');
-        log('start-btn onclick: '+(btn?typeof btn.onclick:'N/A'),'#ff5');
-        log('start-btn text: '+(btn?btn.textContent:'N/A'),'#ff5');
+        // Delay check so the game's DOMContentLoaded handler runs first
+        setTimeout(function(){
+          log('--- POST-INIT CHECK ---','#5ff');
+          var btn=document.getElementById('start-game-btn');
+          log('start-btn found: '+!!btn,'#ff5');
+          log('start-btn onclick: '+(btn?typeof btn.onclick:'N/A'),'#ff5');
+          log('start-btn text: '+(btn?btn.textContent:'N/A'),'#ff5');
+          // Check if game dom object was populated
+          log('game dom populated: '+(typeof dom !== 'undefined' && dom.startBtn ? 'YES' : 'NO'),'#ff5');
+        },500);
       });
     })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script crossorigin="anonymous" src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
