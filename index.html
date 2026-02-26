@@ -71,9 +71,9 @@
       });
     })();
     </script>
-    <script crossorigin="anonymous" src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -823,6 +823,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     </div>
 
     <script>
+    if(window._dbg) window._dbg('GAME SCRIPT BLOCK START','#5ff');
     (function dependencyCheck(){
   const missing = [];
   if (!window.Papa) missing.push('PapaParse');
@@ -1099,7 +1100,9 @@ window.addEventListener('unhandledrejection', (e) => {
        {key:'seasonHighHRPit', label:'High Season HR', lowerBetter:true}
     ];
 
-    document.addEventListener('DOMContentLoaded', () => {
+    if(window._dbg) window._dbg('GAME SCRIPT: about to register DOMContentLoaded','#5ff');
+    document.addEventListener('DOMContentLoaded', () => { try {
+        if(window._dbg) window._dbg('GAME DOMContentLoaded START','#5ff');
         dom = {
             // Core screens
             startScreen: document.getElementById('start-screen'),
@@ -1390,6 +1393,10 @@ window.addEventListener('unhandledrejection', (e) => {
              }
              else nextRound();
         };
+    } catch(initErr) {
+        if(window._dbg) window._dbg('GAME INIT CRASH: '+initErr.message+'\n'+initErr.stack,'#f55');
+        console.error('Game init crash:', initErr);
+    }
     });
 
     function updateScoreColor(currentScore) {
