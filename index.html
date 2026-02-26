@@ -67,6 +67,21 @@
           log('start-btn text: '+(btn?btn.textContent:'N/A'),'#ff5');
           // Check if game dom object was populated
           log('game dom populated: '+(typeof dom !== 'undefined' && dom.startBtn ? 'YES' : 'NO'),'#ff5');
+          // Check if game script block exists in the served HTML
+          var scripts=document.querySelectorAll('script');
+          log('Total script tags: '+scripts.length,'#ff5');
+          // Check for the game script by looking for our marker
+          var gameScriptFound=false;
+          for(var i=0;i<scripts.length;i++){
+            if(scripts[i].textContent.indexOf('dependencyCheck')!==-1){gameScriptFound=true;break;}
+          }
+          log('Game script tag found in DOM: '+gameScriptFound,'#ff5');
+          // Check page completeness - look for a known element near the end
+          var endMarker=document.getElementById('debug-log');
+          var lastScript=scripts[scripts.length-1];
+          log('Last script src: '+(lastScript?lastScript.src||'inline':'none'),'#ff5');
+          // Check HTML length
+          log('HTML length: '+document.documentElement.outerHTML.length,'#ff5');
         },500);
       });
     })();
