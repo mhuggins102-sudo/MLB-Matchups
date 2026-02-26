@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-/* Testing */
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -13,21 +12,19 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="MLB Matchups">
     <meta name="twitter:description" content="The greatest baseball stats game on the web.">
-    <meta name="twitter:image" content="https://mlbmatchups3.pages.dev/icon-180.png"> -->
+    <meta name="twitter:image" content="https://mlb-matchups.mhuggins102.workers.dev/icon-180.png"> -->
 
     <!-- OPEN GRAPH TAGS -->
     <meta property="og:title" content="MLB Matchups">
     <meta property="og:description" content="The greatest baseball stats game on the web.">
     
     <!-- REMOVE THESE LINES to force iOS to fallback to apple-touch-icon -->
-    <!-- <meta property="og:image" content="https://mlbmatchups3.pages.dev/icon-180.png"> -->
+    <!-- <meta property="og:image" content="https://mlb-matchups.mhuggins102.workers.dev/icon-180.png"> -->
     <!-- <meta property="og:image:width" content="180"> -->
     <!-- <meta property="og:image:height" content="180"> -->
     
-    <meta property="og:url" content="https://mlbmatchups3.pages.dev">
+    <meta property="og:url" content="https://mlb-matchups.mhuggins102.workers.dev">
     <meta property="og:type" content="website">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co;">
-
     <link rel="manifest" href="manifest.json">
     <!-- iOS uses this for the small thumbnail if og:image is missing -->
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -2064,7 +2061,7 @@ async function shareGame() {
         shareBtn.disabled = true;
 
         try {
-            let baseDomain = "https://mlbmatchups3.pages.dev"; 
+            let baseDomain = "https://mlb-matchups.mhuggins102.workers.dev"; 
             let shareUrl = baseDomain;
             
             if (!currentChallengeId) {
