@@ -1098,10 +1098,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var id = generateId();
         var res = await sb.from('challenges').insert([{
             id: id,
-            config: { mode: gameMode, pool: selectedMode, era: eraMode, decade: selectedDecade },
-            matchups: matchHistory,
-            score: score,
-            round_scores: roundScores
+            config: {
+                mode: gameMode, pool: selectedMode, era: eraMode, decade: selectedDecade,
+                score: score, roundScores: roundScores
+            },
+            matchups: matchHistory
         }]);
         if (res.error) { console.error('Save failed:', res.error); return null; }
         return id;
@@ -1130,8 +1131,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             selectedDecade = data.config.decade;
             challengeQueue = data.matchups;
             currentChallengeId = cId;
-            challengerScore = data.score || null;
-            challengerRoundScores = data.round_scores || null;
+            challengerScore = data.config.score != null ? data.config.score : null;
+            challengerRoundScores = data.config.roundScores || null;
 
             dom.loadingScreen.classList.add('hidden');
             showAlert('Challenge ' + cId + ' Loaded!', 'bg-purple-600');
