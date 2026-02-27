@@ -785,40 +785,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
-    <script>
-    /* Diagnostic: fetch game.js, parse it with new Function() to get exact error */
-    window.addEventListener('DOMContentLoaded', function() {
-        var btn = document.getElementById('start-game-btn');
-        fetch('game.js').then(function(r) { return r.text(); }).then(function(code) {
-            try {
-                new Function(code);
-                btn.textContent = 'PARSE OK (len=' + code.length + ') - executing...';
-                var s = document.createElement('script');
-                s.textContent = code;
-                document.head.appendChild(s);
-                setTimeout(function() {
-                    if (typeof btn.onclick === 'function') {
-                        btn.textContent = 'Start Game';
-                        btn.style.background = '';
-                    } else {
-                        btn.textContent = 'Parsed OK but init failed - check console';
-                        btn.style.background = '#f97316';
-                    }
-                }, 2000);
-            } catch(e) {
-                btn.textContent = 'PARSE ERROR: ' + e.message;
-                btn.style.background = '#ef4444';
-                btn.style.fontSize = '11px';
-                btn.style.wordBreak = 'break-all';
-                btn.style.whiteSpace = 'normal';
-                btn.style.height = 'auto';
-                btn.style.padding = '8px';
-            }
-        }).catch(function(e) {
-            btn.textContent = 'FETCH ERROR: ' + e.message;
-            btn.style.background = '#ef4444';
-        });
-    });
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>
