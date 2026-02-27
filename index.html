@@ -564,6 +564,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </main>
 
+    <!-- Challenge Score Comparison Popup -->
+    <div id="challenge-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-popup-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Challenge Tracker</h3>
+                <button id="close-challenge-popup" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div id="challenge-popup-body" class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-300"></div>
+        </div>
+    </div>
+
     <div id="rules-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="rules-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
@@ -880,8 +892,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var sbsPicks = new Array(10).fill(null);
 
     var matchHistory       = [];
+    var roundScores        = [];
     var challengeQueue     = [];
     var currentChallengeId = null;
+    var challengerScore    = null;
+    var challengerRoundScores = null;
+    var isPlayingChallenge = false;
 
     var pickEmState = {
         threshold: 0, correctIDs: new Set(), picksMade: 0,
@@ -1083,7 +1099,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var res = await sb.from('challenges').insert([{
             id: id,
             config: { mode: gameMode, pool: selectedMode, era: eraMode, decade: selectedDecade },
-            matchups: matchHistory
+            matchups: matchHistory,
+            score: score,
+            round_scores: roundScores
         }]);
         if (res.error) { console.error('Save failed:', res.error); return null; }
         return id;
@@ -1112,6 +1130,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             selectedDecade = data.config.decade;
             challengeQueue = data.matchups;
             currentChallengeId = cId;
+            challengerScore = data.score || null;
+            challengerRoundScores = data.round_scores || null;
 
             dom.loadingScreen.classList.add('hidden');
             showAlert('Challenge ' + cId + ' Loaded!', 'bg-purple-600');
@@ -1124,6 +1144,86 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             showAlert('Challenge unavailable. Starting normal game.', 'bg-red-500');
             showStart();
         }
+    }
+
+    // ═══════════════════════════════════════
+    // §8b  CHALLENGE SCORE COMPARISON POPUP
+    // ═══════════════════════════════════════
+    function showChallengePopup() {
+        if (!isPlayingChallenge || challengerScore === null) return;
+        var popup = document.getElementById('challenge-popup');
+        var body = document.getElementById('challenge-popup-body');
+
+        var hasRoundScores = challengerRoundScores && challengerRoundScores.length > 0;
+        var completedRounds = roundScores.length;
+
+        var html = '';
+
+        if (hasRoundScores) {
+            // Show per-round comparison table
+            html += '<table class="w-full text-center mb-4">';
+            html += '<thead><tr class="text-xs font-bold text-gray-400 uppercase">';
+            html += '<th class="py-1">Round</th><th class="py-1">You</th><th class="py-1">Challenger</th></tr></thead><tbody>';
+
+            var myRunning = 0, theirRunning = 0;
+            var totalChallengerRounds = challengerRoundScores.length;
+
+            for (var i = 0; i < Math.max(completedRounds, totalChallengerRounds); i++) {
+                var myPts = i < completedRounds ? roundScores[i] : null;
+                var theirPts = i < totalChallengerRounds ? challengerRoundScores[i] : null;
+                if (myPts !== null) myRunning += myPts;
+                if (theirPts !== null) theirRunning += theirPts;
+
+                var rowClass = i < completedRounds ? '' : ' class="opacity-40"';
+                html += '<tr' + rowClass + '>';
+                html += '<td class="py-1 font-bold text-gray-500">' + (i + 1) + '</td>';
+                html += '<td class="py-1 font-bold">' + (myPts !== null ? '+' + myPts : '-') + '</td>';
+                html += '<td class="py-1 font-bold">' + (theirPts !== null ? '+' + theirPts : '-') + '</td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+
+            // Running total comparison
+            var diff = myRunning - theirRunning;
+            var theirScoreAtThisPoint = 0;
+            for (var j = 0; j < completedRounds && j < totalChallengerRounds; j++) {
+                theirScoreAtThisPoint += challengerRoundScores[j];
+            }
+            var myTotal = score;
+            var ahead = myTotal - theirScoreAtThisPoint;
+
+            html += '<div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2 text-center">';
+            if (ahead > 0) {
+                html += '<div class="text-green-600 dark:text-green-400 font-black text-lg">You\'re ahead by ' + ahead + '!</div>';
+            } else if (ahead < 0) {
+                html += '<div class="text-red-500 font-black text-lg">You need ' + Math.abs(ahead) + ' more to catch up</div>';
+            } else {
+                html += '<div class="text-yellow-500 font-black text-lg">You\'re tied!</div>';
+            }
+            html += '<div class="text-xs text-gray-400 mt-1">After ' + completedRounds + ' of 10 rounds</div>';
+            html += '</div>';
+        } else {
+            // Fallback: just show challenger total score and difference
+            html += '<div class="text-center space-y-4">';
+            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
+            html += '<div class="text-4xl font-black text-blue-600 dark:text-blue-400">' + score + '</div></div>';
+            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Challenger\'s Score</div>';
+            html += '<div class="text-4xl font-black text-purple-600 dark:text-purple-400">' + challengerScore + '</div></div>';
+
+            var diff2 = score - challengerScore;
+            html += '<div class="border-t border-gray-200 dark:border-gray-700 pt-3">';
+            if (diff2 > 0) {
+                html += '<div class="text-green-600 dark:text-green-400 font-black text-lg">You\'re ahead by ' + diff2 + '!</div>';
+            } else if (diff2 < 0) {
+                html += '<div class="text-red-500 font-black text-lg">You need ' + Math.abs(diff2) + ' more to catch up</div>';
+            } else {
+                html += '<div class="text-yellow-500 font-black text-lg">You\'re tied!</div>';
+            }
+            html += '</div></div>';
+        }
+
+        body.innerHTML = html;
+        popup.classList.remove('hidden');
     }
 
     // ═══════════════════════════════════════
@@ -1469,12 +1569,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function startGame() {
         score = 0; round = 1; hasUsedReroll = false;
-        roundResults = []; matchHistory = []; categoryHistory = {};
+        roundResults = []; roundScores = []; matchHistory = []; categoryHistory = {};
         usedPlayerIDs.clear();
-        if (challengeQueue.length === 0) currentChallengeId = null;
+        isPlayingChallenge = challengeQueue.length > 0;
+        if (!isPlayingChallenge) currentChallengeId = null;
 
         dom.scoreDisp.textContent = '0';
         dom.scoreDisp.className = 'text-lg font-black leading-none transition-colors duration-300';
+        if (isPlayingChallenge && challengerScore !== null) {
+            dom.scoreDisp.style.cursor = 'pointer';
+            dom.scoreDisp.title = 'Tap to compare with challenger';
+            dom.scoreDisp.classList.add('underline', 'decoration-dotted', 'underline-offset-2');
+        } else {
+            dom.scoreDisp.style.cursor = 'default';
+            dom.scoreDisp.title = '';
+            dom.scoreDisp.classList.remove('underline', 'decoration-dotted', 'underline-offset-2');
+        }
         dom.startScreen.classList.add('hidden');
         dom.gameScreen.classList.remove('hidden');
         dom.gameScreen.classList.add('flex');
@@ -1579,7 +1689,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function goHome() {
         currentChallengeId = null;
-        challengeQueue = []; matchHistory = []; roundResults = [];
+        challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
+        challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
         gameMode = 'howMuch'; selectedMode = 'all'; eraMode = 'modern'; selectedDecade = null;
 
         // Reset game mode buttons
@@ -1786,6 +1897,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
         roundResults.push(resultEmoji);
         var roundTotal = Math.min(1000, Math.max(0, pts));
+        roundScores.push(roundTotal);
 
         // Formatters
         var sA = A.stats[catKey], sB = B.stats[catKey];
@@ -2128,6 +2240,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else if (correctCount === 8)  sbsEmoji = '\uD83D\uDFE7';
             else if (correctCount >= 6)   sbsEmoji = '\uD83D\uDFE8';
             roundResults.push(sbsEmoji);
+            roundScores.push(roundScore);
 
             var newScore = score + roundScore;
             score = newScore;
@@ -2392,6 +2505,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             });
             dom.nextBtn.disabled = false;
             dom.nextBtn.onclick = nextRound;
+            roundScores.push(pickEmState.totalRoundPts);
             if (pickEmState.totalRoundPts >= 1000) roundResults.push('\uD83D\uDC8E');
             else roundResults.push(pickEmState.picksMade);
             dom.feedback.innerHTML = '<div class="font-black text-lg animate-enter ' + (won ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">Round Over! (+' + pickEmState.totalRoundPts + ')</div>';
@@ -2755,20 +2869,29 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var baseDomain = 'https://mlb-matchups.mhuggins102.workers.dev';
             var shareUrl = baseDomain;
-            if (!currentChallengeId) {
+
+            // If playing a challenge, share the existing challenge link (don't create a new one)
+            // If normal game, create a new challenge as before
+            if (isPlayingChallenge && currentChallengeId) {
+                shareUrl += '?c=' + currentChallengeId;
+            } else if (!currentChallengeId) {
                 var newId = await saveChallenge();
                 if (newId) currentChallengeId = newId;
+                if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
+            } else {
+                if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
             }
-            if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
 
-            var modeText = 'Standard';
+            var modeText = 'How Much?';
             if (gameMode === 'sideBySide') modeText = 'Showdown';
             if (gameMode === 'pickEm') modeText = "Pick 'Em";
             var poolTextMap = { all: 'Standard', allStars: 'All Stars', batters: 'Batters', pitchers: 'Pitchers' };
             var poolText = poolTextMap[selectedMode] || 'Standard';
             var eraText = eraMode === 'allEras' ? 'All Eras' : (eraMode === 'modern' ? 'Modern Era' : selectedDecade + 's');
             var subtitleText = modeText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
-            var shareTitle = currentChallengeId ? ('Challenge ' + currentChallengeId) : 'MLB Matchups';
+            var challengeWon = isPlayingChallenge && challengerScore !== null && score >= challengerScore;
+            var challengeLost = isPlayingChallenge && challengerScore !== null && score < challengerScore;
+            var shareTitle = isPlayingChallenge ? ('Challenge ' + currentChallengeId) : (currentChallengeId ? ('Challenge ' + currentChallengeId) : 'MLB Matchups');
 
             var canvas = document.getElementById('share-canvas');
             var ctx = canvas.getContext('2d');
@@ -2790,7 +2913,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             ctx.fillStyle = '#9ca3af'; ctx.font = '500 24px Inter, sans-serif';
             ctx.fillText('The Ultimate Stat Estimation Game', centerX, 165);
             ctx.fillStyle = '#d1d5db'; ctx.font = '600 24px Inter, sans-serif';
-            ctx.fillText(subtitleText.toUpperCase(), centerX, 230);
+            ctx.fillText(subtitleText, centerX, 230);
 
             ctx.fillStyle = '#60a5fa'; ctx.font = '900 150px Inter, sans-serif';
             ctx.shadowColor = 'rgba(96,165,250,0.6)'; ctx.shadowBlur = 30;
@@ -2822,15 +2945,28 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 x += boxSize + gap;
             });
 
-            if (currentChallengeId) {
+            if (isPlayingChallenge && challengerScore !== null) {
+                // Show challenge result
+                ctx.textAlign = 'center';
+                if (challengeWon) {
+                    ctx.fillStyle = '#22c55e'; ctx.font = '900 36px Inter, sans-serif';
+                    ctx.fillText('I BEAT CHALLENGE ' + currentChallengeId + '!', centerX, 650);
+                    ctx.fillStyle = '#86efac'; ctx.font = '600 22px Inter, sans-serif';
+                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString(), centerX, 685);
+                } else {
+                    ctx.fillStyle = '#ef4444'; ctx.font = '900 36px Inter, sans-serif';
+                    ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 650);
+                    ctx.fillStyle = '#fca5a5'; ctx.font = '600 22px Inter, sans-serif';
+                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString() + ' \u2014 Can you beat it?', centerX, 685);
+                }
+            } else if (currentChallengeId) {
                 ctx.fillStyle = '#e5e7eb'; ctx.font = '700 36px Inter, sans-serif';
                 ctx.textAlign = 'center'; ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 660);
             }
             ctx.fillStyle = '#2563eb'; ctx.fillRect(0, 700, 800, 100);
-            ctx.fillStyle = '#bfdbfe'; ctx.font = '700 20px Inter, sans-serif';
-            ctx.textAlign = 'center'; ctx.fillText('TAP LINK BELOW TO BEAT MY SCORE AT', centerX, 735);
-            ctx.fillStyle = '#ffffff'; ctx.font = '900 32px Inter, sans-serif';
-            ctx.fillText('MLBMATCHUPS3.PAGES.DEV', centerX, 775);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff'; ctx.font = '700 28px Inter, sans-serif';
+            ctx.fillText('Tap the link below to beat my score!', centerX, 760);
 
             canvas.toBlob(async function(blob) {
                 var file = new File([blob], 'mlb-matchups-score.png', { type: 'image/png' });
@@ -2964,6 +3100,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
         dom.saveScoreBtn.addEventListener('click', saveHighScore);
         document.getElementById('share-btn').addEventListener('click', shareGame);
+
+        // Score click for challenge comparison
+        dom.scoreDisp.addEventListener('click', showChallengePopup);
+        dom.scoreDisp.style.cursor = 'default';
+        document.getElementById('close-challenge-popup').addEventListener('click', function() {
+            document.getElementById('challenge-popup').classList.add('hidden');
+        });
+        document.getElementById('challenge-popup-overlay').addEventListener('click', function() {
+            document.getElementById('challenge-popup').classList.add('hidden');
+        });
 
         // Close popovers on outside click (single document listener)
         document.addEventListener('click', function(e) {
