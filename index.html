@@ -787,16 +787,38 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     <script src="game.js" onerror="document.title='GAME.JS LOAD FAILED'"></script>
     <script>
-    /* Fallback: if game.js crashed before wiring the start button, show an error */
+    /* Diagnostic: check game.js loading and report status visibly */
     window.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
             var btn = document.getElementById('start-game-btn');
-            if (btn && typeof btn.onclick !== 'function') {
-                btn.textContent = 'Error: JS failed to init';
-                btn.style.background = '#ef4444';
-                console.error('game.js did not wire start button. Check console for errors above.');
-            }
-        }, 1000);
+            var info = [];
+
+            /* 1. Did game.js wire the button? */
+            var wired = btn && typeof btn.onclick === 'function';
+            info.push('wired:' + wired);
+
+            /* 2. Did the game script tag execute at all? */
+            info.push('onerrorSet:' + (typeof window.onerror === 'function'));
+
+            /* 3. Fetch game.js to check HTTP status and content-type */
+            fetch('game.js').then(function(r) {
+                info.push('status:' + r.status);
+                info.push('type:' + r.headers.get('content-type'));
+                return r.text().then(function(t) { info.push('len:' + t.length); info.push('starts:' + t.substring(0,40)); });
+            }).catch(function(e) {
+                info.push('fetchErr:' + e.message);
+            }).finally(function() {
+                if (!wired && btn) {
+                    btn.textContent = info.join(' | ');
+                    btn.style.background = '#ef4444';
+                    btn.style.fontSize = '10px';
+                    btn.style.wordBreak = 'break-all';
+                    btn.style.whiteSpace = 'normal';
+                    btn.style.height = 'auto';
+                    btn.style.padding = '8px';
+                }
+            });
+        }, 1500);
     });
     </script>
 </body>
