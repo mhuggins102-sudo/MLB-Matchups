@@ -786,32 +786,38 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     </div>
 
     <script>
-    /* Diagnostic: check for CSP and page headers */
+    /* Diagnostic: fetch game.js, parse it with new Function() to get exact error */
     window.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            var btn = document.getElementById('start-game-btn');
-            var info = [];
-            var wired = btn && typeof btn.onclick === 'function';
-            info.push('wired:' + wired);
-
-            /* Fetch the page itself to check response headers for CSP */
-            fetch(window.location.href).then(function(r) {
-                var csp = r.headers.get('content-security-policy') || 'none';
-                info.push('CSP:' + csp);
-            }).catch(function(e) {
-                info.push('fetchErr:' + e.message);
-            }).finally(function() {
-                if (!wired && btn) {
-                    btn.textContent = info.join(' | ');
-                    btn.style.background = '#ef4444';
-                    btn.style.fontSize = '10px';
-                    btn.style.wordBreak = 'break-all';
-                    btn.style.whiteSpace = 'normal';
-                    btn.style.height = 'auto';
-                    btn.style.padding = '8px';
-                }
-            });
-        }, 1500);
+        var btn = document.getElementById('start-game-btn');
+        fetch('game.js').then(function(r) { return r.text(); }).then(function(code) {
+            try {
+                new Function(code);
+                btn.textContent = 'PARSE OK (len=' + code.length + ') - executing...';
+                var s = document.createElement('script');
+                s.textContent = code;
+                document.head.appendChild(s);
+                setTimeout(function() {
+                    if (typeof btn.onclick === 'function') {
+                        btn.textContent = 'Start Game';
+                        btn.style.background = '';
+                    } else {
+                        btn.textContent = 'Parsed OK but init failed - check console';
+                        btn.style.background = '#f97316';
+                    }
+                }, 2000);
+            } catch(e) {
+                btn.textContent = 'PARSE ERROR: ' + e.message;
+                btn.style.background = '#ef4444';
+                btn.style.fontSize = '11px';
+                btn.style.wordBreak = 'break-all';
+                btn.style.whiteSpace = 'normal';
+                btn.style.height = 'auto';
+                btn.style.padding = '8px';
+            }
+        }).catch(function(e) {
+            btn.textContent = 'FETCH ERROR: ' + e.message;
+            btn.style.background = '#ef4444';
+        });
     });
     </script>
 </body>
