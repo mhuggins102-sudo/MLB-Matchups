@@ -318,6 +318,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
             </button>
 
+            <button id="challenge-code-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Enter Challenge Code">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            </button>
+
             <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
@@ -573,6 +577,21 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <button id="close-challenge-popup" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div id="challenge-popup-body" class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-300"></div>
+        </div>
+    </div>
+
+    <!-- Challenge Code Entry Modal -->
+    <div id="challenge-code-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-code-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Enter Challenge Code</h3>
+                <button id="close-challenge-code" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-5 text-center">
+                <input type="text" id="challenge-code-input" placeholder="e.g. ABC23" maxlength="5" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-black text-2xl tracking-[0.3em] uppercase focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off" autocapitalize="characters">
+                <button id="challenge-code-go" class="primary-btn bg-purple-600 hover:bg-purple-700 w-full">Play Challenge</button>
+            </div>
         </div>
     </div>
 
@@ -1148,6 +1167,64 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     // ═══════════════════════════════════════
+    // §8a  CHALLENGE CODE MANUAL ENTRY
+    // ═══════════════════════════════════════
+    function openChallengeCodeModal() {
+        var modal = document.getElementById('challenge-code-modal');
+        var input = document.getElementById('challenge-code-input');
+        input.value = '';
+        modal.classList.remove('hidden');
+        setTimeout(function() { input.focus(); }, 100);
+    }
+
+    function closeChallengeCodeModal() {
+        document.getElementById('challenge-code-modal').classList.add('hidden');
+    }
+
+    async function loadChallengeByCode() {
+        var input = document.getElementById('challenge-code-input');
+        var code = input.value.trim().toUpperCase();
+        if (!code || code.length < 3) {
+            showAlert('Please enter a valid code.', 'bg-red-500');
+            return;
+        }
+        if (!sb) {
+            showAlert('Online features unavailable.', 'bg-red-500');
+            return;
+        }
+        closeChallengeCodeModal();
+        showAlert('Loading challenge...', 'bg-purple-600');
+
+        try {
+            var timeout = new Promise(function(_, rej) { setTimeout(function(){ rej(new Error('timeout')); }, 6000); });
+            var query = sb.from('challenges').select('*').eq('id', code).single();
+            var result = await Promise.race([query, timeout]);
+            if (result.error || !result.data) throw result.error || new Error('Challenge not found');
+            var data = result.data;
+
+            gameMode       = data.config.mode;
+            selectedMode   = data.config.pool;
+            eraMode        = data.config.era;
+            selectedDecade = data.config.decade;
+            challengeQueue = data.matchups;
+            currentChallengeId = code;
+            challengerScore = data.config.score != null ? data.config.score : null;
+            challengerRoundScores = data.config.roundScores || null;
+
+            // Update URL to reflect challenge
+            var url = new URL(window.location);
+            url.searchParams.set('c', code);
+            window.history.replaceState({}, '', url);
+
+            showAlert('Challenge ' + code + ' Loaded!', 'bg-purple-600');
+            startGame();
+        } catch (e) {
+            console.error('Challenge load failed:', e);
+            showAlert('Challenge not found. Check the code and try again.', 'bg-red-500');
+        }
+    }
+
+    // ═══════════════════════════════════════
     // §8b  CHALLENGE SCORE COMPARISON POPUP
     // ═══════════════════════════════════════
     function showChallengePopup() {
@@ -1612,9 +1689,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         else if (eraMode === 'select' && selectedDecade) dom.eraLabel.textContent = selectedDecade + 's';
         else dom.eraLabel.textContent = dom.eraDisplay.textContent;
 
-        // Reroll button state
-        if (currentChallengeId) {
+        // Reroll button state – always hidden in challenge mode
+        if (isPlayingChallenge || currentChallengeId) {
             dom.rerollBtn.classList.add('hidden');
+            dom.rerollBtn.disabled = true;
         } else {
             dom.rerollBtn.classList.remove('hidden');
             if (hasUsedReroll) {
@@ -1653,6 +1731,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function skipQuestion() {
         if (hasUsedReroll) return;
+        if (isPlayingChallenge) return;
         if (dom.submitBtn.textContent !== 'Lock In') return;
         hasUsedReroll = true;
         if (matchHistory.length > 0) matchHistory.pop();
@@ -2899,41 +2978,52 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             canvas.width = 800; canvas.height = 800;
             var centerX = 400;
 
+            // Background gradient
             var bgGrad = ctx.createLinearGradient(0, 0, 0, 800);
             bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#1e3a8a');
             ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, 800, 800);
 
+            // Title: "MLB Matchups"
+            ctx.textBaseline = 'alphabetic';
             ctx.font = '900 65px Inter, sans-serif'; ctx.textAlign = 'left';
             var w1 = ctx.measureText('MLB').width;
-            var totalW = w1 + ctx.measureText('Matchups').width;
+            var gap2 = ctx.measureText(' ').width;
+            var totalW = w1 + gap2 + ctx.measureText('Matchups').width;
             var startX = centerX - totalW / 2;
-            ctx.fillStyle = '#ffffff'; ctx.fillText('MLB', startX, 120);
-            ctx.fillStyle = '#3b82f6'; ctx.fillText('Matchups', startX + w1, 120);
+            ctx.fillStyle = '#ffffff'; ctx.fillText('MLB', startX, 110);
+            ctx.fillStyle = '#3b82f6'; ctx.fillText('Matchups', startX + w1 + gap2, 110);
 
+            // Tagline
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#9ca3af'; ctx.font = '500 24px Inter, sans-serif';
-            ctx.fillText('The Ultimate Stat Estimation Game', centerX, 165);
-            ctx.fillStyle = '#d1d5db'; ctx.font = '600 24px Inter, sans-serif';
-            ctx.fillText(subtitleText, centerX, 230);
+            ctx.fillStyle = '#9ca3af'; ctx.font = '500 22px Inter, sans-serif';
+            ctx.fillText('The Ultimate Stat Estimation Game', centerX, 150);
 
+            // Mode / Pool / Era subtitle
+            ctx.fillStyle = '#d1d5db'; ctx.font = '600 24px Inter, sans-serif';
+            ctx.fillText(subtitleText, centerX, 210);
+
+            // Large score with glow
             ctx.fillStyle = '#60a5fa'; ctx.font = '900 150px Inter, sans-serif';
             ctx.shadowColor = 'rgba(96,165,250,0.6)'; ctx.shadowBlur = 30;
-            ctx.fillText(score.toLocaleString(), centerX, 380);
+            ctx.fillText(score.toLocaleString(), centerX, 370);
             ctx.shadowBlur = 0;
 
+            // Round results grid
             var boxSize = 60, gap = 15;
             var totalRowW = 5 * boxSize + 4 * gap;
             var rowStartX = centerX - totalRowW / 2;
-            var y = 460, x = rowStartX;
+            var y = 430, x = rowStartX;
             var emojiColors = { '\uD83D\uDFE9':'#22c55e', '\uD83D\uDFE5':'#ef4444', '\uD83D\uDFE8':'#eab308', '\uD83D\uDFE7':'#f97316' };
 
+            ctx.textBaseline = 'alphabetic';
             roundResults.forEach(function(res, i) {
                 if (i > 0 && i % 5 === 0) { y += boxSize + gap; x = rowStartX; }
                 if (res === '\uD83D\uDC8E' || res === '\uD83C\uDFAF') {
                     ctx.fillStyle = '#22c55e';
                     ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize, 12); ctx.fill();
                     ctx.font = '40px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#ffffff'; ctx.fillText(res, x + boxSize / 2, y + boxSize / 2 + 3);
+                    ctx.fillStyle = '#ffffff'; ctx.fillText(res, x + boxSize / 2, y + boxSize / 2 + 2);
+                    ctx.textBaseline = 'alphabetic';
                 } else {
                     var fill = '#374151';
                     if (typeof res === 'number') {
@@ -2946,28 +3036,30 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 x += boxSize + gap;
             });
 
+            // Challenge result or challenge ID badge
+            ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
             if (isPlayingChallenge && challengerScore !== null) {
-                // Show challenge result
-                ctx.textAlign = 'center';
                 if (challengeWon) {
-                    ctx.fillStyle = '#22c55e'; ctx.font = '900 36px Inter, sans-serif';
-                    ctx.fillText('I BEAT CHALLENGE ' + currentChallengeId + '!', centerX, 650);
+                    ctx.fillStyle = '#22c55e'; ctx.font = '900 34px Inter, sans-serif';
+                    ctx.fillText('I BEAT CHALLENGE ' + currentChallengeId + '!', centerX, 630);
                     ctx.fillStyle = '#86efac'; ctx.font = '600 22px Inter, sans-serif';
-                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString(), centerX, 685);
+                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString(), centerX, 665);
                 } else {
-                    ctx.fillStyle = '#ef4444'; ctx.font = '900 36px Inter, sans-serif';
-                    ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 650);
+                    ctx.fillStyle = '#ef4444'; ctx.font = '900 34px Inter, sans-serif';
+                    ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 630);
                     ctx.fillStyle = '#fca5a5'; ctx.font = '600 22px Inter, sans-serif';
-                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString() + ' \u2014 Can you beat it?', centerX, 685);
+                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString() + ' \u2014 Can you beat it?', centerX, 665);
                 }
             } else if (currentChallengeId) {
-                ctx.fillStyle = '#e5e7eb'; ctx.font = '700 36px Inter, sans-serif';
-                ctx.textAlign = 'center'; ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 660);
+                ctx.fillStyle = '#e5e7eb'; ctx.font = '700 34px Inter, sans-serif';
+                ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 650);
             }
-            ctx.fillStyle = '#2563eb'; ctx.fillRect(0, 700, 800, 100);
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#ffffff'; ctx.font = '700 28px Inter, sans-serif';
-            ctx.fillText('Tap the link below to beat my score!', centerX, 760);
+
+            // Bottom banner
+            ctx.fillStyle = '#2563eb'; ctx.fillRect(0, 710, 800, 90);
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff'; ctx.font = '700 32px Inter, sans-serif';
+            ctx.fillText('Tap the link below to beat my score!', centerX, 755);
 
             canvas.toBlob(async function(blob) {
                 var file = new File([blob], 'mlb-matchups-score.png', { type: 'image/png' });
@@ -3078,6 +3170,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.rulesBtn.addEventListener('click', function() { dom.rulesModal.classList.remove('hidden'); });
         dom.closeRulesBtn.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
         document.getElementById('rules-overlay').addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
+
+        // Challenge code entry
+        document.getElementById('challenge-code-btn').addEventListener('click', openChallengeCodeModal);
+        document.getElementById('close-challenge-code').addEventListener('click', closeChallengeCodeModal);
+        document.getElementById('challenge-code-overlay').addEventListener('click', closeChallengeCodeModal);
+        document.getElementById('challenge-code-go').addEventListener('click', loadChallengeByCode);
+        document.getElementById('challenge-code-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') loadChallengeByCode();
+        });
 
         // Leaderboard modal
         dom.leaderboardBtn.addEventListener('click', function() { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); });
