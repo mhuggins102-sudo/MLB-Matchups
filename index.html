@@ -785,6 +785,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+    /* Load game.js via dynamic injection (static script tags don't execute on this platform) */
+    fetch('game.js').then(function(r){return r.text()}).then(function(c){
+        var s=document.createElement('script');s.textContent=c;document.head.appendChild(s);
+    }).catch(function(e){ document.getElementById('start-game-btn').textContent='Load failed: '+e.message; });
+    </script>
 </body>
 </html>
