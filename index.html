@@ -785,6 +785,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script src="game.js" onerror="document.title='GAME.JS LOAD FAILED'"></script>
+    <script>
+    /* Fallback: if game.js crashed before wiring the start button, show an error */
+    window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var btn = document.getElementById('start-game-btn');
+            if (btn && typeof btn.onclick !== 'function') {
+                btn.textContent = 'Error: JS failed to init';
+                btn.style.background = '#ef4444';
+                console.error('game.js did not wire start button. Check console for errors above.');
+            }
+        }, 1000);
+    });
+    </script>
 </body>
 </html>

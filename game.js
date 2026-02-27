@@ -374,11 +374,13 @@ window.addEventListener('unhandledrejection', (e) => {
             thumbMax: document.getElementById('thumb-max'),
         };
 
-        // DEBUG: visible indicator that JS initialized and handlers are being attached
-        try {
-            if (dom.startBtn) dom.startBtn.textContent = 'Start Game (JS OK)';
-            if (dom.rulesBtn) dom.rulesBtn.setAttribute('data-js-ok','1');
-        } catch(e) {}
+        // --- Wire critical buttons FIRST (before anything that might crash) ---
+        dom.startBtn.onclick = startGame;
+        dom.homeBtn.onclick = goHome;
+        dom.playAgainBtn.onclick = goHome;
+        dom.rerollBtn.onclick = skipQuestion;
+        dom.rulesBtn.onclick = () => dom.rulesModal.classList.remove('hidden');
+        dom.closeRulesBtn.onclick = () => dom.rulesModal.classList.add('hidden');
 
         // Add these to your DOM object (or verify they are there)
         dom.animBtn = document.getElementById('anim-toggle-row');
@@ -478,8 +480,6 @@ window.addEventListener('unhandledrejection', (e) => {
         });
 
         // Modal Handlers
-        dom.rulesBtn.onclick = () => dom.rulesModal.classList.remove('hidden');
-        dom.closeRulesBtn.onclick = () => dom.rulesModal.classList.add('hidden');
         document.getElementById('rules-overlay').onclick = () => dom.rulesModal.classList.add('hidden');
         
         dom.leaderboardBtn.onclick = () => { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); };
@@ -506,12 +506,6 @@ window.addEventListener('unhandledrejection', (e) => {
         // Share Button Listener
         document.getElementById('share-btn').onclick = shareGame;
 
-        dom.rerollBtn.onclick = skipQuestion;
-        dom.startBtn.onclick = startGame;
-        dom.homeBtn.onclick = goHome;
-        
-        dom.playAgainBtn.onclick = goHome;
-        
         dom.saveScoreBtn.onclick = saveHighScore;
 
         document.querySelectorAll('.mode-btn').forEach(btn => {
