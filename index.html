@@ -786,195 +786,185 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     </div>
 
     <script data-cfasync="false" type="text/javascript">
-    (function dependencyCheck(){
-  const missing = [];
-  if (!window.Papa) missing.push('PapaParse');
-  if (!window.supabase || !window.supabase.createClient) missing.push('supabase-js');
-  // tailwind is optional for functionality, but you can include it too:
-  // if (!window.tailwind) missing.push('tailwindcss');
+    /* ──────────────────────────────────────────────────────────
+       MLB Matchups – Complete JavaScript Rewrite
+       Preserves all original UI/HTML structure and functionality.
+       ────────────────────────────────────────────────────────── */
 
-  if (missing.length) {
-    console.error('Missing libraries:', missing.join(', '));
-
-    // Ensure you can see the UI
-    const ls = document.getElementById('loading-screen');
-    if (ls) { ls.classList.add('hidden'); ls.style.display = 'none'; }
-
-    // Make it obvious what’s wrong (works even if showAlert isn't available yet)
-    alert('Site scripts failed to load: ' + missing.join(', ') +
-          '\n\nLikely a blocked CDN request. Open DevTools → Network and look for failed requests to cdn.jsdelivr.net / cdn.tailwindcss.com.');
-
-    // IMPORTANT: stop executing the rest of the script so we don’t throw again
-    throw new Error('Missing required libraries: ' + missing.join(', '));
-  }
-})();
-    // REPLACE THESE WITH YOUR ACTUAL SUPABASE KEYS
+    // ═══════════════════════════════════════
+    // §1  DEPENDENCY CHECK
+    // ═══════════════════════════════════════
+    (function dependencyCheck() {
+        const missing = [];
+        if (!window.Papa) missing.push(‘PapaParse’);
+        if (!window.supabase || !window.supabase.createClient) missing.push(‘supabase-js’);
+        if (missing.length) {
+            console.error(‘Missing libraries:’, missing.join(‘, ‘));
+            const ls = document.getElementById(‘loading-screen’);
+            if (ls) { ls.classList.add(‘hidden’); ls.style.display = ‘none’; }
+            alert(‘Site scripts failed to load: ‘ + missing.join(‘, ‘) +
+                  ‘\n\nLikely a blocked CDN. Check DevTools → Network.’);
+            throw new Error(‘Missing required libraries: ‘ + missing.join(‘, ‘));
+        }
+    })();
+    // ═══════════════════════════════════════
+    // §2  SUPABASE INIT
+    // ═══════════════════════════════════════
     const SUPABASE_URL = 'https://rclygejapjgpnanwevmo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbHlnZWphcGpncG5hbndldm1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODY2ODcsImV4cCI6MjA3OTE2MjY4N30.WKYxJYmLNhm0SsxDeJBy7qGGdLddCuaVUrEN5684uFM';
-    let supabase = null;
-if (window.supabase && typeof window.supabase.createClient === 'function') {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-  console.warn('Supabase library not available; disabling leaderboard/challenges.');
-}
-    
-    // Absolute failsafe: never allow loading overlay to block the UI indefinitely
-function forceHideLoader(reason) {
-  try {
-    const ls = document.getElementById('loading-screen');
-    if (ls) {
-      ls.classList.add('hidden');
-      ls.style.display = 'none'; // works even without Tailwind
+    let sb = null;
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } else {
+        console.warn('Supabase library not available; disabling leaderboard/challenges.');
     }
-    console.warn('Loader forced hidden:', reason);
-  } catch(e) {}
-}
 
-// Hide it after 3 seconds no matter what (adjust if you want)
-setTimeout(() => forceHideLoader('timeout'), 3000);
+    // ═══════════════════════════════════════
+    // §3  GLOBAL ERROR HANDLING / FAILSAFE
+    // ═══════════════════════════════════════
+    function forceHideLoader(reason) {
+        try {
+            const ls = document.getElementById('loading-screen');
+            if (ls) { ls.classList.add('hidden'); ls.style.display = 'none'; }
+            console.warn('Loader forced hidden:', reason);
+        } catch (e) { /* swallow */ }
+    }
+    setTimeout(() => forceHideLoader('timeout'), 3000);
 
-window.addEventListener('error', (e) => {
-  console.error('Global error:', e.error || e.message);
-  forceHideLoader('window.error');
-  const msg = (e.error && e.error.message) ? e.error.message : (e.message || 'Unknown error');
-  if (typeof showAlert === 'function') showAlert(`Error: ${msg}`, 'bg-red-500');
-});
+    window.addEventListener('error', (e) => {
+        console.error('Global error:', e.error || e.message);
+        forceHideLoader('window.error');
+        const msg = (e.error && e.error.message) ? e.error.message : (e.message || 'Unknown error');
+        if (typeof showAlert === 'function') showAlert('Error: ' + msg, 'bg-red-500');
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+        console.error('Unhandled rejection:', e.reason);
+        forceHideLoader('unhandledrejection');
+        const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || 'Unknown rejection');
+        if (typeof showAlert === 'function') showAlert('Error: ' + msg, 'bg-red-500');
+    });
 
-window.addEventListener('unhandledrejection', (e) => {
-  console.error('Unhandled rejection:', e.reason);
-  forceHideLoader('unhandledrejection');
-  const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || 'Unknown rejection');
-  if (typeof showAlert === 'function') showAlert(`Error: ${msg}`, 'bg-red-500');
-});
+    // ═══════════════════════════════════════
+    // §4  STATE VARIABLES
+    // ═══════════════════════════════════════
+    // Persisted preferences (read from localStorage, default true)
+    let deadZoneEnabled = localStorage.getItem('deadZoneEnabled') !== 'false';
+    let useAnimations   = localStorage.getItem('useAnimations')   !== 'false';
+    let useWholeNumbers = true;
 
-    // 1. Add this near the top with other state variables
-    let deadZoneEnabled = localStorage.getItem('deadZoneEnabled') !== 'false'; // Default true
-    let warLoaded={bat:false,pit:false};
-    // --- ANIMATION STATE ---
-    let useAnimations = localStorage.getItem('useAnimations') !== 'false'; // Default true
-    // --- SLIDER STATE VARIABLES ---
-    let sliderState = { min: 0, max: 0, rangeMax: 100, step: 1, minLimit: 0 };
-    let sliderDragging = null; // 'min' or 'max' or null
-    const players=new Map(), batSeasons=new Map(), warBatMap=new Map(), warPitMap=new Map(), pitSeasons=new Map();
-    let catKey=null, numberLineSpan=0, A=null, B=null, trueDiff=0, correctPick=null, score=0, round=1, roundResults = [];
-    let selectedMode='all', gameMode='howMuch', eraMode='modern', selectedDecade=null, useWholeNumbers=true, versusPick=null;
-    let categoryHistory = {}; 
+    // Data stores
+    const players    = new Map();
+    const batSeasons = new Map();
+    const pitSeasons = new Map();
+    const warBatMap  = new Map();
+    const warPitMap  = new Map();
+    let warLoaded = { bat: false, pit: false };
+
+    // Slider
+    let sliderState = { min: 0, max: 0, rangeMax: 100, step: 1, minLimit: 0, visualMin: 0 };
+    let sliderDragging = null;
+
+    // Game state
+    let catKey       = null;
+    let numberLineSpan = 0;
+    let A = null, B = null;
+    let trueDiff     = 0;
+    let correctPick  = null;
+    let score        = 0;
+    let round        = 1;
+    let roundResults = [];
+    let versusPick   = null;
+    let categoryHistory = {};
     let hasUsedReroll = false;
-    
-    // --- NEW: Track used players to prevent dupes ---
     const usedPlayerIDs = new Set();
-    
-    // SBS Specific Vars
-    let sbsPicks = new Array(10).fill(null); 
 
-    let dom = {}; 
-    
-    // --- NEW CHALLENGE VARIABLES ---
-    let matchHistory = []; // Stores round data as you play
-    let challengeQueue = []; // Stores round data loaded from URL
-    let currentChallengeId = null; // Stores the ID if playing/sharing a challenge
+    // Configuration (set from Home Screen)
+    let selectedMode   = 'all';      // all | allStars | batters | pitchers
+    let gameMode       = 'howMuch';  // howMuch | sideBySide | pickEm
+    let eraMode        = 'modern';   // modern | allEras | select
+    let selectedDecade = null;
 
-    // --- CHALLENGE HELPER FUNCTIONS ---
-    
-    // 1. Generate a random 5-character code
+    // Showdown picks
+    let sbsPicks = new Array(10).fill(null);
+
+    // Challenge / share
+    let matchHistory      = [];
+    let challengeQueue    = [];
+    let currentChallengeId = null;
+
+    // Cached DOM references (populated in gameInit)
+    let dom = {};
+
+    // ═══════════════════════════════════════
+    // §5  PICK ‘EM STATE
+    // ═══════════════════════════════════════
+    let pickEmState = {
+        threshold: 0, correctIDs: new Set(), picksMade: 0,
+        totalRoundPts: 0, lastVal: null, chainActive: true, chainCount: 0, roundOver: false
+    };
+
+    // ═══════════════════════════════════════
+    // §6  CHALLENGE HELPERS
+    // ═══════════════════════════════════════
     function generateId() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let result = '';
-        for (let i = 0; i < 5; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-        return result;
+        const chars = ‘ABCDEFGHJKLMNPQRSTUVWXYZ23456789’;
+        let out = ‘’;
+        for (let i = 0; i < 5; i++) out += chars[Math.floor(Math.random() * chars.length)];
+        return out;
     }
 
-    // 2. Save the current game to Supabase
     async function saveChallenge() {
-        if (!supabase) {
-  // fail-open behavior
-  dom.loadingScreen.classList.add('hidden');
-  dom.startScreen.classList.remove('hidden');
-  showAlert && showAlert('Online features unavailable (Supabase failed to load).', 'bg-red-500');
-  return;
-}
+        if (!sb) { showAlert(‘Online features unavailable.’, ‘bg-red-500’); return null; }
         const id = generateId();
-        const payload = {
-            id: id,
-            config: { 
-                mode: gameMode, 
-                pool: selectedMode, 
-                era: eraMode, 
-                decade: selectedDecade // <--- This was missing before!
-            },
+        const { error } = await sb.from(‘challenges’).insert([{
+            id,
+            config: { mode: gameMode, pool: selectedMode, era: eraMode, decade: selectedDecade },
             matchups: matchHistory
-        };
-        
-        const { error } = await supabase.from('challenges').insert([payload]);
-        if (error) { console.error('Save failed:', error); return null; }
+        }]);
+        if (error) { console.error(‘Save failed:’, error); return null; }
         return id;
     }
 
-    // 3. Check URL for challenge code on startup
     async function checkUrlForChallenge() {
-        if (!supabase) {
-  // fail-open behavior
-  dom.loadingScreen.classList.add('hidden');
-  dom.startScreen.classList.remove('hidden');
-  showAlert && showAlert('Online features unavailable (Supabase failed to load).', 'bg-red-500');
-  return;
-}
-  const params = new URLSearchParams(window.location.search);
-  const cId = params.get('c');
+        const showStart = () => {
+            dom.loadingScreen.classList.add(‘hidden’);
+            dom.startScreen.classList.remove(‘hidden’);
+        };
 
-  // helper: show start screen and hide loader
-  const showStart = () => {
-    dom.loadingScreen.classList.add('hidden');
-    dom.startScreen.classList.remove('hidden');
-  };
+        if (!sb) { showStart(); return; }
 
-  // No challenge param => normal path
-  if (!cId) {
-    showStart();
-    return;
-  }
+        const cId = new URLSearchParams(window.location.search).get(‘c’);
+        if (!cId) { showStart(); return; }
 
-  // Hard timeout so we never hang forever.
-  const timeoutMs = 6000;
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Challenge lookup timed out')), timeoutMs)
-  );
+        try {
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error(‘timeout’)), 6000));
+            const query = sb.from(‘challenges’).select(‘*’).eq(‘id’, cId).single();
+            const { data, error } = await Promise.race([query, timeout]);
+            if (error || !data) throw error || new Error(‘Challenge not found’);
 
-  try {
-    const queryPromise = supabase
-      .from('challenges')
-      .select('*')
-      .eq('id', cId)
-      .single();
+            gameMode       = data.config.mode;
+            selectedMode   = data.config.pool;
+            eraMode        = data.config.era;
+            selectedDecade = data.config.decade;
+            challengeQueue = data.matchups;
+            currentChallengeId = cId;
 
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-    if (error || !data) throw error || new Error('Challenge not found');
+            dom.loadingScreen.classList.add(‘hidden’);
+            showAlert(‘Challenge ‘ + cId + ‘ Loaded!’, ‘bg-purple-600’);
+            startGame();
+        } catch (e) {
+            console.error(‘Challenge load failed:’, e);
+            const url = new URL(window.location);
+            url.searchParams.delete(‘c’);
+            window.history.replaceState({}, ‘’, url);
+            showAlert(‘Challenge unavailable. Starting normal game.’, ‘bg-red-500’);
+            showStart();
+        }
+    }
 
-    // Apply loaded config
-    gameMode = data.config.mode;
-    selectedMode = data.config.pool;
-    eraMode = data.config.era;
-    selectedDecade = data.config.decade;
-
-    challengeQueue = data.matchups;
-    currentChallengeId = cId;
-
-    dom.loadingScreen.classList.add('hidden');
-    showAlert(`Challenge ${cId} Loaded!`, 'bg-purple-600');
-    startGame();
-  } catch (e) {
-    console.error('Challenge load failed:', e);
-
-    // Strip ?c= so refreshes don’t keep trying a broken challenge
-    const url = new URL(window.location);
-    url.searchParams.delete('c');
-    window.history.replaceState({}, '', url);
-
-    showAlert('Challenge unavailable. Starting normal game.', 'bg-red-500');
-    showStart();
-  }
-}
-    
+    // ═══════════════════════════════════════
+    // §7  CATEGORY DEFINITIONS
+    // ═══════════════════════════════════════
     const BASE_CATS = {
         // --- HITTER COUNTING ---
         careerHR: { label: 'Career HR', type: 'hitter', dMin: 30, step: 1, thresholds: [100, 150, 200, 250, 300, 350, 400, 450, 500, 550], tolerance: 0.30, minBuffer: 50 },
@@ -1062,483 +1052,425 @@ window.addEventListener('unhandledrejection', (e) => {
        {key:'seasonHighHRPit', label:'High Season HR', lowerBetter:true}
     ];
 
-    function gameInit() { try {
+    // ═══════════════════════════════════════
+    // §8  INITIALIZATION
+    // ═══════════════════════════════════════
+    function gameInit() {
+        try {
+            cacheDom();
+            wireEvents();
+            initPreferences();
+            populateDateDropdown();
+
+            loadAll(() => {
+                try {
+                    buildAgg();
+                    renderDecadeGrid();
+                } catch (e) {
+                    console.error('Init error (build/render):', e);
+                    dom.loadingScreen.classList.add('hidden');
+                    dom.startScreen.classList.remove('hidden');
+                    showAlert('Init error. Check console.', 'bg-red-500');
+                    return;
+                }
+                checkUrlForChallenge();
+            });
+        } catch (initErr) {
+            console.error('Game init crash:', initErr);
+            const btn = document.getElementById('start-game-btn');
+            if (btn) { btn.textContent = 'Init error: ' + initErr.message; btn.style.background = '#ef4444'; }
+        }
+    }
+
+    function cacheDom() {
         dom = {
-            // Core screens
-            startScreen: document.getElementById('start-screen'),
-            gameScreen: document.getElementById('game-screen'),
-            overScreen: document.getElementById('game-over-screen'),
-            loadingScreen: document.getElementById('loading-screen'),
-
+            // Screens
+            startScreen:    document.getElementById('start-screen'),
+            gameScreen:     document.getElementById('game-screen'),
+            overScreen:     document.getElementById('game-over-screen'),
+            loadingScreen:  document.getElementById('loading-screen'),
             // Modals
-            rulesModal: document.getElementById('rules-modal'),
-            leaderboardModal: document.getElementById('leaderboard-modal'),
-
+            rulesModal:         document.getElementById('rules-modal'),
+            leaderboardModal:   document.getElementById('leaderboard-modal'),
             // Header buttons
-            rulesBtn: document.getElementById('rules-btn'),
+            rulesBtn:       document.getElementById('rules-btn'),
             leaderboardBtn: document.getElementById('leaderboard-btn'),
-            rerollBtn: document.getElementById('reroll-btn'),
-            homeBtn: document.getElementById('home-btn'),
-            settingsBtn: document.getElementById('settings-btn'),
-            settingsPopover: document.getElementById('settings-popover'),
-
-            // Settings rows
-            themeBtn: document.getElementById('theme-toggle-row'),
-            formatBtn: document.getElementById('format-toggle-row'),
-            formatInd: document.getElementById('format-indicator'),
-            animBtn: document.getElementById('anim-toggle-row'),
-            animInd: document.getElementById('anim-indicator'),
+            rerollBtn:      document.getElementById('reroll-btn'),
+            homeBtn:        document.getElementById('home-btn'),
+            settingsBtn:    document.getElementById('settings-btn'),
+            settingsPopover:document.getElementById('settings-popover'),
+            // Settings
+            themeBtn:    document.getElementById('theme-toggle-row'),
+            formatBtn:   document.getElementById('format-toggle-row'),
+            formatInd:   document.getElementById('format-indicator'),
+            animBtn:     document.getElementById('anim-toggle-row'),
+            animInd:     document.getElementById('anim-indicator'),
             deadZoneBtn: document.getElementById('dead-zone-toggle-row'),
             deadZoneInd: document.getElementById('dead-zone-indicator'),
-
-            iconSun: document.getElementById('icon-sun'),
-            iconMoon: document.getElementById('icon-moon'),
-
+            iconSun:     document.getElementById('icon-sun'),
+            iconMoon:    document.getElementById('icon-moon'),
             // Home controls
-            startBtn: document.getElementById('start-game-btn'),
-            eraTriggerBtn: document.getElementById('era-trigger-btn'),
-            eraDisplay: document.getElementById('era-display-text'),
-            eraPopover: document.getElementById('era-popover'),
-
-            // Game UI
-            uiHowMuch: document.getElementById('ui-how-much'),
+            startBtn:       document.getElementById('start-game-btn'),
+            eraTriggerBtn:  document.getElementById('era-trigger-btn'),
+            eraDisplay:     document.getElementById('era-display-text'),
+            eraPopover:     document.getElementById('era-popover'),
+            // Game UI panels
+            uiHowMuch:    document.getElementById('ui-how-much'),
             uiSideBySide: document.getElementById('ui-side-by-side'),
-            uiPickEm: document.getElementById('ui-pick-em'),
-
-            cardA: document.getElementById('card-A'),
-            cardB: document.getElementById('card-B'),
-            nameA: document.getElementById('name-A'),
-            nameB: document.getElementById('name-B'),
-            statA: document.getElementById('stat-A'),
-            statB: document.getElementById('stat-B'),
-            playerPrompt: document.getElementById('player-prompt'),
-
-            roundDisp: document.getElementById('round-display'),
-            scoreDisp: document.getElementById('score-display'),
-            catLabel: document.getElementById('game-cat-label'),
-            eraLabel: document.getElementById('game-era-label'),
-            feedback: document.getElementById('round-feedback'),
-
-            submitBtn: document.getElementById('submit-btn'),
-            nextBtn: document.getElementById('next-btn'),
-            playAgainBtn: document.getElementById('play-again-btn'),
-
-            closeRulesBtn: document.getElementById('close-rules-btn'),
+            uiPickEm:     document.getElementById('ui-pick-em'),
+            // Player cards
+            cardA:          document.getElementById('card-A'),
+            cardB:          document.getElementById('card-B'),
+            nameA:          document.getElementById('name-A'),
+            nameB:          document.getElementById('name-B'),
+            statA:          document.getElementById('stat-A'),
+            statB:          document.getElementById('stat-B'),
+            playerPrompt:   document.getElementById('player-prompt'),
+            // Round / Score
+            roundDisp:  document.getElementById('round-display'),
+            scoreDisp:  document.getElementById('score-display'),
+            catLabel:   document.getElementById('game-cat-label'),
+            eraLabel:   document.getElementById('game-era-label'),
+            feedback:   document.getElementById('round-feedback'),
+            // Action buttons
+            submitBtn:      document.getElementById('submit-btn'),
+            nextBtn:        document.getElementById('next-btn'),
+            playAgainBtn:   document.getElementById('play-again-btn'),
+            closeRulesBtn:  document.getElementById('close-rules-btn'),
             closeLeaderboardBtn: document.getElementById('close-leaderboard-btn'),
-
-            // Showdown UI
+            // Showdown
             sbsContainer: document.getElementById('sbs-container'),
-            sbsNameA: document.getElementById('sbs-name-A'),
-            sbsNameB: document.getElementById('sbs-name-B'),
-
-            // Leaderboard UI
-            hsContainer: document.getElementById('highscore-input-container'),
-            nameInput: document.getElementById('player-name-input'),
-            saveScoreBtn: document.getElementById('save-score-btn'),
-            leaderboardBody: document.getElementById('leaderboard-body'),
-            emptyLeaderboardMsg: document.getElementById('empty-leaderboard-msg'),
-            lbFilterMode: document.getElementById('lb-filter-mode'),
-            lbFilterPool: document.getElementById('lb-filter-pool'),
-            lbFilterDate: document.getElementById('lb-filter-date'),
-
-            // Legacy number-line elements (kept so older logic doesn't crash)
-            minInput: document.getElementById('min-input'),
-            maxInput: document.getElementById('max-input'),
-            rangeEl: document.getElementById('number-line-range'),
-            bullEl: document.getElementById('bullseye-band'),
-            labelsEl: document.getElementById('slider-ticks'),
-
-            // Slider elements
+            sbsNameA:     document.getElementById('sbs-name-A'),
+            sbsNameB:     document.getElementById('sbs-name-B'),
+            // Leaderboard
+            hsContainer:        document.getElementById('highscore-input-container'),
+            nameInput:          document.getElementById('player-name-input'),
+            saveScoreBtn:       document.getElementById('save-score-btn'),
+            leaderboardBody:    document.getElementById('leaderboard-body'),
+            emptyLeaderboardMsg:document.getElementById('empty-leaderboard-msg'),
+            lbFilterMode:       document.getElementById('lb-filter-mode'),
+            lbFilterPool:       document.getElementById('lb-filter-pool'),
+            lbFilterDate:       document.getElementById('lb-filter-date'),
+            // Hidden inputs (legacy compat)
+            minInput:  document.getElementById('min-input'),
+            maxInput:  document.getElementById('max-input'),
+            // Slider
             sliderDisplayMin: document.getElementById('slider-display-min'),
             sliderDisplayMax: document.getElementById('slider-display-max'),
-            sliderInvalid: document.getElementById('slider-invalid-zone'),
-            sliderFill: document.getElementById('slider-fill-bar'),
-            sliderBullseye: document.getElementById('slider-bullseye-zone'),
-            sliderPin: document.getElementById('slider-answer-pin'),
+            sliderInvalid:    document.getElementById('slider-invalid-zone'),
+            sliderFill:       document.getElementById('slider-fill-bar'),
+            sliderBullseye:   document.getElementById('slider-bullseye-zone'),
+            sliderPin:        document.getElementById('slider-answer-pin'),
             sliderResultText: document.getElementById('result-diff-display'),
-            sliderTicks: document.getElementById('slider-ticks'),
-            sliderTrackArea: document.getElementById('slider-touch-area'),
-            thumbMin: document.getElementById('thumb-min'),
-            thumbMax: document.getElementById('thumb-max'),
+            sliderTicks:      document.getElementById('slider-ticks'),
+            sliderTrackArea:  document.getElementById('slider-touch-area'),
+            thumbMin:         document.getElementById('thumb-min'),
+            thumbMax:         document.getElementById('thumb-max'),
         };
+    }
 
-        // --- Wire critical buttons FIRST (before anything that might crash) ---
-        dom.startBtn.onclick = startGame;
-        dom.homeBtn.onclick = goHome;
-        dom.playAgainBtn.onclick = goHome;
-        dom.rerollBtn.onclick = skipQuestion;
-        dom.rulesBtn.onclick = () => dom.rulesModal.classList.remove('hidden');
-        dom.closeRulesBtn.onclick = () => dom.rulesModal.classList.add('hidden');
+    // ═══════════════════════════════════════
+    // §9  EVENT WIRING
+    // ═══════════════════════════════════════
+    function wireEvents() {
+        // ── Core navigation ──
+        dom.startBtn.addEventListener('click', startGame);
+        dom.homeBtn.addEventListener('click', goHome);
+        dom.playAgainBtn.addEventListener('click', goHome);
+        dom.rerollBtn.addEventListener('click', skipQuestion);
 
-        // Add these to your DOM object (or verify they are there)
-        dom.animBtn = document.getElementById('anim-toggle-row');
-        dom.animInd = document.getElementById('anim-indicator');
+        // ── Rules modal ──
+        dom.rulesBtn.addEventListener('click', () => dom.rulesModal.classList.remove('hidden'));
+        dom.closeRulesBtn.addEventListener('click', () => dom.rulesModal.classList.add('hidden'));
+        document.getElementById('rules-overlay').addEventListener('click', () => dom.rulesModal.classList.add('hidden'));
 
-// 3. Add these lines further down in 'DOMContentLoaded' (where event listeners are attached)
-        updateDeadZoneUI();
-        dom.deadZoneBtn.onclick = toggleDeadZone;
-
-        // Initialize UI State
-        updateAnimUI(); 
-        
-        // Add Listener
-        dom.animBtn.onclick = toggleAnimations;
-
-        // --- SLIDER EVENT LISTENERS (Moved OUTSIDE the dom object) ---
-        const handleStart = (e, type) => {
-            if(dom.submitBtn.textContent !== "Lock In") return; 
-            // Only allow interaction if we haven't locked in yet
-            
-            // e.preventDefault(); // Optional: uncomment if scrolling is an issue
-            sliderDragging = type;
-            const thumb = type === 'min' ? dom.thumbMin : dom.thumbMax;
-            thumb.classList.add('thumb-active');
-        };
-        
-        // Mouse Events
-        dom.thumbMin.addEventListener('mousedown', (e) => handleStart(e, 'min'));
-        dom.thumbMax.addEventListener('mousedown', (e) => handleStart(e, 'max'));
-        
-        // Touch Events (passive: false is important to prevent scrolling while dragging)
-        dom.thumbMin.addEventListener('touchstart', (e) => handleStart(e, 'min'), {passive: false});
-        dom.thumbMax.addEventListener('touchstart', (e) => handleStart(e, 'max'), {passive: false});
-
-        // Global Move/End Listeners (Attached to window to catch drags outside the box)
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchmove', handleMove, {passive: false});
-        window.addEventListener('touchend', handleEnd);
-        
-        
-        // --- REMAINING INITIALIZATION CODE ---
-        
-        // 1. Populate Date Dropdown (Last 7 Days)
-        const populateDates = () => {
-            const opts = dom.lbFilterDate.options;
-            // Keep "Today" and "All Time"
-            while(opts.length > 2) opts.remove(2);
-            
-            for(let i=1; i<=7; i++) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const val = d.toLocaleDateString();
-                const opt = document.createElement('option');
-                opt.value = val;
-                opt.text = val; 
-                dom.lbFilterDate.add(opt);
-            }
-        };
-        populateDates();
-
-        // 2. Add Listeners to refresh table when filters change
-        dom.lbFilterMode.onchange = () => renderLeaderboard();
-        dom.lbFilterPool.onchange = () => renderLeaderboard();
-        dom.lbFilterDate.onchange = () => renderLeaderboard();
-
-        const isDark = localStorage.getItem('darkMode') !== 'disabled';
-        if(isDark) document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
-        updateThemeIcon();
-        
-        loadAll(() => {
-  try {
-    buildAgg();
-    renderDecadeGrid();
-  } catch (e) {
-    console.error('Init error (build/render):', e);
-    // fail open so you're not stuck on the loader
-    dom.loadingScreen.classList.add('hidden');
-    dom.startScreen.classList.remove('hidden');
-    showAlert('Init error. Check console.', 'bg-red-500');
-    return;
-  }
-
-  // Let challenge logic decide which screen
-  checkUrlForChallenge();
-});
-
-        dom.themeBtn.onclick = toggleTheme;
-        dom.formatBtn.onclick = toggleFormat;
-        
-        dom.settingsBtn.onclick = (e) => { e.stopPropagation(); dom.settingsPopover.classList.toggle('hidden'); };
-        document.addEventListener('click', (e) => {
-            if(!dom.settingsBtn.contains(e.target) && !dom.settingsPopover.contains(e.target)) {
-                dom.settingsPopover.classList.add('hidden');
-            }
+        // ── Leaderboard modal ──
+        dom.leaderboardBtn.addEventListener('click', () => {
+            renderLeaderboard();
+            dom.leaderboardModal.classList.remove('hidden');
         });
-
-        // Modal Handlers
-        document.getElementById('rules-overlay').onclick = () => dom.rulesModal.classList.add('hidden');
-        
-        dom.leaderboardBtn.onclick = () => { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); };
-        // Define the close function
         const closeLeaderboard = () => {
             dom.leaderboardModal.classList.add('hidden');
-            
-            // Reset Filters to Defaults
-            if(dom.lbFilterMode) dom.lbFilterMode.value = 'all';
-            if(dom.lbFilterPool) dom.lbFilterPool.value = 'all_pools';
-            if(dom.lbFilterDate) dom.lbFilterDate.value = 'today';
+            if (dom.lbFilterMode) dom.lbFilterMode.value = 'all';
+            if (dom.lbFilterPool) dom.lbFilterPool.value = 'all_pools';
+            if (dom.lbFilterDate) dom.lbFilterDate.value = 'today';
         };
+        dom.closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
+        document.getElementById('leaderboard-overlay').addEventListener('click', closeLeaderboard);
 
-        // Attach to buttons
-        dom.closeLeaderboardBtn.onclick = closeLeaderboard;
-        document.getElementById('leaderboard-overlay').onclick = closeLeaderboard;
+        // ── Leaderboard filters ──
+        dom.lbFilterMode.addEventListener('change', () => renderLeaderboard());
+        dom.lbFilterPool.addEventListener('change', () => renderLeaderboard());
+        dom.lbFilterDate.addEventListener('change', () => renderLeaderboard());
 
-        document.querySelectorAll('details').forEach((det) => {
-            det.ontoggle = (e) => {
-                if(det.open) document.querySelectorAll('details').forEach(d => { if(d!==det) d.open=false; });
-            };
+        // ── Settings popover ──
+        dom.settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dom.settingsPopover.classList.toggle('hidden');
         });
-        
-        // Share Button Listener
-        document.getElementById('share-btn').onclick = shareGame;
+        dom.themeBtn.addEventListener('click', toggleTheme);
+        dom.formatBtn.addEventListener('click', toggleFormat);
+        dom.animBtn.addEventListener('click', toggleAnimations);
+        dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
+        dom.saveScoreBtn.addEventListener('click', saveHighScore);
+        document.getElementById('share-btn').addEventListener('click', shareGame);
 
-        dom.saveScoreBtn.onclick = saveHighScore;
-
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                // LOCK: Do nothing if disabled (Pick Em Mode)
-                if (e.target.disabled) return; 
-
-                document.querySelectorAll('.mode-btn').forEach(b => {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
-                });
-                e.target.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                e.target.classList.remove('text-gray-500','dark:text-gray-400');
-                selectedMode = e.target.dataset.mode;
+        // ── Close popovers on outside click (single listener) ──
+        document.addEventListener('click', (e) => {
+            // Close settings popover if click is outside
+            if (!dom.settingsBtn.contains(e.target) && !dom.settingsPopover.contains(e.target)) {
+                dom.settingsPopover.classList.add('hidden');
+            }
+            // Close era popover if click is outside
+            if (!dom.eraTriggerBtn.contains(e.target) && !dom.eraPopover.contains(e.target)) {
+                dom.eraPopover.classList.add('hidden');
             }
         });
 
-        document.querySelectorAll('.gamemode-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                // Visual Selection
-                document.querySelectorAll('.gamemode-btn').forEach(b => {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
-                });
-                e.target.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                e.target.classList.remove('text-gray-500','dark:text-gray-400');
-                
-                gameMode = e.target.dataset.mode;
+        // ── Era trigger ──
+        dom.eraTriggerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dom.eraPopover.classList.toggle('hidden');
+        });
 
-                // REMOVED LOCKING LOGIC FOR PICK EM
-                // Buttons stay enabled for all modes now.
-                const poolBtns = document.querySelectorAll('.mode-btn');
-                poolBtns.forEach(pb => {
+        // ── Game mode buttons ──
+        document.querySelectorAll('.gamemode-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.gamemode-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-gray-700', 'text-blue-600', 'dark:text-white', 'shadow-sm', 'font-semibold');
+                    b.classList.add('text-gray-500', 'dark:text-gray-400');
+                });
+                this.classList.add('bg-white', 'dark:bg-gray-700', 'text-blue-600', 'dark:text-white', 'shadow-sm', 'font-semibold');
+                this.classList.remove('text-gray-500', 'dark:text-gray-400');
+                gameMode = this.dataset.mode;
+
+                // Ensure pool buttons stay unlocked
+                document.querySelectorAll('.mode-btn').forEach(pb => {
                     pb.classList.remove('opacity-25', 'cursor-not-allowed', 'pointer-events-none');
                 });
+            });
+        });
+
+        // ── Player pool buttons ──
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                if (this.disabled) return;
+                document.querySelectorAll('.mode-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-gray-700', 'text-blue-600', 'dark:text-white', 'shadow-sm', 'font-semibold');
+                    b.classList.add('text-gray-500', 'dark:text-gray-400');
+                });
+                this.classList.add('bg-white', 'dark:bg-gray-700', 'text-blue-600', 'dark:text-white', 'shadow-sm', 'font-semibold');
+                this.classList.remove('text-gray-500', 'dark:text-gray-400');
+                selectedMode = this.dataset.mode;
+            });
+        });
+
+        // ── Player cards (How Much) ──
+        dom.cardA.addEventListener('click', (e) => {
+            if (dom.submitBtn.textContent === 'Lock In' && !e.target.closest('a')) selectPlayer('A');
+        });
+        dom.cardB.addEventListener('click', (e) => {
+            if (dom.submitBtn.textContent === 'Lock In' && !e.target.closest('a')) selectPlayer('B');
+        });
+
+        // ── Submit / Next button ──
+        dom.submitBtn.addEventListener('click', () => {
+            if (dom.submitBtn.textContent === 'Lock In') {
+                if (gameMode === 'howMuch') submitGuess();
+                else submitSideBySide();
+            } else {
+                nextRound();
             }
         });
 
-        dom.eraTriggerBtn.onclick = (e) => { e.stopPropagation(); dom.eraPopover.classList.toggle('hidden'); };
-        document.onclick = (e) => { if(!dom.eraTriggerBtn.contains(e.target)) dom.eraPopover.classList.add('hidden'); };
+        // ── Accordion details (one-open-at-a-time) ──
+        document.querySelectorAll('details').forEach(det => {
+            det.addEventListener('toggle', () => {
+                if (det.open) document.querySelectorAll('details').forEach(d => { if (d !== det) d.open = false; });
+            });
+        });
 
-        dom.cardA.onclick = (e) => { if(dom.submitBtn.textContent === "Lock In" && !e.target.closest('a')) selectPlayer('A'); };
-        dom.cardB.onclick = (e) => { if(dom.submitBtn.textContent === "Lock In" && !e.target.closest('a')) selectPlayer('B'); };
-
-        // Removed old dom.minInput.oninput listeners
-        
-        dom.submitBtn.onclick = () => {
-             if (dom.submitBtn.textContent === "Lock In") {
-                 if(gameMode === 'howMuch') submitGuess();
-                 else submitSideBySide();
-             }
-             else nextRound();
+        // ── Slider thumbs (mouse + touch) ──
+        const handleStart = (type) => {
+            if (dom.submitBtn.textContent !== 'Lock In') return;
+            sliderDragging = type;
+            (type === 'min' ? dom.thumbMin : dom.thumbMax).classList.add('thumb-active');
         };
-    } catch(initErr) {
-        console.error('Game init crash:', initErr);
-        var btn = document.getElementById('start-game-btn');
-        if (btn) { btn.textContent = 'Init error: ' + initErr.message; btn.style.background='#ef4444'; }
+        dom.thumbMin.addEventListener('mousedown', () => handleStart('min'));
+        dom.thumbMax.addEventListener('mousedown', () => handleStart('max'));
+        dom.thumbMin.addEventListener('touchstart', () => handleStart('min'), { passive: false });
+        dom.thumbMax.addEventListener('touchstart', () => handleStart('max'), { passive: false });
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
     }
+
+    // ── Preferences / theme on load ──
+    function initPreferences() {
+        const isDark = localStorage.getItem('darkMode') !== 'disabled';
+        if (isDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        updateThemeIcon();
+        updateAnimUI();
+        updateDeadZoneUI();
+    }
+
+    function populateDateDropdown() {
+        const opts = dom.lbFilterDate.options;
+        while (opts.length > 2) opts.remove(2);
+        for (let i = 1; i <= 7; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const val = d.toLocaleDateString();
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = val;
+            dom.lbFilterDate.add(opt);
+        }
     }
 
     /* Call immediately — script is at bottom of body, DOM is already parsed */
     gameInit();
 
-    function updateScoreColor(currentScore) {
+    // ═══════════════════════════════════════
+    // §10  SETTINGS / TOGGLE HELPERS
+    // ═══════════════════════════════════════
+    function updateScoreColor(s) {
         const el = dom.scoreDisp;
-        el.classList.remove('score-bronze','score-silver','score-gold','score-platinum');
-        if (currentScore >= 5000) { el.classList.add('score-platinum'); }
-        else if (currentScore >= 4000) { el.classList.add('score-gold'); }
-        else if (currentScore >= 3000) { el.classList.add('score-silver'); }
-        else if (currentScore >= 2000) { el.classList.add('score-bronze'); }
+        el.classList.remove('score-bronze', 'score-silver', 'score-gold', 'score-platinum');
+        if (s >= 5000) el.classList.add('score-platinum');
+        else if (s >= 4000) el.classList.add('score-gold');
+        else if (s >= 3000) el.classList.add('score-silver');
+        else if (s >= 2000) el.classList.add('score-bronze');
     }
-    
+
     function toggleTheme() {
         document.documentElement.classList.toggle('dark');
         localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'enabled' : 'disabled');
         updateThemeIcon();
     }
-
     function updateThemeIcon() {
-        if(document.documentElement.classList.contains('dark')){
-            dom.iconSun.classList.add('hidden');
-            dom.iconMoon.classList.remove('hidden');
-        } else {
-            dom.iconSun.classList.remove('hidden');
-            dom.iconMoon.classList.add('hidden');
+        const dark = document.documentElement.classList.contains('dark');
+        dom.iconSun.classList.toggle('hidden', dark);
+        dom.iconMoon.classList.toggle('hidden', !dark);
+    }
+
+    function toggleAnimations() {
+        useAnimations = !useAnimations;
+        localStorage.setItem('useAnimations', useAnimations);
+        updateAnimUI();
+    }
+    function updateAnimUI() {
+        dom.animInd.textContent = useAnimations ? 'ON' : 'OFF';
+        dom.animInd.className = useAnimations
+            ? 'text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded'
+            : 'text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded';
+    }
+
+    function toggleDeadZone() {
+        deadZoneEnabled = !deadZoneEnabled;
+        localStorage.setItem('deadZoneEnabled', deadZoneEnabled);
+        updateDeadZoneUI();
+
+        // If mid-game in How Much mode, reinit slider with new dead-zone setting
+        if (!dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
+            const curCat = getCurrentCat(catKey);
+            let dMin = curCat.dMin;
+            let dMax = dMin * 5;
+            let step = curCat.step;
+            if (catKey === 'careerXBHRate') { dMax *= 100; dMin *= 100; step *= 100; }
+            if (useWholeNumbers && ['careerBA', 'careerOPS', 'peakSeasonOPS'].includes(catKey)) step = 1;
+
+            const savedMin = sliderState.min;
+            const savedMax = sliderState.max;
+            initSlider(dMax, dMin, step);
+            sliderState.min = Math.max(savedMin, dMin);
+            sliderState.max = Math.min(savedMax, dMax);
+            updateSliderUI();
+
+            // If already locked in, reposition pin
+            if (dom.submitBtn.textContent !== 'Lock In') {
+                dom.thumbMin.style.display = 'none';
+                dom.thumbMax.style.display = 'none';
+                dom.sliderPin.classList.remove('hidden');
+                dom.sliderResultText.classList.remove('opacity-0');
+                dom.sliderResultText.classList.add('opacity-1');
+                const span = sliderState.rangeMax - sliderState.visualMin;
+                let vTD = catKey === 'careerXBHRate' ? trueDiff * 100 : trueDiff;
+                let pinPct = Math.max(0, Math.min(100, ((vTD - sliderState.visualMin) / span) * 100));
+                dom.sliderPin.style.transition = 'none';
+                dom.sliderPin.style.left = pinPct + '%';
+            }
         }
+    }
+    function updateDeadZoneUI() {
+        dom.deadZoneInd.textContent = deadZoneEnabled ? 'ON' : 'OFF';
+        dom.deadZoneInd.className = deadZoneEnabled
+            ? 'text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded'
+            : 'text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded';
+    }
+
+    // ═══════════════════════════════════════
+    // §11  ERA DECADE GRID
+    // ═══════════════════════════════════════
+    const ERA_INACTIVE = 'era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent';
+    const ERA_ACTIVE   = 'era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm';
+
+    function eraClassFor(btn, active) {
+        const base = active ? ERA_ACTIVE : ERA_INACTIVE;
+        if (btn.dataset.era === 'allEras') return base + ' col-span-1';
+        if (btn.dataset.era === 'modern')  return base + ' col-span-2';
+        return base;
     }
 
     function renderDecadeGrid() {
         const grid = dom.eraPopover;
-        // Remove existing decade buttons to prevent duplicates
         grid.querySelectorAll('button[data-decade]').forEach(b => b.remove());
-        
-        for(let d=2020; d>=1880; d-=10) {
+
+        for (let d = 2020; d >= 1880; d -= 10) {
             const btn = document.createElement('button');
-            // Unselected style: Gray text, medium weight, small font
-            btn.className = "era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent";
-            btn.textContent = `${d}s`;
+            btn.className = ERA_INACTIVE;
+            btn.textContent = d + 's';
             btn.dataset.era = 'select';
             btn.dataset.decade = d;
             grid.appendChild(btn);
         }
-        
+
+        // Attach click handler to ALL era options (including the static All Eras / Modern buttons)
         document.querySelectorAll('.era-option').forEach(opt => {
-            opt.onclick = (e) => {
-                // 1. Update the TRIGGER BUTTON to "Selected" style (White BG, Shadow)
-            const btn = document.getElementById('era-trigger-btn');
-            btn.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'hover:bg-gray-200', 'dark:hover:bg-gray-700');
-            btn.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm');
+            opt.addEventListener('click', function () {
+                // Reset all to inactive
+                document.querySelectorAll('.era-option').forEach(b => { b.className = eraClassFor(b, false); });
+                // Activate clicked
+                this.className = eraClassFor(this, true);
 
-            // 2. Update the DISPLAY TEXT to "Selected" style (Blue/White, Bold)
-            const txt = document.getElementById('era-display-text');
-            txt.classList.remove('text-gray-500', 'dark:text-gray-400', 'font-medium');
-            txt.classList.add('text-blue-600', 'dark:text-white', 'font-semibold');
+                const type = this.dataset.era;
+                if (type === 'allEras')    { eraMode = 'allEras'; selectedDecade = null; dom.eraDisplay.textContent = 'All'; }
+                else if (type === 'modern') { eraMode = 'modern';  selectedDecade = null; dom.eraDisplay.textContent = 'Modern'; }
+                else { eraMode = 'select'; selectedDecade = parseInt(this.dataset.decade); dom.eraDisplay.textContent = selectedDecade + 's'; }
 
-            // ... continue with existing logic (highlighting options, setting vars) ...
-                // Reset all to unselected style
-                // 1. RESET ALL BUTTONS (Gray/Unselected)
-            document.querySelectorAll('.era-option').forEach(b => {
-                // Base unselected style
-                let cls = "era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent";
-                
-                // IMPORTANT: Re-apply the column spans so the grid doesn't break
-                if(b.dataset.era === 'allEras') cls += " col-span-1";
-                else if(b.dataset.era === 'modern') cls += " col-span-2";
-                
-                b.className = cls;
-            });
-
-            // 2. STYLE THE CLICKED BUTTON (Active/Blue)
-            // Base active style
-            let activeCls = "era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
-            
-            // Re-apply the column span for the active button too
-            if(e.target.dataset.era === 'allEras') activeCls += " col-span-1";
-            else if(e.target.dataset.era === 'modern') activeCls += " col-span-2";
-            
-            e.target.className = activeCls;
-                
-                // Set clicked to selected style (Blue background, Bold/Semibold, White/Blue text)
-                e.target.className = "era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
-                
-                if(e.target.dataset.era === 'allEras') {
-                     // Specific styling for 'All Eras' when selected (matches pool buttons)
-                     e.target.className = "era-option col-span-1 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
-                } else if (e.target.dataset.era === 'modern') {
-                     // Specific styling for 'Modern' when selected
-                     e.target.className = "era-option col-span-2 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm";
-                }
-
-                const type = e.target.dataset.era;
-                if(type === 'allEras') { eraMode = 'allEras'; selectedDecade = null; dom.eraDisplay.textContent = "All"; }
-                else if(type === 'modern') { eraMode = 'modern'; selectedDecade = null; dom.eraDisplay.textContent = "Modern"; }
-                else { eraMode = 'select'; selectedDecade = parseInt(e.target.dataset.decade); dom.eraDisplay.textContent = `${selectedDecade}s`; }
-                
-                // Close popover after selection
                 dom.eraPopover.classList.add('hidden');
-            };
+            });
         });
     }
 
+    // ═══════════════════════════════════════
+    // §12  PLAYER CARD SELECTION
+    // ═══════════════════════════════════════
     function selectPlayer(who) {
-        if(dom.submitBtn.textContent !== "Lock In") return; 
+        if (dom.submitBtn.textContent !== 'Lock In') return;
         versusPick = who;
-        [dom.cardA, dom.cardB].forEach(c => {
-            c.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
-        });
+        [dom.cardA, dom.cardB].forEach(c => c.classList.remove('ring-4', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20'));
         const sel = who === 'A' ? dom.cardA : dom.cardB;
-        sel.classList.add('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+        sel.classList.add('ring-4', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
         updateSliderUI();
     }
 
-    // ==========================================
-// 1. TOGGLE DEAD ZONE (Fixes Pin Location & Disappearing)
-// ==========================================
-function toggleDeadZone() {
-    deadZoneEnabled = !deadZoneEnabled;
-    localStorage.setItem('deadZoneEnabled', deadZoneEnabled);
-    updateDeadZoneUI();
-
-    // Only proceed if active in "How Much" mode
-    if (!dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
-        const curCat = getCurrentCat(catKey);
-        
-        // 1. SAVE CURRENT USER VALUES
-        let savedMin = sliderState.min;
-        let savedMax = sliderState.max;
-
-        // Recalculate range limits 
-        let dMin = curCat.dMin;
-        let dMax = dMin * 5;
-        let step = curCat.step; // Get base step
-
-        if (catKey === 'careerXBHRate') {
-            dMax = dMax * 100;
-            dMin = dMin * 100; 
-            step = step * 100; // NEW: Scale step for XBH re-init
-        } 
-        
-        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) step = 1;
-
-        // 2. RE-INITIALIZE SLIDER 
-        initSlider(dMax, dMin, step);
-
-        // 3. RESTORE USER VALUES (Clamp to new limits)
-        if (savedMin < dMin) savedMin = dMin;
-        if (savedMax > dMax) savedMax = dMax;
-        
-        sliderState.min = savedMin;
-        sliderState.max = savedMax;
-        
-        updateSliderUI();
-
-        // 4. HANDLE LOCKED-IN STATE
-        if (dom.submitBtn.textContent !== "Lock In") {
-            // A. Hide Thumbs (Fixes reappearance)
-            dom.thumbMin.style.display = 'none';
-            dom.thumbMax.style.display = 'none';
-
-            // B. Force Unhide Pin/Text
-            dom.sliderPin.classList.remove('hidden');
-            dom.sliderResultText.classList.remove('opacity-0');
-            dom.sliderResultText.classList.add('opacity-1'); 
-
-            // C. Recalculate Pin Position
-            const { rangeMax, visualMin } = sliderState;
-            const span = rangeMax - visualMin;
-            
-            let vTD = trueDiff;
-            if(catKey === 'careerXBHRate') vTD = trueDiff * 100;
-            
-            let pinPct = ((vTD - visualMin) / span) * 100;
-            pinPct = Math.max(0, Math.min(100, pinPct));
-            
-            // D. Apply Position
-            dom.sliderPin.style.transition = 'none'; 
-            dom.sliderPin.style.left = pinPct + '%';
-        }
-    }
-}
-
-// ==========================================
-// 2. SUBMIT GUESS (Fixes Wrong Pin Location on Submit)
-// ==========================================
-function submitGuess() {
+    // ═══════════════════════════════════════
+    // §13  SUBMIT GUESS (How Much)
+    // ═══════════════════════════════════════
+    function submitGuess() {
     dom.submitBtn.disabled = true; 
     dom.rerollBtn.disabled = true; 
     dom.thumbMin.style.display = 'none'; 
