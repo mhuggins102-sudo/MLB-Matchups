@@ -1,3 +1,12 @@
+window.onerror = function(msg, src, line, col, err) {
+    var btn = document.getElementById('start-game-btn');
+    if (btn) btn.textContent = msg + ' @L' + line + ':' + col;
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;font:14px monospace;padding:12px;z-index:99999;word-break:break-all;';
+    el.textContent = 'JS ERROR: ' + msg + ' | ' + (src||'?') + ':' + line + ':' + col;
+    if (err && err.stack) el.textContent += ' | ' + err.stack;
+    document.body ? document.body.prepend(el) : document.addEventListener('DOMContentLoaded', function() { document.body.prepend(el); });
+};
     (function dependencyCheck(){
   const missing = [];
   if (!window.Papa) missing.push('PapaParse');
