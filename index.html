@@ -391,7 +391,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Eligibility Criteria</label>
+                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
                         <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Standard</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
@@ -615,6 +615,44 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div id="custom-filter-rows" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto"></div>
                 <button id="add-filter-btn" class="w-full py-2 text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition mb-4">+ Add Filter</button>
                 <button id="apply-custom-elig" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eligibility Help Modal -->
+    <div id="elig-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="elig-help-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Eligibility Criteria</h3>
+                <button id="close-elig-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto">
+                <div>
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Standard</div>
+                    <div class="text-xs leading-relaxed">
+                        <span class="font-semibold">Batters:</span> 5,000+ career plate appearances<br>
+                        <span class="font-semibold">Pitchers:</span> 150+ games started or 500+ games pitched
+                    </div>
+                </div>
+                <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">All Star</div>
+                    <div class="text-xs leading-relaxed">
+                        <span class="font-semibold">Batters:</span> 20+ career WAR<br>
+                        <span class="font-semibold">Pitchers:</span> 20+ career WAR
+                    </div>
+                </div>
+                <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Hall of Fame</div>
+                    <div class="text-xs leading-relaxed">
+                        <span class="font-semibold">Batters:</span> 40+ career WAR<br>
+                        <span class="font-semibold">Pitchers:</span> 40+ career WAR
+                    </div>
+                </div>
+                <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Custom</div>
+                    <div class="text-xs leading-relaxed">Set your own stat thresholds. Add one or more filters from a curated list of career stats.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -3057,10 +3095,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     async function isHighScore(s) {
-        if (s === 0) return false;
-        var lb = await fetchLeaderboard();
-        if (lb.length < 10) return true;
-        return s > lb[lb.length - 1].score;
+        if (!sb || s === 0) return false;
+        try {
+            var result = await sb.from('leaderboard').select('score')
+                .order('score', { ascending: false }).limit(10);
+            if (result.error) return false;
+            var lb = result.data || [];
+            if (lb.length < 10) return true;
+            return s > lb[lb.length - 1].score;
+        } catch (e) { return false; }
     }
 
     async function saveHighScore() {
@@ -3071,7 +3114,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var res = await sb.from('leaderboard').insert([{
                 name: name, score: score, date: new Date().toLocaleDateString(),
-                game_mode: gameMode, player_pool: playerPool, eligibility: eligibility
+                game_mode: gameMode, player_pool: playerPool
             }]);
             if (res.error) throw res.error;
             await fetchLeaderboard();
@@ -3349,6 +3392,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             document.getElementById('custom-filter-rows').appendChild(createFilterRow());
         });
         document.getElementById('apply-custom-elig').addEventListener('click', applyCustomFilters);
+
+        // Eligibility help modal
+        document.getElementById('elig-help-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('elig-help-modal').classList.remove('hidden');
+        });
+        document.getElementById('close-elig-help').addEventListener('click', function() {
+            document.getElementById('elig-help-modal').classList.add('hidden');
+        });
+        document.getElementById('elig-help-overlay').addEventListener('click', function() {
+            document.getElementById('elig-help-modal').classList.add('hidden');
+        });
 
         // Leaderboard modal
         dom.leaderboardBtn.addEventListener('click', function() { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); });
