@@ -375,7 +375,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 </div>
             <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
                 <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode</label>
+                        <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
 <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
     <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
     <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
@@ -619,6 +619,52 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Game Mode Help Modal -->
+    <div id="gamemode-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="gamemode-help-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Game Modes</h3>
+                <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-5 overflow-y-auto">
+                <div>
+                    <div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div>
+                    <div class="text-xs leading-relaxed mb-2">Pick which player has the higher stat, then estimate the difference using a range slider. The tighter your range, the more points you earn.</div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                        <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Career HR</div>
+                        <div class="flex justify-center gap-6">
+                            <span>Mike Trout</span>
+                            <span class="text-gray-400">vs</span>
+                            <span>Manny Ramirez</span>
+                        </div>
+                        <div class="mt-1 text-[10px]">By how much? &nbsp;|&mdash;&mdash; 50-120 &mdash;&mdash;|</div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div>
+                    <div class="text-xs leading-relaxed mb-2">Two players go head-to-head across 10 stat categories. For each category, pick who you think has the higher (or lower) value. Score is based on how many you get right out of 10.</div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                        <div class="flex justify-center gap-4 font-bold text-gray-700 dark:text-gray-300 mb-1">
+                            <span>Griffey Jr.</span>
+                            <span class="text-gray-400">vs</span>
+                            <span>A-Rod</span>
+                        </div>
+                        <div class="text-[10px]">Career HR &bull; Career BA &bull; Career OPS &bull; ...</div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div>
+                    <div class="text-xs leading-relaxed mb-2">Given a stat and a threshold, pick the players from a grid of 10 who meet the criteria. Earn points for each correct pick, but wrong picks end the streak.</div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                        <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Career HR &ge; 300</div>
+                        <div class="text-[10px]">Pick the players who qualify from a 10-player grid</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Eligibility Help Modal -->
     <div id="elig-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="elig-help-overlay"></div>
@@ -843,20 +889,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <option value="all">All Modes</option>
                         <option value="howMuch">How Much?</option>
                         <option value="sideBySide">Showdown</option>
+                        <option value="pickEm">Pick 'Em</option>
                     </select>
 
                     <select id="lb-filter-pool" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
                         <option value="all_pools">All Pools</option>
-                        <option value="all">Standard</option>
-                        <option value="allStars">All Stars</option>
+                        <option value="all">All Players</option>
                         <option value="batters">Batters</option>
                         <option value="pitchers">Pitchers</option>
                     </select>
 
                     <select id="lb-filter-date" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
-                        <option value="today">Today</option>
                         <option value="all_time">All Time</option>
-                        </select>
+                        <option value="today">Today</option>
+                        <option value="this_month">This Month</option>
+                        <option value="last_month">Last Month</option>
+                    </select>
                 </div>
             </div>
 
@@ -3062,8 +3110,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var fDate = dom.lbFilterDate.value;
             if (fMode !== 'all') query = query.eq('game_mode', fMode);
             if (fPool !== 'all_pools') query = query.eq('player_pool', fPool);
-            if (fDate === 'today') query = query.eq('date', new Date().toLocaleDateString());
-            else if (fDate !== 'all_time') query = query.eq('date', fDate);
+            if (fDate === 'today') {
+                query = query.eq('date', new Date().toLocaleDateString());
+            } else if (fDate === 'this_month') {
+                var now = new Date();
+                var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                query = query.gte('date', firstDay.toLocaleDateString()).lte('date', lastDay.toLocaleDateString());
+            } else if (fDate === 'last_month') {
+                var now2 = new Date();
+                var firstDayLM = new Date(now2.getFullYear(), now2.getMonth() - 1, 1);
+                var lastDayLM = new Date(now2.getFullYear(), now2.getMonth(), 0);
+                query = query.gte('date', firstDayLM.toLocaleDateString()).lte('date', lastDayLM.toLocaleDateString());
+            }
+            // all_time: no date filter
             var result = await query;
             if (result.error) throw result.error;
             cachedLeaderboard = result.data || [];
@@ -3097,12 +3157,23 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     async function isHighScore(s) {
         if (!sb || s === 0) return false;
         try {
-            var result = await sb.from('leaderboard').select('score')
-                .order('score', { ascending: false }).limit(10);
-            if (result.error) return false;
-            var lb = result.data || [];
-            if (lb.length < 10) return true;
-            return s > lb[lb.length - 1].score;
+            var todayStr = new Date().toLocaleDateString();
+            var modes = ['howMuch', 'sideBySide', 'pickEm'];
+            var pools = ['all', 'batters', 'pitchers'];
+            for (var m = 0; m < modes.length; m++) {
+                for (var p = 0; p < pools.length; p++) {
+                    var result = await sb.from('leaderboard').select('score')
+                        .eq('date', todayStr)
+                        .eq('game_mode', modes[m])
+                        .eq('player_pool', pools[p])
+                        .order('score', { ascending: false }).limit(10);
+                    if (result.error) continue;
+                    var lb = result.data || [];
+                    if (lb.length < 10) return true;
+                    if (s > lb[lb.length - 1].score) return true;
+                }
+            }
+            return false;
         } catch (e) { return false; }
     }
 
@@ -3393,6 +3464,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         });
         document.getElementById('apply-custom-elig').addEventListener('click', applyCustomFilters);
 
+        // Game mode help modal
+        document.getElementById('gamemode-help-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('gamemode-help-modal').classList.remove('hidden');
+        });
+        document.getElementById('close-gamemode-help').addEventListener('click', function() {
+            document.getElementById('gamemode-help-modal').classList.add('hidden');
+        });
+        document.getElementById('gamemode-help-overlay').addEventListener('click', function() {
+            document.getElementById('gamemode-help-modal').classList.add('hidden');
+        });
+
         // Eligibility help modal
         document.getElementById('elig-help-btn').addEventListener('click', function(e) {
             e.stopPropagation();
@@ -3411,7 +3494,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.leaderboardModal.classList.add('hidden');
             if (dom.lbFilterMode) dom.lbFilterMode.value = 'all';
             if (dom.lbFilterPool) dom.lbFilterPool.value = 'all_pools';
-            if (dom.lbFilterDate) dom.lbFilterDate.value = 'today';
+            if (dom.lbFilterDate) dom.lbFilterDate.value = 'all_time';
         };
         dom.closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
         document.getElementById('leaderboard-overlay').addEventListener('click', closeLeaderboard);
@@ -3537,14 +3620,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     function populateDateDropdown() {
-        var opts = dom.lbFilterDate.options;
-        while (opts.length > 2) opts.remove(2);
-        for (var i = 1; i <= 7; i++) {
-            var d = new Date(); d.setDate(d.getDate() - i);
-            var opt = document.createElement('option');
-            opt.value = d.toLocaleDateString(); opt.text = d.toLocaleDateString();
-            dom.lbFilterDate.add(opt);
-        }
+        // Date options are now fixed in HTML: All Time, Today, This Month, Last Month
     }
 
     function gameInit() {
