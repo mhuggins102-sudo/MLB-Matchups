@@ -385,10 +385,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Player Pool</label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all mode-btn" data-mode="all">All</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="allStars">All Stars</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="batters">Batters</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all mode-btn" data-mode="pitchers">Pitchers</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all pool-btn" data-pool="all">All</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="batters">Batters</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="pitchers">Pitchers</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Eligibility Criteria</label>
+                    <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Standard</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="hof">Hall of Fame</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="custom">Custom</button>
                     </div>
                 </div>
                <div class="relative w-fit">
@@ -591,6 +599,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div class="p-5 text-center">
                 <input type="text" id="challenge-code-input" placeholder="e.g. ABC23" maxlength="5" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-black text-2xl tracking-[0.3em] uppercase focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off" autocapitalize="characters">
                 <button id="challenge-code-go" class="primary-btn bg-purple-600 hover:bg-purple-700 w-full">Play Challenge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Eligibility Modal -->
+    <div id="custom-elig-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-elig-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Custom Eligibility</h3>
+                <button id="close-custom-elig" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-5">
+                <div id="custom-filter-rows" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto"></div>
+                <button id="add-filter-btn" class="w-full py-2 text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition mb-4">+ Add Filter</button>
+                <button id="apply-custom-elig" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Filters</button>
             </div>
         </div>
     </div>
@@ -903,10 +927,27 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var hasUsedReroll = false;
     var usedPlayerIDs = new Set();
 
-    var selectedMode   = 'all';
+    var playerPool     = 'all';
+    var eligibility    = 'standard';
+    var customFilters  = [];
     var gameMode       = 'howMuch';
     var eraMode        = 'modern';
     var selectedDecade = null;
+
+    var CUSTOM_STAT_OPTIONS = [
+        { key: 'careerHR',      label: 'Career HR',   type: 'hitter',  dir: 'min' },
+        { key: 'careerH',       label: 'Career Hits',  type: 'hitter',  dir: 'min' },
+        { key: 'careerBA',      label: 'Career BA',    type: 'hitter',  dir: 'min' },
+        { key: 'careerOPS',     label: 'Career OPS',   type: 'hitter',  dir: 'min' },
+        { key: 'careerSB',      label: 'Career SB',    type: 'hitter',  dir: 'min' },
+        { key: 'careerWARBat',  label: 'Career WAR (Bat)', type: 'hitter',  dir: 'min' },
+        { key: 'careerW',       label: 'Career W',     type: 'pitcher', dir: 'min' },
+        { key: 'careerSO',      label: 'Career K',     type: 'pitcher', dir: 'min' },
+        { key: 'careerERA',     label: 'Career ERA',   type: 'pitcher', dir: 'max' },
+        { key: 'careerWHIP',    label: 'Career WHIP',  type: 'pitcher', dir: 'max' },
+        { key: 'careerIP',      label: 'Career IP',    type: 'pitcher', dir: 'min' },
+        { key: 'careerWARPit',  label: 'Career WAR (Pit)', type: 'pitcher', dir: 'min' }
+    ];
 
     var sbsPicks = new Array(10).fill(null);
 
@@ -1082,19 +1123,41 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // §7  PLAYER ELIGIBILITY
     // ═══════════════════════════════════════
     function passesGlobal(p) {
-        if (selectedMode === 'allStars') {
+        if (!p.stats) return false;
+        // Eligibility-based thresholds
+        if (eligibility === 'allStar') {
             if (p.type === 'hitter')  return p.stats.careerWARBat >= 20;
             if (p.type === 'pitcher') return p.stats.careerWARPit >= 20;
         }
+        if (eligibility === 'hof') {
+            if (p.type === 'hitter')  return p.stats.careerWARBat >= 40;
+            if (p.type === 'pitcher') return p.stats.careerWARPit >= 40;
+        }
+        if (eligibility === 'custom') {
+            for (var i = 0; i < customFilters.length; i++) {
+                var f = customFilters[i];
+                var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+                if (!opt) continue;
+                var val = p.stats[f.stat];
+                if (val == null) return false;
+                if (opt.dir === 'min' && val < f.value) return false;
+                if (opt.dir === 'max' && val > f.value) return false;
+            }
+            // Still require baseline minimums so we get meaningful players
+            if (p.type === 'hitter' && p.stats.PA < 2000) return false;
+            if (p.type === 'pitcher' && p.GS < 50 && p.G < 200) return false;
+            return true;
+        }
+        // Standard eligibility
         if (p.type === 'hitter') return p.stats.PA >= 5000;
         if (gameMode === 'sideBySide' && p.type === 'pitcher') return p.GS >= 150;
         return p.GS >= 150 || p.G >= 500;
     }
 
     function rolePass(p) {
-        return selectedMode === 'all' || selectedMode === 'allStars' ||
-               (selectedMode === 'batters' && p.type === 'hitter') ||
-               (selectedMode === 'pitchers' && p.type === 'pitcher');
+        return playerPool === 'all' ||
+               (playerPool === 'batters' && p.type === 'hitter') ||
+               (playerPool === 'pitchers' && p.type === 'pitcher');
     }
 
     function eraPass(p) {
@@ -1118,7 +1181,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var res = await sb.from('challenges').insert([{
             id: id,
             config: {
-                mode: gameMode, pool: selectedMode, era: eraMode, decade: selectedDecade,
+                mode: gameMode, pool: playerPool, elig: eligibility, customFilters: customFilters,
+                era: eraMode, decade: selectedDecade,
                 score: score, roundScores: roundScores
             },
             matchups: matchHistory
@@ -1145,7 +1209,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var data = result.data;
 
             gameMode       = data.config.mode;
-            selectedMode   = data.config.pool;
+            var rawPool    = data.config.pool || 'all';
+            playerPool     = (rawPool === 'allStars') ? 'all' : rawPool;
+            eligibility    = data.config.elig || (rawPool === 'allStars' ? 'allStar' : 'standard');
+            customFilters  = data.config.customFilters || [];
             eraMode        = data.config.era;
             selectedDecade = data.config.decade;
             challengeQueue = data.matchups;
@@ -1203,7 +1270,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var data = result.data;
 
             gameMode       = data.config.mode;
-            selectedMode   = data.config.pool;
+            var rawPool2   = data.config.pool || 'all';
+            playerPool     = (rawPool2 === 'allStars') ? 'all' : rawPool2;
+            eligibility    = data.config.elig || (rawPool2 === 'allStars' ? 'allStar' : 'standard');
+            customFilters  = data.config.customFilters || [];
             eraMode        = data.config.era;
             selectedDecade = data.config.decade;
             challengeQueue = data.matchups;
@@ -1222,6 +1292,81 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             console.error('Challenge load failed:', e);
             showAlert('Challenge not found. Check the code and try again.', 'bg-red-500');
         }
+    }
+
+    // ═══════════════════════════════════════
+    // §8c  CUSTOM ELIGIBILITY MODAL
+    // ═══════════════════════════════════════
+    function createFilterRow(existingFilter) {
+        var row = document.createElement('div');
+        row.className = 'flex items-center gap-2';
+
+        var select = document.createElement('select');
+        select.className = 'flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:text-white';
+        var defaultOpt = document.createElement('option');
+        defaultOpt.value = ''; defaultOpt.textContent = 'Select stat...';
+        select.appendChild(defaultOpt);
+        CUSTOM_STAT_OPTIONS.forEach(function(opt) {
+            var o = document.createElement('option');
+            o.value = opt.key; o.textContent = opt.label + (opt.dir === 'max' ? ' (max)' : ' (min)');
+            select.appendChild(o);
+        });
+
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.step = 'any';
+        input.placeholder = 'Value';
+        input.className = 'w-20 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-sm font-bold text-center focus:outline-none focus:border-blue-500 dark:text-white';
+
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.textContent = '\u00d7';
+        removeBtn.className = 'w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-lg font-bold';
+        removeBtn.addEventListener('click', function() { row.remove(); });
+
+        if (existingFilter) {
+            select.value = existingFilter.stat;
+            input.value = existingFilter.value;
+        }
+
+        row.appendChild(select);
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        return row;
+    }
+
+    function openCustomEligModal() {
+        var container = document.getElementById('custom-filter-rows');
+        container.innerHTML = '';
+        if (customFilters.length > 0) {
+            customFilters.forEach(function(f) { container.appendChild(createFilterRow(f)); });
+        } else {
+            container.appendChild(createFilterRow());
+        }
+        document.getElementById('custom-elig-modal').classList.remove('hidden');
+    }
+
+    function closeCustomEligModal() {
+        document.getElementById('custom-elig-modal').classList.add('hidden');
+    }
+
+    function applyCustomFilters() {
+        var rows = document.getElementById('custom-filter-rows').children;
+        var filters = [];
+        for (var i = 0; i < rows.length; i++) {
+            var select = rows[i].querySelector('select');
+            var input = rows[i].querySelector('input');
+            if (select && input && select.value && input.value !== '') {
+                filters.push({ stat: select.value, value: parseFloat(input.value) });
+            }
+        }
+        if (filters.length === 0) {
+            showAlert('Add at least one filter.', 'bg-red-500');
+            return;
+        }
+        customFilters = filters;
+        closeCustomEligModal();
+        showAlert(filters.length + ' filter' + (filters.length > 1 ? 's' : '') + ' applied!', 'bg-blue-600');
     }
 
     // ═══════════════════════════════════════
@@ -1771,7 +1916,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         currentChallengeId = null;
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
         challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
-        gameMode = 'howMuch'; selectedMode = 'all'; eraMode = 'modern'; selectedDecade = null;
+        gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = [];
+        eraMode = 'modern'; selectedDecade = null;
 
         // Reset game mode buttons
         document.querySelectorAll('.gamemode-btn').forEach(function(b) {
@@ -1784,12 +1930,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         });
 
         // Reset pool buttons
-        document.querySelectorAll('.mode-btn').forEach(function(b) {
-            b.disabled = false;
-            b.classList.remove('opacity-25','cursor-not-allowed','pointer-events-none');
+        document.querySelectorAll('.pool-btn').forEach(function(b) {
             b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
             b.classList.add('text-gray-500','dark:text-gray-400');
-            if (b.dataset.mode === 'all') {
+            if (b.dataset.pool === 'all') {
+                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-500','dark:text-gray-400');
+            }
+        });
+
+        // Reset eligibility buttons
+        document.querySelectorAll('.elig-btn').forEach(function(b) {
+            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-500','dark:text-gray-400');
+            if (b.dataset.elig === 'standard') {
                 b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 b.classList.remove('text-gray-500','dark:text-gray-400');
             }
@@ -1847,11 +2001,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (warLoaded.bat) allPool.push('careerWARBat');
             if (warLoaded.pit) allPool.push('careerWARPit');
             var poolCats;
-            if (selectedMode === 'all' || selectedMode === 'allStars') poolCats = allPool;
-            else if (selectedMode === 'batters') poolCats = allPool.filter(function(k) { return BASE_CATS[k].type === 'hitter'; });
+            if (playerPool === 'all') poolCats = allPool;
+            else if (playerPool === 'batters') poolCats = allPool.filter(function(k) { return BASE_CATS[k].type === 'hitter'; });
             else poolCats = allPool.filter(function(k) { return BASE_CATS[k].type === 'pitcher'; });
-            if (selectedMode === 'allStars') poolCats = poolCats.filter(function(k) { return !['seasonHighKBat'].includes(k); });
-            var maxUsage = (selectedMode === 'all' || selectedMode === 'allStars') ? 1 : 2;
+            if (eligibility === 'allStar') poolCats = poolCats.filter(function(k) { return !['seasonHighKBat'].includes(k); });
+            var maxUsage = playerPool === 'all' ? 1 : 2;
             var validCats = poolCats.filter(function(k) { return (categoryHistory[k] || 0) < maxUsage; });
             if (validCats.length === 0) validCats = poolCats;
 
@@ -1865,7 +2019,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (usedPlayerIDs.has(p.id)) return;
                     if (!passesGlobal(p) || !rolePass(p) || p.type !== BASE_CATS[catKey].type || !eraPass(p)) return;
                     var s = p.stats;
-                    if (selectedMode !== 'allStars') {
+                    if (eligibility === 'standard') {
                         if (catKey === 'careerW' && s.careerW < 75) return;
                         if (catKey === 'seasonHighSB' && s.seasonHighSB < 25) return;
                         if (catKey === 'careerWARBat' && s.careerWARBat < 25) return;
@@ -1874,7 +2028,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKey) && s.PA <= 0) return;
                     if (['careerERA','careerIP'].includes(catKey) && s.IP <= 0) return;
                     if (catKey === 'bestSeasonERA' && (!s.bestSeasonERA || s.bestSeasonERA <= 0)) return;
-                    if (selectedMode === 'allStars') {
+                    if (eligibility !== 'standard') {
                         if (catKey === 'peakSeasonOPS' && s.peakSeasonOPS <= 0) return;
                         if (catKey === 'bestSeasonERA' && s.bestSeasonERA <= 0) return;
                     }
@@ -1911,8 +2065,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.nameA.textContent = A.name;
         dom.nameB.textContent = B.name;
 
-        var poolMap = { all: 'All Players', allStars: 'All Stars', batters: 'Batters', pitchers: 'Pitchers' };
-        dom.catLabel.textContent = poolMap[selectedMode] || 'Standard';
+        var poolLabel = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
+        var eligLabel = { standard: '', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        var label = poolLabel[playerPool] || 'All Players';
+        if (eligibility !== 'standard') label = (eligLabel[eligibility] || '') + ' \u2022 ' + label;
+        dom.catLabel.textContent = label;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
         var catName = getCurrentCat(catKey).label;
@@ -2155,8 +2312,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // §15  SHOWDOWN MODE
     // ═══════════════════════════════════════
     function startRoundSideBySide() {
-        var poolMap = { all: 'All Players', allStars: 'All Stars', batters: 'Batters', pitchers: 'Pitchers' };
-        dom.catLabel.textContent = poolMap[selectedMode] || 'Standard';
+        var poolLbl = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
+        var eligLbl = { standard: '', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        var lbl = poolLbl[playerPool] || 'All Players';
+        if (eligibility !== 'standard') lbl = (eligLbl[eligibility] || '') + ' \u2022 ' + lbl;
+        dom.catLabel.textContent = lbl;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
         dom.playerPrompt.textContent = '';
         sbsPicks = new Array(10).fill(null);
@@ -2171,16 +2331,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 if (A) targetType = A.type;
             }
         } else {
-            if (selectedMode === 'pitchers') targetType = 'pitcher';
-            else if (selectedMode === 'batters') targetType = 'hitter';
+            if (playerPool === 'pitchers') targetType = 'pitcher';
+            else if (playerPool === 'batters') targetType = 'hitter';
             else targetType = Math.random() < 0.5 ? 'hitter' : 'pitcher';
 
             var pool = [];
             players.forEach(function(p) {
                 if (usedPlayerIDs.has(p.id)) return;
                 if (!passesGlobal(p) || !eraPass(p) || p.type !== targetType || !p.stats) return;
-                if (targetType === 'hitter' && p.stats.PA < 5000 && selectedMode !== 'allStars') return;
-                if (targetType === 'pitcher' && p.GS < 150 && selectedMode !== 'allStars') return;
                 pool.push(p);
             });
 
@@ -2372,8 +2530,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             });
         } else {
             var validCats = Object.keys(BASE_CATS).filter(function(k) { return BASE_CATS[k].thresholds; });
-            if (selectedMode === 'batters') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'hitter' || BASE_CATS[k].type === 'both'; });
-            else if (selectedMode === 'pitchers') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'pitcher' || BASE_CATS[k].type === 'both'; });
+            if (playerPool === 'batters') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'hitter' || BASE_CATS[k].type === 'both'; });
+            else if (playerPool === 'pitchers') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'pitcher' || BASE_CATS[k].type === 'both'; });
 
             var unusedCats = validCats.filter(function(k) { return !categoryHistory[k]; });
             if (unusedCats.length > 0) validCats = unusedCats;
@@ -2383,7 +2541,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             var catConfig2 = BASE_CATS[catKey];
             var availableThresh = catConfig2.thresholds;
-            if (selectedMode === 'allStars') {
+            if (eligibility === 'allStar' || eligibility === 'hof') {
                 if (availableThresh.length >= 2) availableThresh = availableThresh.slice(-2);
             } else {
                 if (availableThresh.length > 1) availableThresh = availableThresh.slice(0, -1);
@@ -2415,8 +2573,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 if (!eraPass(p) || !p.stats) return;
                 if (p.type === 'hitter' && p.stats.PA < 3000) return;
                 if (p.type === 'pitcher' && p.GS < 150 && p.G < 500) return;
-                if (selectedMode === 'batters' && p.type !== 'hitter') return;
-                if (selectedMode === 'pitchers' && p.type !== 'pitcher') return;
+                if (!passesGlobal(p)) return;
+                if (playerPool === 'batters' && p.type !== 'hitter') return;
+                if (playerPool === 'pitchers' && p.type !== 'pitcher') return;
                 if (catConfig2.type === 'hitter' && p.type !== 'hitter') return;
                 if (catConfig2.type === 'pitcher') {
                     if (p.type !== 'pitcher') return;
@@ -2458,7 +2617,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var headerText = 'All Players';
         if (catConfigR.type === 'hitter') headerText = 'Batters';
         else if (catConfigR.type === 'pitcher') headerText = (targetSubRole === 'starter') ? 'Starters' : 'Relievers';
-        if (selectedMode === 'allStars') headerText = 'All Stars (' + headerText + ')';
+        var eligLabelMap = { allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        if (eligibility !== 'standard') headerText = (eligLabelMap[eligibility] || '') + ' \u2022 ' + headerText;
         dom.catLabel.textContent = headerText;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
@@ -2911,7 +3071,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var res = await sb.from('leaderboard').insert([{
                 name: name, score: score, date: new Date().toLocaleDateString(),
-                game_mode: gameMode, player_pool: selectedMode
+                game_mode: gameMode, player_pool: playerPool, eligibility: eligibility
             }]);
             if (res.error) throw res.error;
             await fetchLeaderboard();
@@ -2965,10 +3125,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var modeText = 'How Much?';
             if (gameMode === 'sideBySide') modeText = 'Showdown';
             if (gameMode === 'pickEm') modeText = "Pick 'Em";
-            var poolTextMap = { all: 'Standard', allStars: 'All Stars', batters: 'Batters', pitchers: 'Pitchers' };
-            var poolText = poolTextMap[selectedMode] || 'Standard';
+            var poolTextMap = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
+            var eligTextMap = { standard: 'Standard', allStar: 'All Star', hof: 'Hall of Fame', custom: 'Custom' };
+            var poolText = poolTextMap[playerPool] || 'All Players';
+            var eligText = eligTextMap[eligibility] || 'Standard';
             var eraText = eraMode === 'allEras' ? 'All Eras' : (eraMode === 'modern' ? 'Modern Era' : selectedDecade + 's');
-            var subtitleText = modeText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
+            var subtitleText = modeText + ' \u2022 ' + eligText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
             var challengeWon = isPlayingChallenge && challengerScore !== null && score >= challengerScore;
             var challengeLost = isPlayingChallenge && challengerScore !== null && score < challengerScore;
             var shareTitle = isPlayingChallenge ? ('Challenge ' + currentChallengeId) : (currentChallengeId ? ('Challenge ' + currentChallengeId) : 'MLB Matchups');
@@ -3180,6 +3342,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (e.key === 'Enter') loadChallengeByCode();
         });
 
+        // Custom eligibility modal
+        document.getElementById('close-custom-elig').addEventListener('click', closeCustomEligModal);
+        document.getElementById('custom-elig-overlay').addEventListener('click', closeCustomEligModal);
+        document.getElementById('add-filter-btn').addEventListener('click', function() {
+            document.getElementById('custom-filter-rows').appendChild(createFilterRow());
+        });
+        document.getElementById('apply-custom-elig').addEventListener('click', applyCustomFilters);
+
         // Leaderboard modal
         dom.leaderboardBtn.addEventListener('click', function() { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); });
         var closeLeaderboard = function() {
@@ -3233,24 +3403,37 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 self.classList.remove('text-gray-500','dark:text-gray-400');
                 gameMode = self.dataset.mode;
-                document.querySelectorAll('.mode-btn').forEach(function(pb) {
-                    pb.classList.remove('opacity-25','cursor-not-allowed','pointer-events-none');
-                });
             });
         });
 
         // Player pool buttons
-        document.querySelectorAll('.mode-btn').forEach(function(btn) {
+        document.querySelectorAll('.pool-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                if (this.disabled) return;
                 var self = this;
-                document.querySelectorAll('.mode-btn').forEach(function(b) {
+                document.querySelectorAll('.pool-btn').forEach(function(b) {
                     b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                     b.classList.add('text-gray-500','dark:text-gray-400');
                 });
                 self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 self.classList.remove('text-gray-500','dark:text-gray-400');
-                selectedMode = self.dataset.mode;
+                playerPool = self.dataset.pool;
+            });
+        });
+
+        // Eligibility criteria buttons
+        document.querySelectorAll('.elig-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var self = this;
+                document.querySelectorAll('.elig-btn').forEach(function(b) {
+                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-500','dark:text-gray-400');
+                });
+                self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                self.classList.remove('text-gray-500','dark:text-gray-400');
+                eligibility = self.dataset.elig;
+                if (eligibility === 'custom') {
+                    openCustomEligModal();
+                }
             });
         });
 
