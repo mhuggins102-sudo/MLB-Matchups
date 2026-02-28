@@ -393,7 +393,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div>
                     <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Standard</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Veteran</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="hof">Hall of Fame</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="custom">Custom</button>
@@ -675,7 +675,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             </div>
             <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto">
                 <div>
-                    <div class="font-black text-gray-800 dark:text-white mb-1">Standard</div>
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Veteran</div>
                     <div class="text-xs leading-relaxed">
                         <span class="font-semibold">Batters:</span> 5,000+ career plate appearances<br>
                         <span class="font-semibold">Pitchers:</span> 150+ games started or 500+ games pitched
@@ -684,14 +684,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
                     <div class="font-black text-gray-800 dark:text-white mb-1">All Star</div>
                     <div class="text-xs leading-relaxed">
-                        <span class="font-semibold">Batters:</span> 20+ career WAR<br>
+                        <span class="font-semibold">Batters:</span> 25+ career WAR<br>
                         <span class="font-semibold">Pitchers:</span> 20+ career WAR
                     </div>
                 </div>
                 <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
                     <div class="font-black text-gray-800 dark:text-white mb-1">Hall of Fame</div>
                     <div class="text-xs leading-relaxed">
-                        <span class="font-semibold">Batters:</span> 40+ career WAR<br>
+                        <span class="font-semibold">Batters:</span> 50+ career WAR<br>
                         <span class="font-semibold">Pitchers:</span> 40+ career WAR
                     </div>
                 </div>
@@ -834,7 +834,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
 
                         <div>
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Standard</h4>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Veteran</h4>
                             <p class="mb-1">Designed to include recognizable players with significant careers.</p>
                             <ul class="list-disc ml-4 space-y-1">
                                 <li><strong>Hitters:</strong> 5,000+ career plate appearances.</li>
@@ -846,7 +846,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                             <h4 class="font-bold text-gray-900 dark:text-white mb-1">2. All Star</h4>
                             <p class="mb-1">A more exclusive tier featuring the game's greatest players.</p>
                             <ul class="list-disc ml-4 space-y-1">
-                                <li><strong>Hitters:</strong> 20+ career WAR.</li>
+                                <li><strong>Hitters:</strong> 25+ career WAR.</li>
                                 <li><strong>Pitchers:</strong> 20+ career WAR.</li>
                             </ul>
                         </div>
@@ -855,7 +855,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                             <h4 class="font-bold text-gray-900 dark:text-white mb-1">3. Hall of Fame</h4>
                             <p class="mb-1">Only the all-time legends.</p>
                             <ul class="list-disc ml-4 space-y-1">
-                                <li><strong>Hitters:</strong> 40+ career WAR.</li>
+                                <li><strong>Hitters:</strong> 50+ career WAR.</li>
                                 <li><strong>Pitchers:</strong> 40+ career WAR.</li>
                             </ul>
                         </div>
@@ -1269,11 +1269,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (!p.stats) return false;
         // Eligibility-based thresholds
         if (eligibility === 'allStar') {
-            if (p.type === 'hitter')  return p.stats.careerWARBat >= 20;
+            if (p.type === 'hitter')  return p.stats.careerWARBat >= 25;
             if (p.type === 'pitcher') return p.stats.careerWARPit >= 20;
         }
         if (eligibility === 'hof') {
-            if (p.type === 'hitter')  return p.stats.careerWARBat >= 40;
+            if (p.type === 'hitter')  return p.stats.careerWARBat >= 50;
             if (p.type === 'pitcher') return p.stats.careerWARPit >= 40;
         }
         if (eligibility === 'custom') {
@@ -1299,7 +1299,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (p.type === 'pitcher' && p.GS < 50 && p.G < 200) return false;
             return true;
         }
-        // Standard eligibility
+        // Veteran eligibility
         if (p.type === 'hitter') return p.stats.PA >= 5000;
         if (gameMode === 'sideBySide' && p.type === 'pitcher') return p.GS >= 150;
         return p.GS >= 150 || p.G >= 500;
@@ -1453,14 +1453,23 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         row.className = 'flex items-center gap-2';
 
         var select = document.createElement('select');
-        select.className = 'min-w-0 flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-xs font-semibold focus:outline-none focus:border-blue-500 dark:text-white truncate';
+        select.className = 'min-w-0 flex-1 h-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 text-xs font-semibold focus:outline-none focus:border-blue-500 dark:text-white truncate';
         var defaultOpt = document.createElement('option');
         defaultOpt.value = ''; defaultOpt.textContent = 'Select stat...';
         select.appendChild(defaultOpt);
-        CUSTOM_STAT_OPTIONS.forEach(function(opt) {
-            var o = document.createElement('option');
-            o.value = opt.key; o.textContent = opt.label;
-            select.appendChild(o);
+
+        var groups = { hitter: 'Batters', pitcher: 'Pitchers', both: 'All Players' };
+        ['hitter', 'pitcher', 'both'].forEach(function(type) {
+            var grp = document.createElement('optgroup');
+            grp.label = groups[type];
+            CUSTOM_STAT_OPTIONS.forEach(function(opt) {
+                if (opt.type === type) {
+                    var o = document.createElement('option');
+                    o.value = opt.key; o.textContent = opt.label;
+                    grp.appendChild(o);
+                }
+            });
+            select.appendChild(grp);
         });
 
         var dirBtn = document.createElement('button');
@@ -1494,12 +1503,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         input.type = 'number';
         input.step = 'any';
         input.placeholder = 'Value';
-        input.className = 'w-20 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-sm font-bold text-center focus:outline-none focus:border-blue-500 dark:text-white';
+        input.className = 'w-20 h-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 text-sm font-bold text-center focus:outline-none focus:border-blue-500 dark:text-white';
 
         var removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.textContent = '\u00d7';
-        removeBtn.className = 'w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-lg font-bold';
+        removeBtn.className = 'w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-lg font-bold flex-shrink-0';
         removeBtn.addEventListener('click', function() { row.remove(); });
 
         if (existingFilter) {
@@ -2241,9 +2250,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.nameB.textContent = B.name;
 
         var poolLabel = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
-        var eligLabel = { standard: '', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        var eligLabel = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         var label = poolLabel[playerPool] || 'All Players';
-        if (eligibility !== 'standard') label = (eligLabel[eligibility] || '') + ' \u2022 ' + label;
+        label = (eligLabel[eligibility] || 'Veteran') + ' \u2022 ' + label;
         dom.catLabel.textContent = label;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
@@ -2488,9 +2497,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     function startRoundSideBySide() {
         var poolLbl = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
-        var eligLbl = { standard: '', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        var eligLbl = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         var lbl = poolLbl[playerPool] || 'All Players';
-        if (eligibility !== 'standard') lbl = (eligLbl[eligibility] || '') + ' \u2022 ' + lbl;
+        lbl = (eligLbl[eligibility] || 'Veteran') + ' \u2022 ' + lbl;
         dom.catLabel.textContent = lbl;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
         dom.playerPrompt.textContent = '';
@@ -2792,8 +2801,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var headerText = 'All Players';
         if (catConfigR.type === 'hitter') headerText = 'Batters';
         else if (catConfigR.type === 'pitcher') headerText = (targetSubRole === 'starter') ? 'Starters' : 'Relievers';
-        var eligLabelMap = { allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
-        if (eligibility !== 'standard') headerText = (eligLabelMap[eligibility] || '') + ' \u2022 ' + headerText;
+        var eligLabelMap = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        headerText = (eligLabelMap[eligibility] || 'Veteran') + ' \u2022 ' + headerText;
         dom.catLabel.textContent = headerText;
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
@@ -3329,9 +3338,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (gameMode === 'sideBySide') modeText = 'Showdown';
             if (gameMode === 'pickEm') modeText = "Pick 'Em";
             var poolTextMap = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
-            var eligTextMap = { standard: 'Standard', allStar: 'All Star', hof: 'Hall of Fame', custom: 'Custom' };
+            var eligTextMap = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame', custom: 'Custom' };
             var poolText = poolTextMap[playerPool] || 'All Players';
-            var eligText = eligTextMap[eligibility] || 'Standard';
+            var eligText = eligTextMap[eligibility] || 'Veteran';
             var eraText = eraMode === 'allEras' ? 'All Eras' : (eraMode === 'modern' ? 'Modern Era' : selectedDecade + 's');
             var subtitleText = modeText + ' \u2022 ' + eligText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
             var challengeWon = isPlayingChallenge && challengerScore !== null && score >= challengerScore;
