@@ -603,6 +603,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Custom Filters Info Popup (in-game) -->
+    <div id="custom-info-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-info-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Custom Filters</h3>
+                <button id="close-custom-info" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div id="custom-info-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto"></div>
+        </div>
+    </div>
+
     <!-- Custom Eligibility Modal -->
     <div id="custom-elig-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-elig-overlay"></div>
@@ -1208,6 +1220,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         return '<a href="https://www.baseball-reference.com/players/' + p.bbrefID[0] + '/' + p.bbrefID + '.shtml" target="_blank" class="text-inherit no-underline cursor-pointer relative z-20 hover:opacity-75 transition-opacity">' + p.name + '</a>';
     }
 
+    function setCatLabel(text) {
+        if (eligibility === 'custom') {
+            var escaped = text.replace('Custom', '<span class="underline cursor-pointer text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition" id="custom-label-link">Custom</span>');
+            dom.catLabel.innerHTML = escaped;
+            var link = document.getElementById('custom-label-link');
+            if (link) link.addEventListener('click', showCustomInfoPopup);
+        } else {
+            dom.catLabel.textContent = text;
+        }
+    }
+
     function showAlert(message, classes) {
         classes = classes || 'bg-blue-600';
         var alertBox = document.getElementById('custom-alert');
@@ -1557,6 +1580,95 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         customFilters = filters;
         closeCustomEligModal();
         showAlert(filters.length + ' filter' + (filters.length > 1 ? 's' : '') + ' applied!', 'bg-blue-600');
+    }
+
+    function showCustomInfoPopup() {
+        if (eligibility !== 'custom' || customFilters.length === 0) return;
+        var body = document.getElementById('custom-info-body');
+        var html = '';
+
+        // Build filter table
+        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Active Filters</div>';
+        html += '<table class="w-full text-xs mb-1"><tbody>';
+        customFilters.forEach(function(f) {
+            var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+            var label = opt ? opt.label : f.stat;
+            var filterDir = f.dir;
+            if (!filterDir) filterDir = opt ? opt.dir : 'min';
+            var symbol = filterDir === 'max' ? '\u2264' : '\u2265';
+            html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
+            html += '<td class="py-2 font-semibold text-gray-700 dark:text-gray-200">' + label + '</td>';
+            html += '<td class="py-2 text-center font-bold text-blue-600 dark:text-blue-400 w-8">' + symbol + '</td>';
+            html += '<td class="py-2 text-right font-bold text-gray-800 dark:text-white">' + f.value + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        // Determine if the round is over (post lock-in)
+        var roundOver = false;
+        if (gameMode === 'pickEm') {
+            var nextBtn = document.getElementById('next-btn');
+            roundOver = nextBtn && !nextBtn.classList.contains('hidden') && !nextBtn.disabled;
+        } else {
+            roundOver = dom.submitBtn.textContent === 'Next Round' || dom.submitBtn.textContent === 'Finish Game';
+        }
+
+        if (roundOver) {
+            // Gather current players
+            var currentPlayers = [];
+            if (gameMode === 'pickEm') {
+                var grid = document.getElementById('pickem-grid');
+                var cards = grid.querySelectorAll('div[data-id]');
+                cards.forEach(function(card) {
+                    var p = players.get(card.dataset.id);
+                    if (p) currentPlayers.push(p);
+                });
+            } else {
+                if (A) currentPlayers.push(A);
+                if (B) currentPlayers.push(B);
+            }
+
+            if (currentPlayers.length > 0) {
+                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2 mt-4">Player Values</div>';
+                html += '<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
+                html += '<th class="py-2 text-left font-bold text-gray-500 dark:text-gray-400">Player</th>';
+                customFilters.forEach(function(f) {
+                    var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+                    var shortLabel = opt ? opt.label.replace('Career ', '').replace('Highest ', 'Hi ').replace('Season High ', 'Hi ').replace('Best ', 'Best ') : f.stat;
+                    html += '<th class="py-2 text-right font-bold text-gray-500 dark:text-gray-400">' + shortLabel + '</th>';
+                });
+                html += '</tr></thead><tbody>';
+
+                currentPlayers.forEach(function(p) {
+                    html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
+                    var displayName = p.name.length > 14 ? p.name.split(' ').pop() : p.name;
+                    html += '<td class="py-2 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">' + displayName + '</td>';
+                    customFilters.forEach(function(f) {
+                        var val;
+                        if (f.stat === 'teams') val = p.teams ? p.teams.size : 0;
+                        else if (f.stat === 'seasons') val = p.years ? p.years.size : 0;
+                        else if (f.stat === 'G') val = p.G;
+                        else if (f.stat === 'GS') val = p.GS;
+                        else val = p.stats ? p.stats[f.stat] : null;
+
+                        var filterDir = f.dir || 'min';
+                        var passes = true;
+                        if (val != null) {
+                            if (filterDir === 'min') passes = val >= f.value;
+                            else passes = val <= f.value;
+                        }
+                        var color = (val == null) ? 'text-gray-400' : (passes ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400');
+                        var display = val != null ? (typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(3) : val) : '—';
+                        html += '<td class="py-2 text-right font-bold ' + color + '">' + display + '</td>';
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+        }
+
+        body.innerHTML = html;
+        document.getElementById('custom-info-popup').classList.remove('hidden');
     }
 
     // ═══════════════════════════════════════
@@ -2253,7 +2365,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var eligLabel = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         var label = poolLabel[playerPool] || 'All Players';
         label = (eligLabel[eligibility] || 'Veteran') + ' \u2022 ' + label;
-        dom.catLabel.textContent = label;
+        setCatLabel(label);
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
         var catName = getCurrentCat(catKey).label;
@@ -2500,7 +2612,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var eligLbl = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         var lbl = poolLbl[playerPool] || 'All Players';
         lbl = (eligLbl[eligibility] || 'Veteran') + ' \u2022 ' + lbl;
-        dom.catLabel.textContent = lbl;
+        setCatLabel(lbl);
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
         dom.playerPrompt.textContent = '';
         sbsPicks = new Array(10).fill(null);
@@ -2803,7 +2915,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         else if (catConfigR.type === 'pitcher') headerText = (targetSubRole === 'starter') ? 'Starters' : 'Relievers';
         var eligLabelMap = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         headerText = (eligLabelMap[eligibility] || 'Veteran') + ' \u2022 ' + headerText;
-        dom.catLabel.textContent = headerText;
+        setCatLabel(headerText);
         dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
 
         var op = catConfigR.lowerBetter ? '\u2264' : '\u2265';
@@ -3561,6 +3673,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             document.getElementById('custom-filter-rows').appendChild(createFilterRow());
         });
         document.getElementById('apply-custom-elig').addEventListener('click', applyCustomFilters);
+
+        document.getElementById('close-custom-info').addEventListener('click', function() {
+            document.getElementById('custom-info-popup').classList.add('hidden');
+        });
+        document.getElementById('custom-info-overlay').addEventListener('click', function() {
+            document.getElementById('custom-info-popup').classList.add('hidden');
+        });
 
         // Game mode help modal
         document.getElementById('gamemode-help-btn').addEventListener('click', function(e) {
