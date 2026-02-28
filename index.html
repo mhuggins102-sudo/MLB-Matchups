@@ -697,7 +697,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 </div>
                 <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
                     <div class="font-black text-gray-800 dark:text-white mb-1">Custom</div>
-                    <div class="text-xs leading-relaxed">Set your own stat thresholds. Add one or more filters from a curated list of career stats.</div>
+                    <div class="text-xs leading-relaxed">Set your own stat thresholds. Add one or more filters from any statistical category and toggle between &ge; and &le; for each.</div>
                 </div>
             </div>
         </div>
@@ -798,35 +798,42 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 text-xs space-y-4">
-                        <p>Players are filtered based on the <strong>Player Pool</strong> selected on the home screen.</p>
-                        
+                        <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
+
                         <div>
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Standard / Batters / Pitchers Pools</h4>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Standard</h4>
                             <p class="mb-1">Designed to include recognizable players with significant careers.</p>
-                            <ul class="list-disc ml-4 mb-2 space-y-1">
-                                <li><strong>Hitters:</strong> Must have 5,000+ Career Plate Appearances.</li>
-                                <li><strong>Pitchers:</strong> Must have 150+ Starts OR 500+ Games Played.</li>
-                            </ul>
-                            <p class="mb-1 italic">Additional Category-Specific Gates:</p>
-                            <ul class="list-disc ml-4 space-y-1 opacity-90">
-                                <li>Career Wins: ≥ 75</li>
-                                <li>Season SB: ≥ 25 (Career ≥ 50)</li>
-                                <li>Career WAR: ≥ 10.0</li>
-                                <li>ERA/Rate Stats: Minimum IP/PA requirements apply for rate stat qualification.</li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">2. All-Star Pool</h4>
-                            <p class="mb-1">A more exclusive list of the game's greatest players.</p>
                             <ul class="list-disc ml-4 space-y-1">
-                                <li><strong>Global Gate:</strong> Player must have ≥ 25.0 Career WAR (Wins Above Replacement).</li>
-                                <li>This allows for younger stars on a Hall of Fame track (e.g., Juan Soto) who might not yet meet the 5,000 PA longevity requirement of the Standard pool.</li>
+                                <li><strong>Hitters:</strong> 5,000+ career plate appearances.</li>
+                                <li><strong>Pitchers:</strong> 150+ games started or 500+ games pitched.</li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">3. Era Selection</h4>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">2. All Star</h4>
+                            <p class="mb-1">A more exclusive tier featuring the game's greatest players.</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><strong>Hitters:</strong> 20+ career WAR.</li>
+                                <li><strong>Pitchers:</strong> 20+ career WAR.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">3. Hall of Fame</h4>
+                            <p class="mb-1">Only the all-time legends.</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><strong>Hitters:</strong> 40+ career WAR.</li>
+                                <li><strong>Pitchers:</strong> 40+ career WAR.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">4. Custom</h4>
+                            <p class="mb-1">Set your own stat thresholds. Add one or more filters from any statistical category and toggle between &ge; and &le; for each.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-1">5. Era Selection</h4>
                             <ul class="list-disc ml-4 space-y-1">
                                 <li><strong>Modern Era:</strong> Players who played a significant portion of their career from 1970 to present.</li>
                                 <li><strong>All Eras:</strong> Includes historical players dating back to 1871 (e.g., Ty Cobb, Cy Young).</li>
@@ -1021,18 +1028,32 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var selectedDecade = null;
 
     var CUSTOM_STAT_OPTIONS = [
-        { key: 'careerHR',      label: 'Career HR',   type: 'hitter',  dir: 'min' },
-        { key: 'careerH',       label: 'Career Hits',  type: 'hitter',  dir: 'min' },
-        { key: 'careerBA',      label: 'Career BA',    type: 'hitter',  dir: 'min' },
-        { key: 'careerOPS',     label: 'Career OPS',   type: 'hitter',  dir: 'min' },
-        { key: 'careerSB',      label: 'Career SB',    type: 'hitter',  dir: 'min' },
-        { key: 'careerWARBat',  label: 'Career WAR (Bat)', type: 'hitter',  dir: 'min' },
-        { key: 'careerW',       label: 'Career W',     type: 'pitcher', dir: 'min' },
-        { key: 'careerSO',      label: 'Career K',     type: 'pitcher', dir: 'min' },
-        { key: 'careerERA',     label: 'Career ERA',   type: 'pitcher', dir: 'max' },
-        { key: 'careerWHIP',    label: 'Career WHIP',  type: 'pitcher', dir: 'max' },
-        { key: 'careerIP',      label: 'Career IP',    type: 'pitcher', dir: 'min' },
-        { key: 'careerWARPit',  label: 'Career WAR (Pit)', type: 'pitcher', dir: 'min' }
+        { key: 'careerHR',       label: 'Career HR',             type: 'hitter',  dir: 'min' },
+        { key: 'careerH',        label: 'Career Hits',           type: 'hitter',  dir: 'min' },
+        { key: 'careerRBI',      label: 'Career RBI',            type: 'hitter',  dir: 'min' },
+        { key: 'careerSB',       label: 'Career SB',             type: 'hitter',  dir: 'min' },
+        { key: 'careerBB',       label: 'Career BB',             type: 'hitter',  dir: 'min' },
+        { key: 'careerBA',       label: 'Career BA',             type: 'hitter',  dir: 'min' },
+        { key: 'careerOPS',      label: 'Career OPS',            type: 'hitter',  dir: 'min' },
+        { key: 'careerXBHRate',  label: 'Career XBH%',           type: 'hitter',  dir: 'min' },
+        { key: 'careerWARBat',   label: 'Career WAR (Bat)',      type: 'hitter',  dir: 'min' },
+        { key: 'seasonHighHR',   label: 'Highest Season HR',     type: 'hitter',  dir: 'min' },
+        { key: 'seasonHighSB',   label: 'Highest Season SB',     type: 'hitter',  dir: 'min' },
+        { key: 'peakSeasonOPS',  label: 'Highest Season OPS',    type: 'hitter',  dir: 'min' },
+        { key: 'seasonHighKBat', label: 'Highest Season K (Bat)',type: 'hitter',  dir: 'max' },
+        { key: 'careerW',        label: 'Career W',              type: 'pitcher', dir: 'min' },
+        { key: 'careerSO',       label: 'Career K',              type: 'pitcher', dir: 'min' },
+        { key: 'careerWARPit',   label: 'Career WAR (Pit)',      type: 'pitcher', dir: 'min' },
+        { key: 'careerIP',       label: 'Career IP',             type: 'pitcher', dir: 'min' },
+        { key: 'careerERA',      label: 'Career ERA',            type: 'pitcher', dir: 'max' },
+        { key: 'careerWHIP',     label: 'Career WHIP',           type: 'pitcher', dir: 'max' },
+        { key: 'careerKBB',      label: 'Career K/BB',           type: 'pitcher', dir: 'min' },
+        { key: 'seasonHighW',    label: 'Highest Season W',      type: 'pitcher', dir: 'min' },
+        { key: 'seasonHighK',    label: 'Highest Season K',      type: 'pitcher', dir: 'min' },
+        { key: 'bestSeasonERA',  label: 'Best Season ERA',       type: 'pitcher', dir: 'max' },
+        { key: 'seasonHighHRPit',label: 'Season High HR Allowed',type: 'pitcher', dir: 'max' },
+        { key: 'seasons',        label: 'Seasons Played',        type: 'both',    dir: 'min' },
+        { key: 'teams',          label: 'Teams Played For',      type: 'both',    dir: 'max' }
     ];
 
     var sbsPicks = new Array(10).fill(null);
@@ -1222,12 +1243,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (eligibility === 'custom') {
             for (var i = 0; i < customFilters.length; i++) {
                 var f = customFilters[i];
-                var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
-                if (!opt) continue;
-                var val = p.stats[f.stat];
+                var filterDir = f.dir;
+                if (!filterDir) {
+                    var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+                    filterDir = opt ? opt.dir : 'min';
+                }
+                var val = (f.stat === 'teams') ? (p.teams ? p.teams.size : 0) : p.stats[f.stat];
                 if (val == null) return false;
-                if (opt.dir === 'min' && val < f.value) return false;
-                if (opt.dir === 'max' && val > f.value) return false;
+                if (filterDir === 'min' && val < f.value) return false;
+                if (filterDir === 'max' && val > f.value) return false;
             }
             // Still require baseline minimums so we get meaningful players
             if (p.type === 'hitter' && p.stats.PA < 2000) return false;
@@ -1394,8 +1418,35 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         select.appendChild(defaultOpt);
         CUSTOM_STAT_OPTIONS.forEach(function(opt) {
             var o = document.createElement('option');
-            o.value = opt.key; o.textContent = opt.label + (opt.dir === 'max' ? ' (max)' : ' (min)');
+            o.value = opt.key; o.textContent = opt.label;
             select.appendChild(o);
+        });
+
+        var dirBtn = document.createElement('button');
+        dirBtn.type = 'button';
+        var defaultDir = 'min';
+        if (existingFilter && existingFilter.dir) {
+            defaultDir = existingFilter.dir;
+        } else if (existingFilter && existingFilter.stat) {
+            var match = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === existingFilter.stat; });
+            if (match) defaultDir = match.dir;
+        }
+        dirBtn.setAttribute('data-dir', defaultDir);
+        dirBtn.textContent = defaultDir === 'max' ? '\u2264' : '\u2265';
+        dirBtn.className = 'w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition flex-shrink-0';
+        dirBtn.addEventListener('click', function() {
+            var cur = dirBtn.getAttribute('data-dir');
+            var next = cur === 'min' ? 'max' : 'min';
+            dirBtn.setAttribute('data-dir', next);
+            dirBtn.textContent = next === 'max' ? '\u2264' : '\u2265';
+        });
+
+        select.addEventListener('change', function() {
+            var match = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === select.value; });
+            if (match) {
+                dirBtn.setAttribute('data-dir', match.dir);
+                dirBtn.textContent = match.dir === 'max' ? '\u2264' : '\u2265';
+            }
         });
 
         var input = document.createElement('input');
@@ -1416,6 +1467,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
 
         row.appendChild(select);
+        row.appendChild(dirBtn);
         row.appendChild(input);
         row.appendChild(removeBtn);
         return row;
@@ -1442,8 +1494,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         for (var i = 0; i < rows.length; i++) {
             var select = rows[i].querySelector('select');
             var input = rows[i].querySelector('input');
+            var dirBtnEl = rows[i].querySelector('button[data-dir]');
             if (select && input && select.value && input.value !== '') {
-                filters.push({ stat: select.value, value: parseFloat(input.value) });
+                var dir = dirBtnEl ? dirBtnEl.getAttribute('data-dir') : 'min';
+                filters.push({ stat: select.value, value: parseFloat(input.value), dir: dir });
             }
         }
         if (filters.length === 0) {
@@ -2105,12 +2159,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (usedPlayerIDs.has(p.id)) return;
                     if (!passesGlobal(p) || !rolePass(p) || p.type !== BASE_CATS[catKey].type || !eraPass(p)) return;
                     var s = p.stats;
-                    if (eligibility === 'standard') {
-                        if (catKey === 'careerW' && s.careerW < 75) return;
-                        if (catKey === 'seasonHighSB' && s.seasonHighSB < 25) return;
-                        if (catKey === 'careerWARBat' && s.careerWARBat < 25) return;
-                        if (catKey === 'careerWARPit' && s.careerWARPit < 25) return;
-                    }
                     if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKey) && s.PA <= 0) return;
                     if (['careerERA','careerIP'].includes(catKey) && s.IP <= 0) return;
                     if (catKey === 'bestSeasonERA' && (!s.bestSeasonERA || s.bestSeasonERA <= 0)) return;
