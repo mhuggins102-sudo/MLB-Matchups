@@ -720,7 +720,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
                         <div>
-                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Mode A: How Much? (Standard)</h4>
+                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">How Much?</h4>
                             <ol class="list-decimal ml-5 space-y-2">
                                 <li><strong>Analyze the Matchup:</strong> Review the Category (e.g., Career HR) and the two players displayed. Note if the prompt asks for the <em>Higher</em> or <em>Lower</em> stat.</li>
                                 <li><strong>Pick the Winner:</strong> Tap the card of the player you believe is the statistical leader in that category.</li>
@@ -735,12 +735,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         </div>
                         <hr class="border-gray-100 dark:border-gray-800">
                         <div>
-                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Mode B: Showdown</h4>
+                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Showdown</h4>
                             <ol class="list-decimal ml-5 space-y-2">
                                 <li><strong>The Face-Off:</strong> You are presented with two players and a list of 10 different statistical categories.</li>
                                 <li><strong>Pick 10 Winners:</strong> For each row, tap the name of the player you think has the better stat in that specific category.</li>
                                 <li><strong>Lock In:</strong> You must make a selection for all 10 categories before you can submit.</li>
-                                <li><strong>The Reveal:</strong> The game will reveal the actual stats row-by-row. You need at least 5 correct to score points, and 10/10 for a massive bonus.</li>
+                                <li><strong>The Reveal:</strong> The game will reveal the actual stats row-by-row. You need at least 6 correct to score points, and 10/10 for a massive bonus.</li>
+                            </ol>
+                        </div>
+                        <hr class="border-gray-100 dark:border-gray-800">
+                        <div>
+                            <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">Pick 'Em</h4>
+                            <ol class="list-decimal ml-5 space-y-2">
+                                <li><strong>The Grid:</strong> You are given a stat category, a threshold (e.g., Career HR &ge; 300), and a grid of 10 players.</li>
+                                <li><strong>Make Your Picks:</strong> Tap the players you believe meet the criteria. Each correct pick earns 100 points.</li>
+                                <li><strong>Chain Bonus:</strong> If you pick players in order from farthest to closest to the threshold, you earn escalating bonus points (+50, +100, +150&hellip;).</li>
+                                <li><strong>Be Careful:</strong> A wrong pick ends the round immediately. You can make up to 5 picks per round.</li>
                             </ol>
                         </div>
                     </div>
@@ -754,20 +764,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
                         <div>
-                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Standard Mode (Max 1,000 pts/round)</h4>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">How Much? (Max 1,000 pts/round)</h4>
                             <ul class="space-y-2">
                                 <li class="flex justify-between text-sm">
                                     <span><strong>1. Correct Player</strong></span>
                                     <span class="font-bold text-green-600 dark:text-green-400">+200 Pts</span>
                                 </li>
                                 <li class="text-xs mb-2">You earn these points simply for identifying the correct winner. If you pick the wrong player, you score 0 for the round.</li>
-                                
+
                                 <li class="flex justify-between text-sm">
                                     <span><strong>2. Range Accuracy</strong></span>
                                     <span class="font-bold text-green-600 dark:text-green-400">0 to +800 Pts</span>
                                 </li>
                                 <li class="text-xs mb-2">Awarded only if the true difference falls strictly between your Min and Max sliders. The score is calculated exponentially based on how narrow your range is compared to the "Safe Zone" (the default wide range). A very tight, correct range yields max points.</li>
-                                
+
                                 <li class="flex justify-between text-sm">
                                     <span><strong>3. Bullseye Bonus</strong></span>
                                     <span class="font-bold text-amber-500">+100 Pts</span>
@@ -777,7 +787,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         </div>
                         <hr class="border-gray-100 dark:border-gray-800">
                         <div>
-                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown Mode (Max 1,000 pts/round)</h4>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown (Max 1,000 pts/round)</h4>
                             <p class="text-xs mb-2">Points are awarded based on the total number of correct selections (out of 10):</p>
                             <div class="grid grid-cols-2 gap-2 text-xs font-medium">
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>10/10 Correct</span> <span class="text-blue-600 font-bold">1,000 Pts</span></div>
@@ -787,6 +797,29 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>6/10 Correct</span> <span class="text-orange-500 font-bold">100 Pts</span></div>
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>0-5 Correct</span> <span class="text-gray-400 font-bold">0 Pts</span></div>
                             </div>
+                        </div>
+                        <hr class="border-gray-100 dark:border-gray-800">
+                        <div>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Pick 'Em (Max 1,000+ pts/round)</h4>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>1. Correct Pick</strong></span>
+                                    <span class="font-bold text-green-600 dark:text-green-400">+100 Pts each</span>
+                                </li>
+                                <li class="text-xs mb-2">Each correct selection from the grid earns 100 points. You can make up to 5 picks per round.</li>
+
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>2. Chain Bonus</strong></span>
+                                    <span class="font-bold text-amber-500">+50, +100, +150&hellip;</span>
+                                </li>
+                                <li class="text-xs mb-2">Pick players in order from farthest to closest to the threshold. Each consecutive pick that is closer earns an escalating bonus (+50, +100, +150, etc.).</li>
+
+                                <li class="flex justify-between text-sm">
+                                    <span><strong>3. Wrong Pick</strong></span>
+                                    <span class="font-bold text-red-500">Ends Round</span>
+                                </li>
+                                <li class="text-xs">Selecting a player who does not meet the threshold immediately ends the round. Points earned so far in the round are kept.</li>
+                            </ul>
                         </div>
                     </div>
                 </details>
@@ -1028,6 +1061,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var selectedDecade = null;
 
     var CUSTOM_STAT_OPTIONS = [
+        { key: 'PA',             label: 'Career PA',             type: 'hitter',  dir: 'min' },
         { key: 'careerHR',       label: 'Career HR',             type: 'hitter',  dir: 'min' },
         { key: 'careerH',        label: 'Career Hits',           type: 'hitter',  dir: 'min' },
         { key: 'careerRBI',      label: 'Career RBI',            type: 'hitter',  dir: 'min' },
@@ -1041,6 +1075,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         { key: 'seasonHighSB',   label: 'Highest Season SB',     type: 'hitter',  dir: 'min' },
         { key: 'peakSeasonOPS',  label: 'Highest Season OPS',    type: 'hitter',  dir: 'min' },
         { key: 'seasonHighKBat', label: 'Highest Season K (Bat)',type: 'hitter',  dir: 'max' },
+        { key: 'G',              label: 'Career G',              type: 'pitcher', dir: 'min' },
+        { key: 'GS',             label: 'Career GS',             type: 'pitcher', dir: 'min' },
         { key: 'careerW',        label: 'Career W',              type: 'pitcher', dir: 'min' },
         { key: 'careerSO',       label: 'Career K',              type: 'pitcher', dir: 'min' },
         { key: 'careerWARPit',   label: 'Career WAR (Pit)',      type: 'pitcher', dir: 'min' },
@@ -1248,7 +1284,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
                     filterDir = opt ? opt.dir : 'min';
                 }
-                var val = (f.stat === 'teams') ? (p.teams ? p.teams.size : 0) : p.stats[f.stat];
+                var val;
+                if (f.stat === 'teams') val = p.teams ? p.teams.size : 0;
+                else if (f.stat === 'seasons') val = p.years ? p.years.size : 0;
+                else if (f.stat === 'G') val = p.G;
+                else if (f.stat === 'GS') val = p.GS;
+                else val = p.stats[f.stat];
                 if (val == null) return false;
                 if (filterDir === 'min' && val < f.value) return false;
                 if (filterDir === 'max' && val > f.value) return false;
@@ -1412,7 +1453,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         row.className = 'flex items-center gap-2';
 
         var select = document.createElement('select');
-        select.className = 'flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:text-white';
+        select.className = 'min-w-0 flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2 text-xs font-semibold focus:outline-none focus:border-blue-500 dark:text-white truncate';
         var defaultOpt = document.createElement('option');
         defaultOpt.value = ''; defaultOpt.textContent = 'Select stat...';
         select.appendChild(defaultOpt);
@@ -1433,7 +1474,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
         dirBtn.setAttribute('data-dir', defaultDir);
         dirBtn.textContent = defaultDir === 'max' ? '\u2264' : '\u2265';
-        dirBtn.className = 'w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition flex-shrink-0';
+        dirBtn.className = 'w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-lg font-bold text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition flex-shrink-0';
         dirBtn.addEventListener('click', function() {
             var cur = dirBtn.getAttribute('data-dir');
             var next = cur === 'min' ? 'max' : 'min';
