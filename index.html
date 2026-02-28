@@ -1302,9 +1302,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (eligibility === 'custom') {
             for (var i = 0; i < customFilters.length; i++) {
                 var f = customFilters[i];
+                var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+                // Skip filters that don't apply to this player's type
+                var filterType = opt ? opt.type : 'both';
+                if (filterType === 'hitter' && p.type !== 'hitter') continue;
+                if (filterType === 'pitcher' && p.type !== 'pitcher') continue;
                 var filterDir = f.dir;
                 if (!filterDir) {
-                    var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
                     filterDir = opt ? opt.dir : 'min';
                 }
                 var val;
@@ -1582,15 +1586,43 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         showAlert(filters.length + ' filter' + (filters.length > 1 ? 's' : '') + ' applied!', 'bg-blue-600');
     }
 
+    function getRelevantFilters() {
+        // Determine what player type the current question involves
+        var questionType = 'both';
+        if (catKey && BASE_CATS[catKey]) {
+            questionType = BASE_CATS[catKey].type;
+        } else if (gameMode === 'sideBySide' && A) {
+            questionType = A.type === 'hitter' ? 'hitter' : 'pitcher';
+        }
+        return customFilters.filter(function(f) {
+            var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+            var filterType = opt ? opt.type : 'both';
+            if (filterType === 'both') return true;
+            if (questionType === 'both') return true;
+            return filterType === questionType;
+        });
+    }
+
+    function getFilterVal(p, statKey) {
+        if (statKey === 'teams') return p.teams ? p.teams.size : 0;
+        if (statKey === 'seasons') return p.years ? p.years.size : 0;
+        if (statKey === 'G') return p.G;
+        if (statKey === 'GS') return p.GS;
+        return p.stats ? p.stats[statKey] : null;
+    }
+
     function showCustomInfoPopup() {
         if (eligibility !== 'custom' || customFilters.length === 0) return;
         var body = document.getElementById('custom-info-body');
         var html = '';
 
+        // Only show filters relevant to the current question's player type
+        var relevantFilters = getRelevantFilters();
+
         // Build filter table
         html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Active Filters</div>';
         html += '<table class="w-full text-xs mb-1"><tbody>';
-        customFilters.forEach(function(f) {
+        relevantFilters.forEach(function(f) {
             var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
             var label = opt ? opt.label : f.stat;
             var filterDir = f.dir;
@@ -1628,11 +1660,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 if (B) currentPlayers.push(B);
             }
 
-            if (currentPlayers.length > 0) {
+            if (currentPlayers.length > 0 && relevantFilters.length > 0) {
                 html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2 mt-4">Player Values</div>';
                 html += '<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
                 html += '<th class="py-2 text-left font-bold text-gray-500 dark:text-gray-400">Player</th>';
-                customFilters.forEach(function(f) {
+                relevantFilters.forEach(function(f) {
                     var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
                     var shortLabel = opt ? opt.label.replace('Career ', '').replace('Highest ', 'Hi ').replace('Season High ', 'Hi ').replace('Best ', 'Best ') : f.stat;
                     html += '<th class="py-2 text-right font-bold text-gray-500 dark:text-gray-400">' + shortLabel + '</th>';
@@ -1643,13 +1675,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
                     var displayName = p.name.length > 14 ? p.name.split(' ').pop() : p.name;
                     html += '<td class="py-2 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">' + displayName + '</td>';
-                    customFilters.forEach(function(f) {
-                        var val;
-                        if (f.stat === 'teams') val = p.teams ? p.teams.size : 0;
-                        else if (f.stat === 'seasons') val = p.years ? p.years.size : 0;
-                        else if (f.stat === 'G') val = p.G;
-                        else if (f.stat === 'GS') val = p.GS;
-                        else val = p.stats ? p.stats[f.stat] : null;
+                    relevantFilters.forEach(function(f) {
+                        var val = getFilterVal(p, f.stat);
 
                         var filterDir = f.dir || 'min';
                         var passes = true;
