@@ -1321,9 +1321,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 if (filterDir === 'min' && val < f.value) return false;
                 if (filterDir === 'max' && val > f.value) return false;
             }
-            // Still require baseline minimums so we get meaningful players
-            if (p.type === 'hitter' && p.stats.PA < 2000) return false;
-            if (p.type === 'pitcher' && p.GS < 50 && p.G < 200) return false;
             return true;
         }
         // Veteran eligibility
@@ -2931,8 +2928,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             players.forEach(function(p) {
                 if (usedPlayerIDs.has(p.id)) return;
                 if (!eraPass(p) || !p.stats) return;
-                if (p.type === 'hitter' && p.stats.PA < 3000) return;
-                if (p.type === 'pitcher' && p.GS < 150 && p.G < 500) return;
+                if (eligibility !== 'custom') {
+                    if (p.type === 'hitter' && p.stats.PA < 3000) return;
+                    if (p.type === 'pitcher' && p.GS < 150 && p.G < 500) return;
+                }
                 if (!passesGlobal(p)) return;
                 if (playerPool === 'batters' && p.type !== 'hitter') return;
                 if (playerPool === 'pitchers' && p.type !== 'pitcher') return;
