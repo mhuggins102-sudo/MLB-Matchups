@@ -2386,8 +2386,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (['careerERA','careerIP'].includes(catKey) && s.IP <= 0) return;
                     if (catKey === 'bestSeasonERA' && (!s.bestSeasonERA || s.bestSeasonERA <= 0)) return;
                     if (eligibility !== 'standard') {
-                        if (catKey === 'peakSeasonOPS' && s.peakSeasonOPS <= 0) return;
-                        if (catKey === 'bestSeasonERA' && s.bestSeasonERA <= 0) return;
+                        if (['peakSeasonOPS','bestSeasonERA','seasonHighHR','seasonHighSB','seasonHighKBat','seasonHighW','seasonHighK','seasonHighHRPit'].includes(catKey) && (!s[catKey] || s[catKey] <= 0)) return;
                     }
                     pool.push(p);
                 });
@@ -2941,8 +2940,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (targetSubRole === 'starter' && p.GS < 150) return;
                     if (targetSubRole === 'reliever' && (p.G < 500 || p.GS >= 150)) return;
                 }
-                if (['peakSeasonOPS'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
-                if (catKey === 'bestSeasonERA' && (!p.stats.bestSeasonERA || p.stats.bestSeasonERA <= 0)) return;
+                if (['peakSeasonOPS','bestSeasonERA','seasonHighHR','seasonHighSB','seasonHighKBat','seasonHighW','seasonHighK','seasonHighHRPit'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
 
                 var val;
                 if (catKey === 'careerSO') val = p.stats.careerSO;
@@ -3309,11 +3307,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 });
                 for (var yr in aggBat) {
                     var dd = aggBat[yr];
-                    if (dd.HR > sHR) sHR = dd.HR;
-                    if (dd.SB > sSB) sSB = dd.SB;
-                    if (dd.SO > sKBat) sKBat = dd.SO;
                     var yPA = dd.AB + dd.BB + dd.HBP + dd.SF;
                     if (yPA >= 400) {
+                        if (dd.HR > sHR) sHR = dd.HR;
+                        if (dd.SB > sSB) sSB = dd.SB;
+                        if (dd.SO > sKBat) sKBat = dd.SO;
                         var obp = (dd.H + dd.BB + dd.HBP) / yPA;
                         var slg = ((dd.H - dd._2B - dd._3B - dd.HR) + (2*dd._2B) + (3*dd._3B) + (4*dd.HR)) / (dd.AB || 1);
                         if (obp + slg > peakOPS) peakOPS = obp + slg;
@@ -3331,11 +3329,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 });
                 for (var yr2 in aggPit) {
                     var dd2 = aggPit[yr2];
-                    if (dd2.SO > sK) sK = dd2.SO;
-                    if (dd2.W > sW) sW = dd2.W;
-                    if (dd2.HR > sHRPit) sHRPit = dd2.HR;
                     var yIP = dd2.IPouts / 3;
                     if (yIP >= 100) {
+                        if (dd2.SO > sK) sK = dd2.SO;
+                        if (dd2.W > sW) sW = dd2.W;
+                        if (dd2.HR > sHRPit) sHRPit = dd2.HR;
                         var e = (dd2.ER * 9) / yIP;
                         if (bERA === 0 || e < bERA) bERA = e;
                     }
