@@ -311,6 +311,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <button id="leaderboard-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Leaderboard">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
             </button>
+
+            <!-- Daily Challenge Icon -->
+            <button id="daily-btn" class="p-2 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition text-amber-500 dark:text-amber-400" aria-label="Daily Challenge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
         </div>
 
         <div class="flex items-center gap-2 relative">
@@ -373,18 +378,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">MLB<span class="text-blue-600">Matchups</span></h2>
     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
 </div>
-            <div id="daily-challenge-card" class="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 p-4 rounded-2xl shadow-lg text-white cursor-pointer transition-transform active:scale-[0.98] hover:shadow-xl" style="display:none;">
-                <div class="flex items-center justify-between">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-1.5 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            <span class="text-xs font-black uppercase tracking-widest opacity-90">Daily Challenge</span>
-                        </div>
-                        <div id="daily-settings-label" class="text-sm font-bold opacity-90 truncate"></div>
-                    </div>
-                    <button id="daily-play-btn" class="flex-none bg-white/20 hover:bg-white/30 backdrop-blur-sm px-5 py-2.5 rounded-xl font-black text-sm transition-all border border-white/20">Play</button>
-                </div>
-            </div>
             <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
                 <div>
                         <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
@@ -1022,6 +1015,60 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Daily Challenge Popup -->
+    <div id="daily-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="daily-popup-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <!-- Header with date navigation -->
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-amber-500 to-orange-500">
+                <div class="flex justify-between items-center">
+                    <button id="daily-prev" class="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="text-center">
+                        <div class="text-xs font-black uppercase tracking-widest text-white/80">Daily Challenge</div>
+                        <div id="daily-popup-date" class="text-lg font-black text-white"></div>
+                    </div>
+                    <button id="daily-next" class="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Settings & play -->
+            <div class="px-4 pt-3 pb-2 text-center">
+                <div id="daily-popup-settings" class="text-sm font-bold text-gray-600 dark:text-gray-300"></div>
+                <div id="daily-popup-status" class="text-xs mt-1 text-gray-400"></div>
+            </div>
+            <div class="px-4 pb-3">
+                <button id="daily-popup-play" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black py-3 rounded-xl transition-all text-sm shadow-md">Play</button>
+            </div>
+            <!-- Leaderboard -->
+            <div class="border-t border-gray-100 dark:border-gray-800 flex flex-col min-h-0">
+                <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex-none">
+                    <span class="text-xs font-black uppercase tracking-wide text-gray-400">Top 10</span>
+                </div>
+                <div class="overflow-y-auto" style="max-height:35vh;">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-2 text-center w-12 font-bold">#</th>
+                                <th class="px-4 py-2 text-left w-24 font-bold">Score</th>
+                                <th class="px-4 py-2 text-left font-bold">Player</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-popup-lb" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
+                    </table>
+                    <div id="daily-popup-empty" class="hidden p-6 text-center text-gray-400 text-sm">
+                        No scores yet. Be the first!
+                    </div>
+                </div>
+            </div>
+            <!-- Close -->
+            <div class="p-3 border-t border-gray-100 dark:border-gray-800 flex-none">
+                <button id="daily-popup-close" class="w-full text-center text-sm font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 py-2 transition">Close</button>
+            </div>
+        </div>
+    </div>
 
     <script data-cfasync="false" type="text/javascript">
     /* ──────────────────────────────────────────────────────────
@@ -1536,12 +1583,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         return Math.abs(hash);
     }
 
-    function getDailyId() {
+    function getDailyId(offset) {
         var d = new Date();
+        if (offset) d.setDate(d.getDate() + offset);
         return 'D' + String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
     }
-    function getDailyDateStr() {
+    function getDailyDateStr(offset) {
         var d = new Date();
+        if (offset) d.setDate(d.getDate() + offset);
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
@@ -1775,10 +1824,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     // --- Daily challenge play flow ---
-    async function playDaily() {
+    async function playDaily(offset) {
         if (!players || players.size === 0) { showAlert('Player data still loading...', 'bg-red-500'); return; }
-        var dailyId = getDailyId();
-        var seed = hashStr(getDailyDateStr());
+        offset = offset || 0;
+        var dailyId = getDailyId(offset);
+        var seed = hashStr(getDailyDateStr(offset));
         var rng = mulberry32(seed);
         var settings = generateDailySettings(rng);
 
@@ -1845,21 +1895,95 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         startGame();
     }
 
-    function initDailyCard() {
-        var card = document.getElementById('daily-challenge-card');
-        if (!card) return;
-        var seed = hashStr(getDailyDateStr());
+    var dailyPopupOffset = 0;
+
+    function getDailyDisplayDate(offset) {
+        var d = new Date();
+        d.setDate(d.getDate() + (offset || 0));
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        if (offset === 0) return 'Today \u2013 ' + months[d.getMonth()] + ' ' + d.getDate();
+        if (offset === -1) return 'Yesterday \u2013 ' + months[d.getMonth()] + ' ' + d.getDate();
+        return days[d.getDay()] + ' \u2013 ' + months[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    function openDailyPopup() {
+        dailyPopupOffset = 0;
+        renderDailyPopup();
+        document.getElementById('daily-popup').classList.remove('hidden');
+    }
+
+    function closeDailyPopup() {
+        document.getElementById('daily-popup').classList.add('hidden');
+    }
+
+    async function renderDailyPopup() {
+        var offset = dailyPopupOffset;
+        document.getElementById('daily-popup-date').textContent = getDailyDisplayDate(offset);
+
+        // Arrow visibility
+        var prevBtn = document.getElementById('daily-prev');
+        var nextBtn = document.getElementById('daily-next');
+        prevBtn.style.opacity = offset > -6 ? '1' : '0.3';
+        prevBtn.style.pointerEvents = offset > -6 ? 'auto' : 'none';
+        nextBtn.style.opacity = offset < 0 ? '1' : '0.3';
+        nextBtn.style.pointerEvents = offset < 0 ? 'auto' : 'none';
+
+        // Settings for this day
+        var seed = hashStr(getDailyDateStr(offset));
         var rng = mulberry32(seed);
         var settings = generateDailySettings(rng);
-        document.getElementById('daily-settings-label').textContent = getDailySettingsLabel(settings);
+        document.getElementById('daily-popup-settings').textContent = getDailySettingsLabel(settings);
 
-        var played = localStorage.getItem('lastDailyPlayed') === getDailyId();
-        var btn = document.getElementById('daily-play-btn');
-        if (played) {
-            var savedScore = localStorage.getItem('lastDailyScore');
-            btn.textContent = savedScore ? savedScore + ' pts \u00B7 Replay' : 'Replay';
+        // Play status
+        var dailyId = getDailyId(offset);
+        var played = localStorage.getItem('dailyPlayed_' + dailyId);
+        var savedScore = localStorage.getItem('dailyScore_' + dailyId);
+        var statusEl = document.getElementById('daily-popup-status');
+        if (played && savedScore) {
+            statusEl.textContent = 'Your score: ' + savedScore + ' pts';
+            statusEl.className = 'text-xs mt-1 text-amber-600 dark:text-amber-400 font-bold';
+        } else {
+            statusEl.textContent = '';
+            statusEl.className = 'text-xs mt-1 text-gray-400';
         }
-        card.style.display = '';
+
+        // Play button text
+        var playBtn = document.getElementById('daily-popup-play');
+        if (played) {
+            playBtn.textContent = savedScore ? savedScore + ' pts \u00B7 Replay' : 'Replay';
+        } else {
+            playBtn.textContent = 'Play';
+        }
+
+        // Load leaderboard
+        var body = document.getElementById('daily-popup-lb');
+        var empty = document.getElementById('daily-popup-empty');
+        body.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        empty.classList.add('hidden');
+
+        var scores = await fetchChallengeScores(dailyId);
+        body.innerHTML = '';
+        if (scores.length === 0) {
+            empty.classList.remove('hidden');
+        } else {
+            empty.classList.add('hidden');
+            scores.forEach(function(entry, i) {
+                var tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 dark:border-gray-800';
+                var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
+                tr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
+                body.appendChild(tr);
+            });
+        }
+    }
+
+    function playDailyFromPopup() {
+        var offset = dailyPopupOffset;
+        closeDailyPopup();
+        playDaily(offset);
     }
 
     // ═══════════════════════════════════════
@@ -2666,9 +2790,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 showChallengeLeaderboard(currentChallengeId);
             }
             // Store daily score in localStorage
-            if (isDailyChallenge) {
-                localStorage.setItem('lastDailyPlayed', getDailyId());
-                localStorage.setItem('lastDailyScore', String(score));
+            if (isDailyChallenge && currentChallengeId) {
+                localStorage.setItem('dailyPlayed_' + currentChallengeId, '1');
+                localStorage.setItem('dailyScore_' + currentChallengeId, String(score));
             }
         } else {
             round++;
@@ -2739,7 +2863,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.startScreen.classList.remove('hidden');
         dom.homeBtn.classList.add('hidden');
         dom.rerollBtn.classList.add('hidden');
-        initDailyCard();
     }
 
     // ═══════════════════════════════════════
@@ -3929,13 +4052,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var res = await sb.from('challenge_scores').insert([{
                 challenge_id: currentChallengeId, name: name, score: score
-            }]);
-            if (res.error) throw res.error;
+            }]).select();
+            if (res.error) {
+                console.error('Supabase challenge_scores insert error:', JSON.stringify(res.error));
+                throw res.error;
+            }
             document.getElementById('challenge-lb-save').classList.add('hidden');
             renderChallengeLeaderboard(currentChallengeId, true, name, score);
         } catch (e) {
-            alert('Error saving score. Please try again.');
-            console.error(e);
+            console.error('saveChallengeScore failed:', e);
+            alert('Error saving score: ' + (e.message || 'Unknown error') + '. Check that the challenge_scores table has columns: challenge_id (text), name (text), score (int8), and that RLS allows inserts.');
             btn.disabled = false; btn.textContent = 'Save Score';
         }
     }
@@ -4201,10 +4327,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (e.key === 'Enter') loadChallengeByCode();
         });
 
-        // Daily challenge
-        document.getElementById('daily-play-btn').addEventListener('click', playDaily);
-        document.getElementById('daily-challenge-card').addEventListener('click', function(e) {
-            if (e.target.id !== 'daily-play-btn') document.getElementById('daily-play-btn').click();
+        // Daily challenge popup
+        document.getElementById('daily-btn').addEventListener('click', openDailyPopup);
+        document.getElementById('daily-popup-close').addEventListener('click', closeDailyPopup);
+        document.getElementById('daily-popup-overlay').addEventListener('click', closeDailyPopup);
+        document.getElementById('daily-popup-play').addEventListener('click', playDailyFromPopup);
+        document.getElementById('daily-prev').addEventListener('click', function() {
+            if (dailyPopupOffset > -6) { dailyPopupOffset--; renderDailyPopup(); }
+        });
+        document.getElementById('daily-next').addEventListener('click', function() {
+            if (dailyPopupOffset < 0) { dailyPopupOffset++; renderDailyPopup(); }
         });
 
         // Challenge leaderboard modal
@@ -4393,7 +4525,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             initPreferences();
             populateDateDropdown();
             loadAll(function() {
-                try { buildAgg(); renderDecadeGrid(); initDailyCard(); }
+                try { buildAgg(); renderDecadeGrid(); }
                 catch (e) {
                     console.error('Init error:', e);
                     dom.loadingScreen.classList.add('hidden');
