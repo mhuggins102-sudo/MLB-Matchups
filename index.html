@@ -2119,7 +2119,44 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         updateSliderUI();
     }
 
+    function validateCustomPool() {
+        if (eligibility !== 'custom') return true;
+        if (isPlayingChallenge) return true;
+
+        var hitCount = 0, pitCount = 0;
+        players.forEach(function(p) {
+            if (!passesGlobal(p) || !rolePass(p) || !eraPass(p)) return;
+            if (p.type === 'hitter') hitCount++;
+            else if (p.type === 'pitcher') pitCount++;
+        });
+
+        var minNeeded, typeLabel;
+        if (gameMode === 'howMuch' || gameMode === 'sideBySide') {
+            // Need 2 players per round × 10 rounds = 20 unique, plus margin
+            if (playerPool === 'batters') {
+                if (hitCount < 20) { showAlert('Not enough batters (' + hitCount + ' found, need 20+). Try relaxing your filters.', 'bg-red-500'); return false; }
+            } else if (playerPool === 'pitchers') {
+                if (pitCount < 20) { showAlert('Not enough pitchers (' + pitCount + ' found, need 20+). Try relaxing your filters.', 'bg-red-500'); return false; }
+            } else {
+                // For "All Players", each round picks a category type so we need both
+                if (hitCount < 10 && pitCount < 10) { showAlert('Not enough players (batters: ' + hitCount + ', pitchers: ' + pitCount + '). Try relaxing your filters.', 'bg-red-500'); return false; }
+                if (hitCount + pitCount < 20) { showAlert('Not enough players (' + (hitCount + pitCount) + ' found, need 20+). Try relaxing your filters.', 'bg-red-500'); return false; }
+            }
+        } else if (gameMode === 'pickEm') {
+            // Need at least 10 players per round, but can reuse across rounds
+            if (playerPool === 'batters') {
+                if (hitCount < 10) { showAlert('Not enough batters (' + hitCount + ' found, need 10+). Try relaxing your filters.', 'bg-red-500'); return false; }
+            } else if (playerPool === 'pitchers') {
+                if (pitCount < 10) { showAlert('Not enough pitchers (' + pitCount + ' found, need 10+). Try relaxing your filters.', 'bg-red-500'); return false; }
+            } else {
+                if (hitCount < 10 && pitCount < 10) { showAlert('Not enough players (batters: ' + hitCount + ', pitchers: ' + pitCount + '). Try relaxing your filters.', 'bg-red-500'); return false; }
+            }
+        }
+        return true;
+    }
+
     function startGame() {
+        if (!validateCustomPool()) return;
         score = 0; round = 1; hasUsedReroll = false;
         roundResults = []; roundScores = []; matchHistory = []; categoryHistory = {};
         usedPlayerIDs.clear();
