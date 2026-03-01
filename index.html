@@ -311,16 +311,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <button id="leaderboard-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Leaderboard">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
             </button>
-
-            <!-- Daily Challenge Icon -->
-            <button id="daily-btn" class="p-2 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition text-amber-500 dark:text-amber-400" aria-label="Daily Challenge">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </button>
         </div>
 
         <div class="flex items-center gap-2 relative">
              <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" aria-label="Skip Question">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+            </button>
+
+            <!-- Daily Challenge Icon (right side) -->
+            <button id="daily-btn" class="p-2 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition text-amber-500 dark:text-amber-400" aria-label="Daily Challenge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </button>
 
             <button id="challenge-code-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Enter Challenge Code">
@@ -1598,23 +1598,24 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var modes = ['howMuch', 'sideBySide', 'pickEm'];
         var mode = modes[Math.floor(rng() * modes.length)];
 
+        // Pool: All 50%, Batters 25%, Pitchers 25%
         var poolR = rng();
-        var pool = poolR < 0.6 ? 'all' : (poolR < 0.8 ? 'batters' : 'pitchers');
+        var pool = poolR < 0.50 ? 'all' : (poolR < 0.75 ? 'batters' : 'pitchers');
 
-        // Era: weighted toward modern
+        // Era: explicit percentages (total = 100)
         var eraOptions = [
             { era: 'modern', decade: null, weight: 30 },
-            { era: 'allEras', decade: null, weight: 15 },
-            { era: 'select', decade: 2020, weight: 12 },
-            { era: 'select', decade: 2010, weight: 12 },
+            { era: 'allEras', decade: null, weight: 10 },
+            { era: 'select', decade: 2020, weight: 5 },
+            { era: 'select', decade: 2010, weight: 10 },
             { era: 'select', decade: 2000, weight: 10 },
-            { era: 'select', decade: 1990, weight: 8 },
-            { era: 'select', decade: 1980, weight: 5 },
-            { era: 'select', decade: 1970, weight: 3 },
-            { era: 'select', decade: 1960, weight: 2 },
-            { era: 'select', decade: 1950, weight: 1.5 },
-            { era: 'select', decade: 1940, weight: 1 },
-            { era: 'select', decade: 1930, weight: 0.5 }
+            { era: 'select', decade: 1990, weight: 10 },
+            { era: 'select', decade: 1980, weight: 10 },
+            { era: 'select', decade: 1970, weight: 5 },
+            { era: 'select', decade: 1960, weight: 3 },
+            { era: 'select', decade: 1950, weight: 3 },
+            { era: 'select', decade: 1940, weight: 2 },
+            { era: 'select', decade: 1930, weight: 2 }
         ];
         var totalW = eraOptions.reduce(function(s, o) { return s + o.weight; }, 0);
         var eraR = rng() * totalW, cum = 0, selEra = eraOptions[0];
@@ -1623,12 +1624,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (eraR < cum) { selEra = eraOptions[i]; break; }
         }
 
-        // Eligibility: old decades lean allStar
+        // Eligibility based on era
         var eligR = rng(), elig;
-        if (selEra.era === 'select' && selEra.decade <= 1970) {
-            elig = eligR < 0.60 ? 'allStar' : (eligR < 0.85 ? 'standard' : 'hof');
+        if (selEra.era === 'modern' || (selEra.era === 'select' && selEra.decade >= 1990)) {
+            // Modern or 1990s-2020s: equal 1/3 each
+            elig = eligR < (1/3) ? 'standard' : (eligR < (2/3) ? 'allStar' : 'hof');
+        } else if (selEra.era === 'select' && selEra.decade >= 1970) {
+            // 1970s-1980s: All Star or HoF 50/50
+            elig = eligR < 0.50 ? 'allStar' : 'hof';
         } else {
-            elig = eligR < 0.50 ? 'standard' : (eligR < 0.80 ? 'allStar' : 'hof');
+            // 1960s or before, or All Eras: always HoF
+            elig = 'hof';
         }
 
         return { mode: mode, pool: pool, elig: elig, era: selEra.era, decade: selEra.decade };
@@ -1832,26 +1838,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var rng = mulberry32(seed);
         var settings = generateDailySettings(rng);
 
-        // Try to load existing daily from Supabase
-        if (sb) {
-            try {
-                var result = await sb.from('challenges').select('*').eq('id', dailyId).single();
-                if (result.data) {
-                    var data = result.data;
-                    gameMode = data.config.mode; playerPool = data.config.pool;
-                    eligibility = data.config.elig; customFilters = [];
-                    eraMode = data.config.era; selectedDecade = data.config.decade;
-                    challengeQueue = data.matchups;
-                    currentChallengeId = dailyId;
-                    challengerScore = null; challengerRoundScores = null;
-                    isPlayingChallenge = true; isDailyChallenge = true;
-                    startGame();
-                    return;
-                }
-            } catch (e) { /* not found, generate below */ }
-        }
-
-        // Generate matchups with seeded PRNG
+        // Always regenerate from seeded PRNG (deterministic) then upsert
         var savedMode = gameMode, savedPool = playerPool, savedElig = eligibility;
         var savedEra = eraMode, savedDecade = selectedDecade, savedFilters = customFilters;
         gameMode = settings.mode; playerPool = settings.pool;
@@ -1873,14 +1860,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         if (matchups.length < 10) { showAlert('Could not generate daily challenge.', 'bg-red-500'); return; }
 
-        // Save to Supabase (best-effort)
+        // Save to Supabase (upsert so regenerated challenges overwrite old ones)
         if (sb) {
             try {
-                await sb.from('challenges').insert([{
+                await sb.from('challenges').upsert([{
                     id: dailyId,
                     config: { mode: settings.mode, pool: settings.pool, elig: settings.elig, era: settings.era, decade: settings.decade },
                     matchups: matchups
-                }]);
+                }], { onConflict: 'id' });
             } catch (e) { /* race condition or offline, ok */ }
         }
 
@@ -2698,6 +2685,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.rerollBtn.classList.remove('hidden','text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','opacity-25');
         dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
 
+        // Header icon visibility during gameplay
+        var dailyBtn = document.getElementById('daily-btn');
+        var challengeCodeBtn = document.getElementById('challenge-code-btn');
+        challengeCodeBtn.classList.add('hidden');
+        if (isDailyChallenge) {
+            dailyBtn.classList.remove('hidden');
+            dom.leaderboardBtn.classList.add('hidden');
+        } else {
+            dailyBtn.classList.add('hidden');
+            dom.leaderboardBtn.classList.remove('hidden');
+        }
+
         startRound();
     }
 
@@ -2863,6 +2862,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.startScreen.classList.remove('hidden');
         dom.homeBtn.classList.add('hidden');
         dom.rerollBtn.classList.add('hidden');
+
+        // Restore all header icons
+        document.getElementById('daily-btn').classList.remove('hidden');
+        document.getElementById('challenge-code-btn').classList.remove('hidden');
+        dom.leaderboardBtn.classList.remove('hidden');
     }
 
     // ═══════════════════════════════════════
