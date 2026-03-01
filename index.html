@@ -1895,7 +1895,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     function openDailyPopup() {
-        dailyPopupOffset = 0;
+        // If playing a daily challenge, jump to that challenge's date
+        if (isDailyChallenge && currentChallengeId && currentChallengeId.startsWith('D')) {
+            var id = currentChallengeId; // e.g. "D260301"
+            var yy = parseInt(id.slice(1, 3), 10);
+            var mm = parseInt(id.slice(3, 5), 10);
+            var dd = parseInt(id.slice(5, 7), 10);
+            var challengeDate = new Date(2000 + yy, mm - 1, dd);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            challengeDate.setHours(0, 0, 0, 0);
+            dailyPopupOffset = Math.round((challengeDate - today) / 86400000);
+        } else {
+            dailyPopupOffset = 0;
+        }
         renderDailyPopup();
         document.getElementById('daily-popup').classList.remove('hidden');
     }
@@ -2680,10 +2693,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.gameScreen.classList.add('flex');
         dom.homeBtn.classList.remove('hidden');
 
-        // Reset reroll button fully
-        dom.rerollBtn.disabled = false;
-        dom.rerollBtn.classList.remove('hidden','text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','opacity-25');
-        dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        // Reset reroll button – keep hidden for challenge games
+        if (isPlayingChallenge || currentChallengeId) {
+            dom.rerollBtn.classList.add('hidden');
+            dom.rerollBtn.disabled = true;
+        } else {
+            dom.rerollBtn.disabled = false;
+            dom.rerollBtn.classList.remove('hidden','text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','opacity-25');
+            dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        }
 
         // Header icon visibility during gameplay
         var dailyBtn = document.getElementById('daily-btn');
@@ -4388,7 +4406,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         });
 
         // Leaderboard modal
-        dom.leaderboardBtn.addEventListener('click', function() { renderLeaderboard(); dom.leaderboardModal.classList.remove('hidden'); });
+        dom.leaderboardBtn.addEventListener('click', function() {
+            // Pre-filter to current game settings if a game is active
+            if (!dom.startScreen.classList.contains('hidden')) {
+                dom.lbFilterMode.value = gameMode || 'all';
+                dom.lbFilterPool.value = playerPool || 'all_pools';
+                dom.lbFilterDate.value = 'today';
+            }
+            renderLeaderboard();
+            dom.leaderboardModal.classList.remove('hidden');
+        });
         var closeLeaderboard = function() {
             dom.leaderboardModal.classList.add('hidden');
             if (dom.lbFilterMode) dom.lbFilterMode.value = 'all';
