@@ -373,6 +373,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">MLB<span class="text-blue-600">Matchups</span></h2>
     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
 </div>
+            <div id="daily-challenge-card" class="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 p-4 rounded-2xl shadow-lg text-white cursor-pointer transition-transform active:scale-[0.98] hover:shadow-xl" style="display:none;">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="text-xs font-black uppercase tracking-widest opacity-90">Daily Challenge</span>
+                        </div>
+                        <div id="daily-settings-label" class="text-sm font-bold opacity-90 truncate"></div>
+                    </div>
+                    <button id="daily-play-btn" class="flex-none bg-white/20 hover:bg-white/30 backdrop-blur-sm px-5 py-2.5 rounded-xl font-black text-sm transition-all border border-white/20">Play</button>
+                </div>
+            </div>
             <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
                 <div>
                         <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
@@ -978,6 +990,38 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Challenge Leaderboard Modal -->
+    <div id="challenge-lb-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-lb-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <div class="flex justify-between items-center">
+                    <h3 id="challenge-lb-title" class="text-sm font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">Challenge Leaderboard</h3>
+                    <button id="close-challenge-lb" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                </div>
+            </div>
+            <div class="p-0 overflow-y-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-center w-12 font-bold">#</th>
+                            <th class="px-4 py-3 text-left w-24 font-bold">Score</th>
+                            <th class="px-4 py-3 text-left font-bold">Player</th>
+                        </tr>
+                    </thead>
+                    <tbody id="challenge-lb-body" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
+                </table>
+                <div id="challenge-lb-empty" class="hidden p-8 text-center text-gray-400 text-sm">
+                    No scores yet. Be the first!
+                </div>
+            </div>
+            <div id="challenge-lb-save" class="p-4 border-t border-gray-100 dark:border-gray-800">
+                <input type="text" id="challenge-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
+                <button id="save-challenge-score-btn" class="primary-btn bg-amber-600 hover:bg-amber-700 w-full">Save Score</button>
+            </div>
+        </div>
+    </div>
+
 
     <script data-cfasync="false" type="text/javascript">
     /* ──────────────────────────────────────────────────────────
@@ -1113,6 +1157,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var challengerScore    = null;
     var challengerRoundScores = null;
     var isPlayingChallenge = false;
+    var isDailyChallenge   = false;
 
     var pickEmState = {
         threshold: 0, correctIDs: new Set(), picksMade: 0,
@@ -1467,6 +1512,354 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             console.error('Challenge load failed:', e);
             showAlert('Challenge not found. Check the code and try again.', 'bg-red-500');
         }
+    }
+
+    // ═══════════════════════════════════════
+    // §8b2  DAILY CHALLENGE
+    // ═══════════════════════════════════════
+
+    // Seeded PRNG (mulberry32)
+    function mulberry32(a) {
+        return function() {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+    function hashStr(str) {
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+
+    function getDailyId() {
+        var d = new Date();
+        return 'D' + String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    }
+    function getDailyDateStr() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function generateDailySettings(rng) {
+        var modes = ['howMuch', 'sideBySide', 'pickEm'];
+        var mode = modes[Math.floor(rng() * modes.length)];
+
+        var poolR = rng();
+        var pool = poolR < 0.6 ? 'all' : (poolR < 0.8 ? 'batters' : 'pitchers');
+
+        // Era: weighted toward modern
+        var eraOptions = [
+            { era: 'modern', decade: null, weight: 30 },
+            { era: 'allEras', decade: null, weight: 15 },
+            { era: 'select', decade: 2020, weight: 12 },
+            { era: 'select', decade: 2010, weight: 12 },
+            { era: 'select', decade: 2000, weight: 10 },
+            { era: 'select', decade: 1990, weight: 8 },
+            { era: 'select', decade: 1980, weight: 5 },
+            { era: 'select', decade: 1970, weight: 3 },
+            { era: 'select', decade: 1960, weight: 2 },
+            { era: 'select', decade: 1950, weight: 1.5 },
+            { era: 'select', decade: 1940, weight: 1 },
+            { era: 'select', decade: 1930, weight: 0.5 }
+        ];
+        var totalW = eraOptions.reduce(function(s, o) { return s + o.weight; }, 0);
+        var eraR = rng() * totalW, cum = 0, selEra = eraOptions[0];
+        for (var i = 0; i < eraOptions.length; i++) {
+            cum += eraOptions[i].weight;
+            if (eraR < cum) { selEra = eraOptions[i]; break; }
+        }
+
+        // Eligibility: old decades lean allStar
+        var eligR = rng(), elig;
+        if (selEra.era === 'select' && selEra.decade <= 1970) {
+            elig = eligR < 0.60 ? 'allStar' : (eligR < 0.85 ? 'standard' : 'hof');
+        } else {
+            elig = eligR < 0.50 ? 'standard' : (eligR < 0.80 ? 'allStar' : 'hof');
+        }
+
+        return { mode: mode, pool: pool, elig: elig, era: selEra.era, decade: selEra.decade };
+    }
+
+    function getDailySettingsLabel(settings) {
+        var modeText = { howMuch: 'How Much?', sideBySide: 'Showdown', pickEm: "Pick 'Em" };
+        var eligText = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame' };
+        var poolText = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
+        var eraText = settings.era === 'allEras' ? 'All Eras' : (settings.era === 'modern' ? 'Modern Era' : settings.decade + 's');
+        return modeText[settings.mode] + ' \u2022 ' + eligText[settings.elig] + ' \u2022 ' + poolText[settings.pool] + ' \u2022 ' + eraText;
+    }
+
+    // --- Matchup pre-generation ---
+    function seededShuffle(arr, rng) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(rng() * (i + 1));
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+    }
+
+    function pregenHowMuch(rng, usedIDs, catHist) {
+        var allPool = ['careerHR','careerBA','careerOPS','careerERA','careerW','careerSB','seasonHighHR','careerXBHRate','peakSeasonOPS','careerKBB','careerIP','seasonHighK','bestSeasonERA','seasonHighKBat','seasonHighSB','careerH','careerBB','careerWHIP'];
+        if (warLoaded.bat) allPool.push('careerWARBat');
+        if (warLoaded.pit) allPool.push('careerWARPit');
+        var poolCats;
+        if (playerPool === 'all') poolCats = allPool;
+        else if (playerPool === 'batters') poolCats = allPool.filter(function(k) { return BASE_CATS[k].type === 'hitter'; });
+        else poolCats = allPool.filter(function(k) { return BASE_CATS[k].type === 'pitcher'; });
+        if (eligibility === 'allStar') poolCats = poolCats.filter(function(k) { return !['seasonHighKBat'].includes(k); });
+
+        var maxUsage = playerPool === 'all' ? 1 : 2;
+        var validCats = poolCats.filter(function(k) { return (catHist[k] || 0) < maxUsage; });
+        if (validCats.length === 0) validCats = poolCats;
+
+        for (var attempts = 0; attempts < 500; attempts++) {
+            var ck = validCats[Math.floor(rng() * validCats.length)];
+            var catDef = BASE_CATS[ck];
+            var pool = [];
+            players.forEach(function(p) {
+                if (usedIDs.has(p.id)) return;
+                if (!passesGlobal(p) || !rolePass(p) || p.type !== catDef.type || !eraPass(p)) return;
+                var s = p.stats;
+                if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(ck) && s.PA <= 0) return;
+                if (['careerERA','careerIP'].includes(ck) && s.IP <= 0) return;
+                if (['peakSeasonOPS','bestSeasonERA'].includes(ck) && (!s[ck] || s[ck] <= 0)) return;
+                pool.push(p);
+            });
+            if (pool.length < 2) continue;
+            for (var j = 0; j < 50; j++) {
+                var a = pool[Math.floor(rng() * pool.length)];
+                var b = pool[Math.floor(rng() * pool.length)];
+                if (a === b) continue;
+                var d = Math.abs(a.stats[ck] - b.stats[ck]);
+                if (d >= catDef.dMin && d <= catDef.dMin * 5) {
+                    usedIDs.add(a.id); usedIDs.add(b.id);
+                    catHist[ck] = (catHist[ck] || 0) + 1;
+                    return { pA: a.id, pB: b.id, cat: ck };
+                }
+            }
+        }
+        return null;
+    }
+
+    function pregenShowdown(rng, usedIDs) {
+        var targetType;
+        if (playerPool === 'pitchers') targetType = 'pitcher';
+        else if (playerPool === 'batters') targetType = 'hitter';
+        else targetType = rng() < 0.5 ? 'hitter' : 'pitcher';
+
+        var pool = [];
+        players.forEach(function(p) {
+            if (usedIDs.has(p.id)) return;
+            if (!passesGlobal(p) || !eraPass(p) || p.type !== targetType || !p.stats) return;
+            pool.push(p);
+        });
+        if (pool.length < 2) return null;
+
+        var cats = targetType === 'hitter' ? SBS_CATS_BAT : SBS_CATS_PIT;
+        for (var attempts = 0; attempts < 100; attempts++) {
+            var idxA = Math.floor(rng() * pool.length);
+            var idxB = Math.floor(rng() * pool.length);
+            while (idxA === idxB) idxB = Math.floor(rng() * pool.length);
+            var pA = pool[idxA], pB = pool[idxB];
+            var wA = 0, wB = 0;
+            for (var i = 0; i < 10 && i < cats.length; i++) {
+                var cat = cats[i];
+                var vA = cat.key === 'seasons' ? pA.years.size : (cat.key === 'teams' ? pA.teams.size : pA.stats[cat.key]);
+                var vB = cat.key === 'seasons' ? pB.years.size : (cat.key === 'teams' ? pB.teams.size : pB.stats[cat.key]);
+                if (vA === vB) continue;
+                if (cat.lowerBetter ? vA < vB : vA > vB) wA++; else wB++;
+            }
+            if (wA <= 8 && wB <= 8) {
+                usedIDs.add(pA.id); usedIDs.add(pB.id);
+                return { pA: pA.id, pB: pB.id, type: targetType };
+            }
+        }
+        // Fallback
+        var fA = Math.floor(rng() * pool.length), fB = Math.floor(rng() * pool.length);
+        while (fA === fB) fB = Math.floor(rng() * pool.length);
+        usedIDs.add(pool[fA].id); usedIDs.add(pool[fB].id);
+        return { pA: pool[fA].id, pB: pool[fB].id, type: targetType };
+    }
+
+    function pregenPickEm(rng, catHist, roundNum) {
+        var validCats = Object.keys(BASE_CATS).filter(function(k) { return BASE_CATS[k].thresholds; });
+        if (playerPool === 'batters') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'hitter' || BASE_CATS[k].type === 'both'; });
+        else if (playerPool === 'pitchers') validCats = validCats.filter(function(k) { return BASE_CATS[k].type === 'pitcher' || BASE_CATS[k].type === 'both'; });
+
+        var unusedCats = validCats.filter(function(k) { return !catHist[k]; });
+        if (unusedCats.length > 0) validCats = unusedCats;
+
+        for (var retry = 0; retry < 20; retry++) {
+            var ck = validCats[Math.floor(rng() * validCats.length)];
+            var cc = BASE_CATS[ck];
+            var availThresh = cc.thresholds.slice();
+            if (eligibility === 'allStar' || eligibility === 'hof') {
+                if (availThresh.length >= 2) availThresh = availThresh.slice(-2);
+            } else {
+                if (availThresh.length > 1) availThresh = availThresh.slice(0, -1);
+            }
+            var threshVal = availThresh[Math.floor(rng() * availThresh.length)];
+
+            var subRole = 'all';
+            if (cc.type === 'pitcher') subRole = rng() < 0.75 ? 'starter' : 'reliever';
+
+            var numCorrect = roundNum <= 3 ? 7 : (roundNum <= 6 ? 6 : 5);
+            var numIncorrect = 10 - numCorrect;
+            var buffer = threshVal * cc.tolerance;
+            if (cc.minBuffer) buffer = Math.max(buffer, cc.minBuffer);
+
+            var goodMin, goodMax, badMin, badMax;
+            if (cc.lowerBetter) {
+                goodMax = threshVal; goodMin = Math.max(0, threshVal - buffer);
+                badMin = threshVal + 0.0001; badMax = threshVal + buffer;
+            } else {
+                goodMin = threshVal; goodMax = threshVal + buffer;
+                badMax = threshVal - (cc.step || 0.01); badMin = threshVal - buffer;
+            }
+
+            var correctPool = [], distractorPool = [];
+            players.forEach(function(p) {
+                if (!eraPass(p) || !p.stats) return;
+                if (eligibility !== 'custom') {
+                    if (p.type === 'hitter' && p.stats.PA < 3000) return;
+                    if (p.type === 'pitcher' && p.GS < 150 && p.G < 500) return;
+                }
+                if (!passesGlobal(p)) return;
+                if (playerPool === 'batters' && p.type !== 'hitter') return;
+                if (playerPool === 'pitchers' && p.type !== 'pitcher') return;
+                if (cc.type === 'hitter' && p.type !== 'hitter') return;
+                if (cc.type === 'pitcher') {
+                    if (p.type !== 'pitcher') return;
+                    if (subRole === 'starter' && p.GS < 150) return;
+                    if (subRole === 'reliever' && (p.G < 500 || p.GS >= 150)) return;
+                }
+                if (['peakSeasonOPS','bestSeasonERA'].includes(ck) && (!p.stats[ck] || p.stats[ck] <= 0)) return;
+
+                var val;
+                if (ck === 'careerSO') val = p.stats.careerSO;
+                else if (ck === 'careerRBI') val = p.stats.careerRBI;
+                else if (ck === 'teams') val = p.teams.size;
+                else if (ck === 'seasons') val = p.years.size;
+                else val = p.stats[ck];
+                if (val === undefined || isNaN(val)) return;
+
+                if (val >= goodMin && val <= goodMax) correctPool.push(p);
+                else if (val >= badMin && val <= badMax) distractorPool.push(p);
+            });
+
+            if (correctPool.length < numCorrect || distractorPool.length < numIncorrect) continue;
+
+            seededShuffle(correctPool, rng);
+            seededShuffle(distractorPool, rng);
+            var selected = correctPool.slice(0, numCorrect).concat(distractorPool.slice(0, numIncorrect));
+            seededShuffle(selected, rng);
+            catHist[ck] = (catHist[ck] || 0) + 1;
+            return { cat: ck, thresh: threshVal, subRole: subRole, ids: selected.map(function(p) { return p.id; }) };
+        }
+        return null;
+    }
+
+    function generateMatchups(mode, rng) {
+        var matchups = [], usedIDs = new Set(), catHist = {};
+        for (var r = 0; r < 10; r++) {
+            var m;
+            if (mode === 'howMuch') m = pregenHowMuch(rng, usedIDs, catHist);
+            else if (mode === 'sideBySide') m = pregenShowdown(rng, usedIDs);
+            else m = pregenPickEm(rng, catHist, r + 1);
+            if (m) matchups.push(m);
+        }
+        return matchups;
+    }
+
+    // --- Daily challenge play flow ---
+    async function playDaily() {
+        if (!players || players.size === 0) { showAlert('Player data still loading...', 'bg-red-500'); return; }
+        var dailyId = getDailyId();
+        var seed = hashStr(getDailyDateStr());
+        var rng = mulberry32(seed);
+        var settings = generateDailySettings(rng);
+
+        // Try to load existing daily from Supabase
+        if (sb) {
+            try {
+                var result = await sb.from('challenges').select('*').eq('id', dailyId).single();
+                if (result.data) {
+                    var data = result.data;
+                    gameMode = data.config.mode; playerPool = data.config.pool;
+                    eligibility = data.config.elig; customFilters = [];
+                    eraMode = data.config.era; selectedDecade = data.config.decade;
+                    challengeQueue = data.matchups;
+                    currentChallengeId = dailyId;
+                    challengerScore = null; challengerRoundScores = null;
+                    isPlayingChallenge = true; isDailyChallenge = true;
+                    startGame();
+                    return;
+                }
+            } catch (e) { /* not found, generate below */ }
+        }
+
+        // Generate matchups with seeded PRNG
+        var savedMode = gameMode, savedPool = playerPool, savedElig = eligibility;
+        var savedEra = eraMode, savedDecade = selectedDecade, savedFilters = customFilters;
+        gameMode = settings.mode; playerPool = settings.pool;
+        eligibility = settings.elig; customFilters = [];
+        eraMode = settings.era; selectedDecade = settings.decade;
+
+        var matchups = generateMatchups(settings.mode, rng);
+
+        // Fallback: if not enough matchups, try modern + allStar
+        if (matchups.length < 10) {
+            eraMode = 'modern'; selectedDecade = null; eligibility = 'allStar';
+            settings = { mode: settings.mode, pool: settings.pool, elig: 'allStar', era: 'modern', decade: null };
+            matchups = generateMatchups(settings.mode, rng);
+        }
+
+        // Restore globals (startGame will set them from challenge data)
+        gameMode = savedMode; playerPool = savedPool; eligibility = savedElig;
+        eraMode = savedEra; selectedDecade = savedDecade; customFilters = savedFilters;
+
+        if (matchups.length < 10) { showAlert('Could not generate daily challenge.', 'bg-red-500'); return; }
+
+        // Save to Supabase (best-effort)
+        if (sb) {
+            try {
+                await sb.from('challenges').insert([{
+                    id: dailyId,
+                    config: { mode: settings.mode, pool: settings.pool, elig: settings.elig, era: settings.era, decade: settings.decade },
+                    matchups: matchups
+                }]);
+            } catch (e) { /* race condition or offline, ok */ }
+        }
+
+        // Set up and start
+        gameMode = settings.mode; playerPool = settings.pool;
+        eligibility = settings.elig; customFilters = [];
+        eraMode = settings.era; selectedDecade = settings.decade;
+        challengeQueue = matchups;
+        currentChallengeId = dailyId;
+        challengerScore = null; challengerRoundScores = null;
+        isPlayingChallenge = true; isDailyChallenge = true;
+        startGame();
+    }
+
+    function initDailyCard() {
+        var card = document.getElementById('daily-challenge-card');
+        if (!card) return;
+        var seed = hashStr(getDailyDateStr());
+        var rng = mulberry32(seed);
+        var settings = generateDailySettings(rng);
+        document.getElementById('daily-settings-label').textContent = getDailySettingsLabel(settings);
+
+        var played = localStorage.getItem('lastDailyPlayed') === getDailyId();
+        var btn = document.getElementById('daily-play-btn');
+        if (played) {
+            var savedScore = localStorage.getItem('lastDailyScore');
+            btn.textContent = savedScore ? savedScore + ' pts \u00B7 Replay' : 'Replay';
+        }
+        card.style.display = '';
     }
 
     // ═══════════════════════════════════════
@@ -2268,6 +2661,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-500 font-bold'; }
             dom.rerollBtn.classList.add('hidden');
             checkHighScoreTrigger();
+            // Show challenge leaderboard for any challenge game
+            if (isPlayingChallenge && currentChallengeId) {
+                showChallengeLeaderboard(currentChallengeId);
+            }
+            // Store daily score in localStorage
+            if (isDailyChallenge) {
+                localStorage.setItem('lastDailyPlayed', getDailyId());
+                localStorage.setItem('lastDailyScore', String(score));
+            }
         } else {
             round++;
             dom.rerollBtn.disabled = hasUsedReroll;
@@ -2279,6 +2681,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         currentChallengeId = null;
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
         challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
+        isDailyChallenge = false;
         gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = [];
         eraMode = 'modern'; selectedDecade = null;
 
@@ -2336,6 +2739,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.startScreen.classList.remove('hidden');
         dom.homeBtn.classList.add('hidden');
         dom.rerollBtn.classList.add('hidden');
+        initDailyCard();
     }
 
     // ═══════════════════════════════════════
@@ -3480,6 +3884,79 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     // ═══════════════════════════════════════
+    // §18a  CHALLENGE LEADERBOARD
+    // ═══════════════════════════════════════
+
+    async function fetchChallengeScores(challengeId) {
+        if (!sb) return [];
+        try {
+            var result = await sb.from('challenge_scores').select('*')
+                .eq('challenge_id', challengeId)
+                .order('score', { ascending: false }).limit(10);
+            if (result.error) throw result.error;
+            return result.data || [];
+        } catch (e) { console.error('Fetch challenge scores error:', e); return []; }
+    }
+
+    async function renderChallengeLeaderboard(challengeId, highlightNew, newName, newScore) {
+        var body = document.getElementById('challenge-lb-body');
+        body.innerHTML = '<tr><td colspan="3" class="text-center py-4">Loading...</td></tr>';
+        var scores = await fetchChallengeScores(challengeId);
+        body.innerHTML = '';
+        if (scores.length === 0) {
+            document.getElementById('challenge-lb-empty').classList.remove('hidden');
+        } else {
+            document.getElementById('challenge-lb-empty').classList.add('hidden');
+            scores.forEach(function(entry, i) {
+                var tr = document.createElement('tr');
+                var isMatch = highlightNew && entry.name === newName && entry.score === newScore;
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '');
+                var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
+                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
+                    '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
+                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
+                body.appendChild(tr);
+            });
+        }
+    }
+
+    async function saveChallengeScore() {
+        if (!sb || !currentChallengeId) { showAlert('Online features unavailable.', 'bg-red-500'); return; }
+        var nameInput = document.getElementById('challenge-name-input');
+        var name = nameInput.value.trim() || 'Anonymous';
+        var btn = document.getElementById('save-challenge-score-btn');
+        btn.textContent = 'Saving...'; btn.disabled = true;
+        try {
+            var res = await sb.from('challenge_scores').insert([{
+                challenge_id: currentChallengeId, name: name, score: score
+            }]);
+            if (res.error) throw res.error;
+            document.getElementById('challenge-lb-save').classList.add('hidden');
+            renderChallengeLeaderboard(currentChallengeId, true, name, score);
+        } catch (e) {
+            alert('Error saving score. Please try again.');
+            console.error(e);
+            btn.disabled = false; btn.textContent = 'Save Score';
+        }
+    }
+
+    function showChallengeLeaderboard(challengeId) {
+        var title = document.getElementById('challenge-lb-title');
+        if (challengeId.startsWith('D')) {
+            var mm = challengeId.slice(3, 5), dd = challengeId.slice(5, 7);
+            title.textContent = 'Daily Challenge ' + mm + '/' + dd;
+        } else {
+            title.textContent = 'Challenge ' + challengeId;
+        }
+        var btn = document.getElementById('save-challenge-score-btn');
+        btn.disabled = false; btn.textContent = 'Save Score';
+        document.getElementById('challenge-lb-save').classList.remove('hidden');
+        document.getElementById('challenge-name-input').value = '';
+        renderChallengeLeaderboard(challengeId);
+        document.getElementById('challenge-lb-modal').classList.remove('hidden');
+    }
+
+    // ═══════════════════════════════════════
     // §19  SHARE GAME
     // ═══════════════════════════════════════
     async function shareGame() {
@@ -3724,6 +4201,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (e.key === 'Enter') loadChallengeByCode();
         });
 
+        // Daily challenge
+        document.getElementById('daily-play-btn').addEventListener('click', playDaily);
+        document.getElementById('daily-challenge-card').addEventListener('click', function(e) {
+            if (e.target.id !== 'daily-play-btn') document.getElementById('daily-play-btn').click();
+        });
+
+        // Challenge leaderboard modal
+        document.getElementById('close-challenge-lb').addEventListener('click', function() { document.getElementById('challenge-lb-modal').classList.add('hidden'); });
+        document.getElementById('challenge-lb-overlay').addEventListener('click', function() { document.getElementById('challenge-lb-modal').classList.add('hidden'); });
+        document.getElementById('save-challenge-score-btn').addEventListener('click', saveChallengeScore);
+
         // Custom eligibility modal
         document.getElementById('close-custom-elig').addEventListener('click', closeCustomEligModal);
         document.getElementById('custom-elig-overlay').addEventListener('click', closeCustomEligModal);
@@ -3905,7 +4393,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             initPreferences();
             populateDateDropdown();
             loadAll(function() {
-                try { buildAgg(); renderDecadeGrid(); }
+                try { buildAgg(); renderDecadeGrid(); initDailyCard(); }
                 catch (e) {
                     console.error('Init error:', e);
                     dom.loadingScreen.classList.add('hidden');
