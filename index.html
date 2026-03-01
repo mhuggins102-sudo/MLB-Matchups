@@ -2384,11 +2384,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     var s = p.stats;
                     if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKey) && s.PA <= 0) return;
                     if (['careerERA','careerIP'].includes(catKey) && s.IP <= 0) return;
-                    if (catKey === 'bestSeasonERA' && (!s.bestSeasonERA || s.bestSeasonERA <= 0)) return;
-                    if (eligibility !== 'standard') {
-                        if (catKey === 'peakSeasonOPS' && s.peakSeasonOPS <= 0) return;
-                        if (catKey === 'bestSeasonERA' && s.bestSeasonERA <= 0) return;
-                    }
+                    if (['peakSeasonOPS','bestSeasonERA'].includes(catKey) && (!s[catKey] || s[catKey] <= 0)) return;
                     pool.push(p);
                 });
                 if (pool.length < 2) continue;
@@ -2941,8 +2937,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (targetSubRole === 'starter' && p.GS < 150) return;
                     if (targetSubRole === 'reliever' && (p.G < 500 || p.GS >= 150)) return;
                 }
-                if (['peakSeasonOPS'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
-                if (catKey === 'bestSeasonERA' && (!p.stats.bestSeasonERA || p.stats.bestSeasonERA <= 0)) return;
+                if (['peakSeasonOPS','bestSeasonERA'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
 
                 var val;
                 if (catKey === 'careerSO') val = p.stats.careerSO;
