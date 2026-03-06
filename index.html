@@ -561,7 +561,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             </div>
 
             <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
-                <div id="round-feedback" class="flex items-center"></div>
+                <div id="round-feedback" class="flex flex-col items-center space-y-1"></div>
                 <div id="pickem-chain-guide" class="text-sm font-bold hidden"></div>
             </div>
         </div>
@@ -4397,20 +4397,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var btn = document.getElementById('save-challenge-score-btn');
         btn.textContent = 'Saving...'; btn.disabled = true;
         try {
-            // Try insert first; if duplicate key, fall back to update
             var res = await sb.from('challenge_scores').insert([{
                 challenge_id: currentChallengeId, name: name, score: score
             }]);
-            if (res.error) {
-                if (res.error.code === '23505') {
-                    // Duplicate key — update existing row
-                    var res2 = await sb.from('challenge_scores').update({ name: name, score: score })
-                        .eq('challenge_id', currentChallengeId);
-                    if (res2.error) throw res2.error;
-                } else {
-                    throw res.error;
-                }
-            }
+            if (res.error) throw res.error;
             document.getElementById('challenge-lb-save').classList.add('hidden');
             await renderChallengeLeaderboard(currentChallengeId, true, name, score);
             // If leaderboard is still empty (RLS blocking SELECT), show the score locally
