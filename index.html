@@ -559,9 +559,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <button id="submit-btn" disabled class="primary-btn">Lock In</button>
                 <button id="next-btn" disabled class="primary-btn mt-2 hidden">Next Round</button>
             </div>
-            
-            <div id="round-feedback" class="mt-4 flex flex-col items-center space-y-1 min-h-[2rem]"></div>
-            <div id="pickem-chain-guide" class="text-center text-sm font-bold hidden"></div>
+
+            <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
+                <div id="round-feedback" class="flex items-center"></div>
+                <div id="pickem-chain-guide" class="text-sm font-bold hidden"></div>
+            </div>
         </div>
 
         <div id="game-over-screen" class="hidden flex-col items-center justify-center h-full text-center animate-enter pb-12">
@@ -3902,11 +3904,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             // Update chain guidance after successful pick
             var chainGuideU = document.getElementById('pickem-chain-guide');
-            if (chainGuideU && pickEmState.chainActive) {
-                var catCfgCG = BASE_CATS[catKey];
-                var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
-                var displayVal = formatStat(val, catKey);
-                chainGuideU.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400">Chain active! Next pick: value ' + op2 + ' ' + displayVal + '</span>';
+            if (chainGuideU) {
+                if (pickEmState.chainActive) {
+                    var catCfgCG = BASE_CATS[catKey];
+                    var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
+                    var displayVal = formatStat(val, catKey);
+                    chainGuideU.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400">Chain active! Next pick ' + op2 + ' ' + displayVal + '</span>';
+                } else {
+                    chainGuideU.classList.add('hidden');
+                    chainGuideU.innerHTML = '';
+                }
             }
 
             var oldScore = score, newScore = score + pts;
@@ -4405,7 +4412,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 }
             }
             document.getElementById('challenge-lb-save').classList.add('hidden');
-            renderChallengeLeaderboard(currentChallengeId, true, name, score);
+            await renderChallengeLeaderboard(currentChallengeId, true, name, score);
+            // If leaderboard is still empty (RLS blocking SELECT), show the score locally
+            var body = document.getElementById('challenge-lb-body');
+            if (body && body.children.length === 0) {
+                document.getElementById('challenge-lb-empty').classList.add('hidden');
+                var tr = document.createElement('tr');
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 leaderboard-new';
+                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">\uD83E\uDD47</td>' +
+                    '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + score + '</td>' +
+                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200">' + name + '</td>';
+                body.appendChild(tr);
+            }
         } catch (e) {
             console.error('saveChallengeScore failed:', e);
             alert('Error saving score: ' + (e.message || 'Unknown error') + '. Check that the challenge_scores table has columns: challenge_id (text), name (text), score (int8), and that RLS allows inserts.');
