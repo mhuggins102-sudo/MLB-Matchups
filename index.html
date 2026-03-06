@@ -3405,7 +3405,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.nextBtn.disabled = true;
         dom.nextBtn.textContent = (round === 10) ? 'Finish Game' : 'Next Round';
 
-        if (!hasUsedReroll) {
+        if (!hasUsedReroll && !isPlayingChallenge && !currentChallengeId) {
             dom.rerollBtn.className = 'p-2 rounded-full transition text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400';
             dom.rerollBtn.disabled = false;
         }
@@ -4408,7 +4408,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         // Leaderboard modal
         dom.leaderboardBtn.addEventListener('click', function() {
             // Pre-filter to current game settings if a game is active
-            if (!dom.startScreen.classList.contains('hidden')) {
+            if (dom.startScreen.classList.contains('hidden')) {
                 dom.lbFilterMode.value = gameMode || 'all';
                 dom.lbFilterPool.value = playerPool || 'all_pools';
                 dom.lbFilterDate.value = 'today';
