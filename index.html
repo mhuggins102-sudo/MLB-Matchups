@@ -34,6 +34,12 @@
     <meta name="apple-mobile-web-app-title" content="Matchups">
 
 
+    <script data-cfasync="false">
+        // Apply dark mode immediately to prevent flash of light mode
+        if (localStorage.getItem('darkMode') !== 'disabled') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
     <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
     <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -344,7 +350,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <!-- Format Toggle -->
                 <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="format-toggle-row">
                     <span class="text-sm font-semibold">Number Format</span>
-                    <div id="format-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">123</div>
+                    <div id="format-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">.12</div>
                 </div>
 
                 <!-- Animation Toggle -->
@@ -545,8 +551,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">
         </div>
 
-    <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
+    <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-2">
         </div>
+    <div id="pickem-chain-guide" class="text-center text-xs font-bold mb-2 min-h-[1.25rem]"></div>
 </div>
 
             <div class="mt-2">
@@ -620,6 +627,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Category Tooltip Popup -->
+    <div id="cat-tooltip-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="cat-tooltip-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 id="cat-tooltip-title" class="text-lg font-black tracking-wide text-gray-800 dark:text-white"></h3>
+                <button id="close-cat-tooltip" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div id="cat-tooltip-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-3"></div>
+        </div>
+    </div>
+
     <!-- Custom Eligibility Modal -->
     <div id="custom-elig-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-elig-overlay"></div>
@@ -629,9 +648,26 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <button id="close-custom-elig" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5">
-                <div id="custom-filter-rows" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto"></div>
-                <button id="add-filter-btn" class="w-full py-2 text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition mb-4">+ Add Filter</button>
-                <button id="apply-custom-elig" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Filters</button>
+                <!-- Presets / Customize toggle -->
+                <div class="flex mb-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
+                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Presets</button>
+                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 dark:text-gray-400 transition-all">Customize</button>
+                </div>
+                <!-- Presets view -->
+                <div id="custom-presets-view">
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">Hitter Presets</div>
+                    <div id="preset-hitter-list" class="space-y-2 mb-4"></div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">Pitcher Presets</div>
+                    <div id="preset-pitcher-list" class="space-y-2 mb-4"></div>
+                    <div id="preset-combo-note" class="hidden text-[10px] text-center text-amber-600 dark:text-amber-400 font-semibold mb-3">Playing with "All Players"? Pick up to 1 hitter + 1 pitcher preset.</div>
+                    <button id="apply-presets-btn" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Presets</button>
+                </div>
+                <!-- Customize view (existing) -->
+                <div id="custom-customize-view" class="hidden">
+                    <div id="custom-filter-rows" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto"></div>
+                    <button id="add-filter-btn" class="w-full py-2 text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition mb-4">+ Add Filter</button>
+                    <button id="apply-custom-elig" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Filters</button>
+                </div>
             </div>
         </div>
     </div>
@@ -949,11 +985,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <option value="pickEm">Pick 'Em</option>
                     </select>
 
-                    <select id="lb-filter-pool" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
-                        <option value="all_pools">All Pools</option>
-                        <option value="all">All Players</option>
-                        <option value="batters">Batters</option>
-                        <option value="pitchers">Pitchers</option>
+                    <select id="lb-filter-elig" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
+                        <option value="all_elig">All Tiers</option>
+                        <option value="standard">Veteran</option>
+                        <option value="allStar">All Star</option>
+                        <option value="hof">Hall of Fame</option>
                     </select>
 
                     <select id="lb-filter-date" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
@@ -1037,15 +1073,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <!-- Settings & play -->
             <div class="px-4 pt-3 pb-2 text-center">
                 <div id="daily-popup-settings" class="text-sm font-bold text-gray-600 dark:text-gray-300"></div>
-                <div id="daily-popup-status" class="text-xs mt-1 text-gray-400"></div>
             </div>
-            <div class="px-4 pb-3">
+            <div id="daily-popup-play-wrap" class="px-4 pb-3">
                 <button id="daily-popup-play" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black py-3 rounded-xl transition-all text-sm shadow-md">Play</button>
             </div>
             <!-- Leaderboard -->
             <div class="border-t border-gray-100 dark:border-gray-800 flex flex-col min-h-0">
                 <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex-none">
-                    <span class="text-xs font-black uppercase tracking-wide text-gray-400">Top 10</span>
+                    <span class="text-xs font-black uppercase tracking-wide text-gray-400">Leaderboard</span>
                 </div>
                 <div class="overflow-y-auto" style="max-height:35vh;">
                     <table class="w-full text-sm text-left">
@@ -1135,7 +1170,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     var deadZoneEnabled = localStorage.getItem('deadZoneEnabled') !== 'false';
     var useAnimations   = localStorage.getItem('useAnimations')   !== 'false';
-    var useWholeNumbers = true;
+    var useWholeNumbers = false;
 
     var players    = new Map();
     var batSeasons = new Map();
@@ -1252,6 +1287,57 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         bestSeasonERA:0.08, careerWARBat:2.0, careerWARPit:2.0, careerIP:80,
         careerH:80, careerBB:40, careerWHIP:0.032
     };
+
+    var CAT_DESCRIPTIONS = {
+        careerHR:       { desc: 'Total home runs hit over a player\'s entire career.', calc: null, elig: null },
+        careerH:        { desc: 'Total base hits accumulated over a player\'s career.', calc: null, elig: null },
+        careerRBI:      { desc: 'Total runs batted in over a player\'s career.', calc: null, elig: null },
+        careerSB:       { desc: 'Total stolen bases over a player\'s career.', calc: null, elig: null },
+        careerBB:       { desc: 'Total walks (bases on balls) drawn over a player\'s career.', calc: null, elig: null },
+        careerBA:       { desc: 'Career batting average — how often a batter gets a hit.', calc: 'Hits \u00f7 At Bats', elig: null },
+        careerOPS:      { desc: 'Career on-base plus slugging — measures a hitter\'s overall offensive value.', calc: 'On-Base % + Slugging %', elig: null },
+        careerXBHRate:  { desc: 'Percentage of hits that go for extra bases (doubles, triples, home runs).', calc: '(2B + 3B + HR) \u00f7 Hits', elig: null },
+        careerWARBat:   { desc: 'Career Wins Above Replacement for position players — estimates total value over a replacement-level player.', calc: 'Composite metric combining batting, baserunning, and fielding value (Baseball Reference bWAR).', elig: null },
+        seasonHighHR:   { desc: 'Most home runs hit in any single season.', calc: null, elig: null },
+        seasonHighSB:   { desc: 'Most stolen bases in any single season.', calc: null, elig: null },
+        peakSeasonOPS:  { desc: 'Highest OPS achieved in any single season.', calc: 'On-Base % + Slugging % (best single season)', elig: 'Minimum 400 PA in the season.' },
+        seasonHighKBat: { desc: 'Most strikeouts in any single season as a batter. Lower is better.', calc: null, elig: null },
+        careerW:        { desc: 'Total wins as a pitcher over an entire career.', calc: null, elig: null },
+        careerSO:       { desc: 'Total strikeouts recorded as a pitcher over a career.', calc: null, elig: null },
+        careerWARPit:   { desc: 'Career Wins Above Replacement for pitchers — estimates total value over a replacement-level pitcher.', calc: 'Composite metric combining pitching value, run prevention, and leverage (Baseball Reference bWAR).', elig: null },
+        careerIP:       { desc: 'Total innings pitched over a career.', calc: null, elig: null },
+        careerERA:      { desc: 'Career earned run average — average earned runs allowed per 9 innings. Lower is better.', calc: '(Earned Runs \u00f7 Innings Pitched) \u00d7 9', elig: null },
+        careerWHIP:     { desc: 'Career walks plus hits per inning pitched. Lower is better.', calc: '(Walks + Hits) \u00f7 Innings Pitched', elig: null },
+        careerKBB:      { desc: 'Career strikeout-to-walk ratio — measures a pitcher\'s command.', calc: 'Strikeouts \u00f7 Walks', elig: null },
+        seasonHighW:    { desc: 'Most wins in any single season as a pitcher.', calc: null, elig: null },
+        seasonHighK:    { desc: 'Most strikeouts in any single season as a pitcher.', calc: null, elig: null },
+        bestSeasonERA:  { desc: 'Lowest ERA achieved in any single season. Lower is better.', calc: '(Earned Runs \u00f7 Innings Pitched) \u00d7 9 (best single season)', elig: 'Minimum 100 IP in the season.' },
+        seasonHighHRPit:{ desc: 'Most home runs allowed in any single season. Lower is better.', calc: null, elig: null },
+        seasons:        { desc: 'Number of MLB seasons played.', calc: null, elig: null },
+        teams:          { desc: 'Number of distinct MLB teams played for.', calc: null, elig: null }
+    };
+
+    var CUSTOM_PRESETS = [
+        { id: 'willie_mays_hayes', name: 'Willie Mays Hayes', type: 'hitter', desc: 'Speed demons with little power', filters: [
+            { stat: 'careerSB', value: 400, dir: 'min' },
+            { stat: 'careerHR', value: 100, dir: 'max' }
+        ]},
+        { id: 'swing_for_fences', name: 'Swing for the Fences', type: 'hitter', desc: 'High XBH rate, moderate WAR, long careers', filters: [
+            { stat: 'careerXBHRate', value: 0.45, dir: 'min' },
+            { stat: 'careerWARBat', value: 30, dir: 'max' },
+            { stat: 'seasons', value: 10, dir: 'min' }
+        ]},
+        { id: 'power_precision', name: 'Power & Precision', type: 'pitcher', desc: 'Elite command pitchers', filters: [
+            { stat: 'careerKBB', value: 3, dir: 'min' },
+            { stat: 'seasons', value: 10, dir: 'min' }
+        ]},
+        { id: 'journeymen', name: 'Journeymen', type: 'pitcher', desc: 'Long-serving starters who never dominated', filters: [
+            { stat: 'seasonHighW', value: 15, dir: 'max' },
+            { stat: 'GS', value: 300, dir: 'min' }
+        ]}
+    ];
+
+    var selectedPresets = { hitter: null, pitcher: null };
 
     var SBS_CATS_BAT = [
        {key:'careerWARBat', label:'Career WAR'},
@@ -1939,21 +2025,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var dailyId = getDailyId(offset);
         var played = localStorage.getItem('dailyPlayed_' + dailyId);
         var savedScore = localStorage.getItem('dailyScore_' + dailyId);
-        var statusEl = document.getElementById('daily-popup-status');
-        if (played && savedScore) {
-            statusEl.textContent = 'Your score: ' + savedScore + ' pts';
-            statusEl.className = 'text-xs mt-1 text-amber-600 dark:text-amber-400 font-bold';
-        } else {
-            statusEl.textContent = '';
-            statusEl.className = 'text-xs mt-1 text-gray-400';
-        }
+        var myScore = played && savedScore ? parseInt(savedScore, 10) : null;
 
-        // Play button text
-        var playBtn = document.getElementById('daily-popup-play');
+        // Show play button only if not yet played
+        var playWrap = document.getElementById('daily-popup-play-wrap');
         if (played) {
-            playBtn.textContent = savedScore ? savedScore + ' pts \u00B7 Replay' : 'Replay';
+            playWrap.classList.add('hidden');
         } else {
-            playBtn.textContent = 'Play';
+            playWrap.classList.remove('hidden');
+            document.getElementById('daily-popup-play').textContent = 'Play';
         }
 
         // Load leaderboard
@@ -1964,19 +2044,56 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         var scores = await fetchChallengeScores(dailyId);
         body.innerHTML = '';
-        if (scores.length === 0) {
+
+        if (scores.length === 0 && myScore === null) {
             empty.classList.remove('hidden');
         } else {
             empty.classList.add('hidden');
-            scores.forEach(function(entry, i) {
+            var top10 = scores.slice(0, 10);
+            var myInTop10 = false;
+            var myRank = null;
+
+            // Find player's rank in full list
+            if (myScore !== null) {
+                for (var r = 0; r < scores.length; r++) {
+                    if (scores[r].score === myScore) { myRank = r; myInTop10 = r < 10; break; }
+                }
+                // If score not found in DB yet (just played, not saved), find insert position
+                if (myRank === null) {
+                    myRank = scores.length;
+                    for (var r2 = 0; r2 < scores.length; r2++) {
+                        if (myScore > scores[r2].score) { myRank = r2; break; }
+                    }
+                    myInTop10 = myRank < 10;
+                }
+            }
+
+            top10.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
-                tr.className = 'border-b border-gray-100 dark:border-gray-800';
+                var isMe = myScore !== null && entry.score === myScore && myInTop10;
+                tr.className = 'border-b border-gray-100 dark:border-gray-800' + (isMe ? ' bg-amber-50 dark:bg-amber-900/20' : '');
                 var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
                 tr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
+                    '<td class="px-4 py-2.5 text-left font-black ' + (isMe ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400') + ' w-20">' + entry.score + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-bold ' + (isMe ? 'text-amber-700 dark:text-amber-300' : 'text-gray-800 dark:text-gray-200') + ' truncate max-w-[150px]">' + entry.name + (isMe ? ' (You)' : '') + '</td>';
                 body.appendChild(tr);
             });
+
+            // If player not in top 10, show them at the bottom with their rank
+            if (myScore !== null && !myInTop10) {
+                // Separator
+                var sepTr = document.createElement('tr');
+                sepTr.innerHTML = '<td colspan="3" class="text-center py-1 text-gray-300 dark:text-gray-600 text-xs">···</td>';
+                body.appendChild(sepTr);
+                // Player's row
+                var myTr = document.createElement('tr');
+                myTr.className = 'bg-amber-50 dark:bg-amber-900/20';
+                var myRankDisplay = (myRank + 1) + '.';
+                myTr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-amber-600 dark:text-amber-400">' + myRankDisplay + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-black text-amber-600 dark:text-amber-400 w-20">' + myScore + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-bold text-amber-700 dark:text-amber-300">You</td>';
+                body.appendChild(myTr);
+            }
         }
     }
 
@@ -2064,6 +2181,103 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         return row;
     }
 
+    function showCatTooltip(key) {
+        var cat = BASE_CATS[key];
+        var info = CAT_DESCRIPTIONS[key];
+        if (!cat || !info) return;
+        document.getElementById('cat-tooltip-title').textContent = cat.label;
+        var html = '<div>' + info.desc + '</div>';
+        if (info.calc) {
+            html += '<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700">';
+            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-1">Calculation</div>';
+            html += '<div class="font-semibold text-gray-700 dark:text-gray-200 text-xs">' + info.calc + '</div>';
+            html += '</div>';
+        }
+        if (info.elig) {
+            html += '<div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">';
+            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-amber-500 mb-1">Eligibility</div>';
+            html += '<div class="font-semibold text-amber-700 dark:text-amber-300 text-xs">' + info.elig + '</div>';
+            html += '</div>';
+        }
+        if (cat.lowerBetter) {
+            html += '<div class="text-xs text-red-500 dark:text-purple-400 font-bold mt-1">Lower is better</div>';
+        }
+        document.getElementById('cat-tooltip-body').innerHTML = html;
+        document.getElementById('cat-tooltip-popup').classList.remove('hidden');
+    }
+
+    function closeCatTooltip() {
+        document.getElementById('cat-tooltip-popup').classList.add('hidden');
+    }
+
+    function renderPresets() {
+        var hitterList = document.getElementById('preset-hitter-list');
+        var pitcherList = document.getElementById('preset-pitcher-list');
+        hitterList.innerHTML = '';
+        pitcherList.innerHTML = '';
+        CUSTOM_PRESETS.forEach(function(preset) {
+            var card = document.createElement('div');
+            var isSelected = (preset.type === 'hitter' ? selectedPresets.hitter : selectedPresets.pitcher) === preset.id;
+            card.className = 'p-3 rounded-xl border-2 cursor-pointer transition-all ' +
+                (isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600');
+            var filtersDesc = preset.filters.map(function(f) {
+                var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
+                var label = opt ? opt.label : f.stat;
+                var sym = f.dir === 'max' ? '\u2264' : '\u2265';
+                return label + ' ' + sym + ' ' + f.value;
+            }).join(', ');
+            card.innerHTML = '<div class="font-black text-sm text-gray-800 dark:text-white">' + preset.name + '</div>' +
+                '<div class="text-[10px] text-gray-400 mt-0.5">' + preset.desc + '</div>' +
+                '<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-semibold">' + filtersDesc + '</div>';
+            card.addEventListener('click', function() {
+                if (preset.type === 'hitter') {
+                    selectedPresets.hitter = selectedPresets.hitter === preset.id ? null : preset.id;
+                } else {
+                    selectedPresets.pitcher = selectedPresets.pitcher === preset.id ? null : preset.id;
+                }
+                renderPresets();
+            });
+            if (preset.type === 'hitter') hitterList.appendChild(card);
+            else pitcherList.appendChild(card);
+        });
+        // Show combo note if player pool is "all"
+        var comboNote = document.getElementById('preset-combo-note');
+        if (playerPool === 'all') comboNote.classList.remove('hidden');
+        else comboNote.classList.add('hidden');
+    }
+
+    function applyPresets() {
+        var filters = [];
+        if (selectedPresets.hitter) {
+            var hp = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.hitter; });
+            if (hp) filters = filters.concat(hp.filters);
+        }
+        if (selectedPresets.pitcher) {
+            var pp = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.pitcher; });
+            if (pp) filters = filters.concat(pp.filters);
+        }
+        if (filters.length === 0) {
+            showAlert('Select at least one preset.', 'bg-red-500');
+            return;
+        }
+        if (playerPool !== 'all' && selectedPresets.hitter && selectedPresets.pitcher) {
+            showAlert('Pick one preset when using Batters or Pitchers pool.', 'bg-red-500');
+            return;
+        }
+        customFilters = filters;
+        closeCustomEligModal();
+        var names = [];
+        if (selectedPresets.hitter) {
+            var h = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.hitter; });
+            if (h) names.push(h.name);
+        }
+        if (selectedPresets.pitcher) {
+            var p2 = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.pitcher; });
+            if (p2) names.push(p2.name);
+        }
+        showAlert('Preset' + (names.length > 1 ? 's' : '') + ' applied: ' + names.join(' + '), 'bg-blue-600');
+    }
+
     function openCustomEligModal() {
         var container = document.getElementById('custom-filter-rows');
         container.innerHTML = '';
@@ -2072,7 +2286,32 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             container.appendChild(createFilterRow());
         }
+        // Show presets tab by default
+        switchCustomTab('presets');
+        renderPresets();
         document.getElementById('custom-elig-modal').classList.remove('hidden');
+    }
+
+    function switchCustomTab(tab) {
+        var presetsBtn = document.getElementById('custom-tab-presets');
+        var customizeBtn = document.getElementById('custom-tab-customize');
+        var presetsView = document.getElementById('custom-presets-view');
+        var customizeView = document.getElementById('custom-customize-view');
+        if (tab === 'presets') {
+            presetsBtn.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            presetsBtn.classList.remove('text-gray-500','dark:text-gray-400');
+            customizeBtn.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            customizeBtn.classList.add('text-gray-500','dark:text-gray-400');
+            presetsView.classList.remove('hidden');
+            customizeView.classList.add('hidden');
+        } else {
+            customizeBtn.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            customizeBtn.classList.remove('text-gray-500','dark:text-gray-400');
+            presetsBtn.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            presetsBtn.classList.add('text-gray-500','dark:text-gray-400');
+            customizeView.classList.remove('hidden');
+            presetsView.classList.add('hidden');
+        }
     }
 
     function closeCustomEligModal() {
@@ -2125,6 +2364,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         return p.stats ? p.stats[statKey] : null;
     }
 
+    var customInfoSortKey = null;
+    var customInfoSortAsc = false;
+
     function showCustomInfoPopup() {
         if (eligibility !== 'custom' || customFilters.length === 0) return;
         var body = document.getElementById('custom-info-body');
@@ -2133,9 +2375,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         // Only show filters relevant to the current question's player type
         var relevantFilters = getRelevantFilters();
 
-        // Build filter table
-        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Active Filters</div>';
-        html += '<table class="w-full text-xs mb-1"><tbody>';
+        // Build compact filter list
+        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Active Filters</div>';
+        html += '<table class="w-full text-xs mb-0"><tbody>';
         relevantFilters.forEach(function(f) {
             var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
             var label = opt ? opt.label : f.stat;
@@ -2143,9 +2385,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (!filterDir) filterDir = opt ? opt.dir : 'min';
             var symbol = filterDir === 'max' ? '\u2264' : '\u2265';
             html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
-            html += '<td class="py-2 font-semibold text-gray-700 dark:text-gray-200">' + label + '</td>';
-            html += '<td class="py-2 text-center font-bold text-blue-600 dark:text-blue-400 w-8">' + symbol + '</td>';
-            html += '<td class="py-2 text-right font-bold text-gray-800 dark:text-white">' + f.value + '</td>';
+            html += '<td class="py-1 font-semibold text-gray-700 dark:text-gray-200">' + label + '</td>';
+            html += '<td class="py-1 text-center font-bold text-blue-600 dark:text-blue-400 w-10 text-base">' + symbol + '</td>';
+            html += '<td class="py-1 text-right font-bold text-gray-800 dark:text-white">' + f.value + '</td>';
             html += '</tr>';
         });
         html += '</tbody></table>';
@@ -2175,20 +2417,31 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             }
 
             if (currentPlayers.length > 0 && relevantFilters.length > 0) {
-                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2 mt-4">Player Values</div>';
-                html += '<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
-                html += '<th class="py-2 text-left font-bold text-gray-500 dark:text-gray-400">Player</th>';
+                // Sort players if a sort key is active
+                if (customInfoSortKey) {
+                    currentPlayers.sort(function(a, b) {
+                        var va = getFilterVal(a, customInfoSortKey);
+                        var vb = getFilterVal(b, customInfoSortKey);
+                        if (va == null) return 1;
+                        if (vb == null) return -1;
+                        return customInfoSortAsc ? va - vb : vb - va;
+                    });
+                }
+
+                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1 mt-2">Player Values</div>';
+                html += '<div class="overflow-x-auto -mx-5 px-5"><table class="text-xs" style="min-width:100%"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
+                html += '<th class="py-1 text-left font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap pr-3 sticky left-0 bg-white dark:bg-gray-900 z-10">Player</th>';
                 relevantFilters.forEach(function(f) {
                     var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
                     var shortLabel = opt ? opt.label.replace('Career ', '').replace('Highest ', 'Hi ').replace('Season High ', 'Hi ').replace('Best ', 'Best ') : f.stat;
-                    html += '<th class="py-2 text-right font-bold text-gray-500 dark:text-gray-400">' + shortLabel + '</th>';
+                    var arrow = customInfoSortKey === f.stat ? (customInfoSortAsc ? ' \u25B2' : ' \u25BC') : '';
+                    html += '<th class="py-1 text-right font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap pl-3 cursor-pointer hover:text-blue-500" data-sort-stat="' + f.stat + '">' + shortLabel + arrow + '</th>';
                 });
                 html += '</tr></thead><tbody>';
 
                 currentPlayers.forEach(function(p) {
                     html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
-                    var displayName = p.name.length > 14 ? p.name.split(' ').pop() : p.name;
-                    html += '<td class="py-2 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">' + displayName + '</td>';
+                    html += '<td class="py-1 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap pr-3 sticky left-0 bg-white dark:bg-gray-900 z-10">' + p.name + '</td>';
                     relevantFilters.forEach(function(f) {
                         var val = getFilterVal(p, f.stat);
 
@@ -2199,8 +2452,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                             else passes = val <= f.value;
                         }
                         var color = (val == null) ? 'text-gray-400' : (passes ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400');
-                        var display = val != null ? (typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(3) : val) : '—';
-                        html += '<td class="py-2 text-right font-bold ' + color + '">' + display + '</td>';
+                        var display = val != null ? (typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(3) : val) : '\u2014';
+                        html += '<td class="py-1 text-right font-bold pl-3 ' + color + '">' + display + '</td>';
                     });
                     html += '</tr>';
                 });
@@ -2209,6 +2462,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
 
         body.innerHTML = html;
+        // Attach sort handlers to column headers
+        body.querySelectorAll('th[data-sort-stat]').forEach(function(th) {
+            th.addEventListener('click', function() {
+                var stat = th.getAttribute('data-sort-stat');
+                if (customInfoSortKey === stat) {
+                    customInfoSortAsc = !customInfoSortAsc;
+                } else {
+                    customInfoSortKey = stat;
+                    customInfoSortAsc = false;
+                }
+                showCustomInfoPopup();
+            });
+        });
         document.getElementById('custom-info-popup').classList.remove('hidden');
     }
 
@@ -2823,7 +3089,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
         challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
         isDailyChallenge = false;
-        gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = [];
+        gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = []; selectedPresets = { hitter: null, pitcher: null };
         eraMode = 'modern'; selectedDecade = null;
 
         // Reset game mode buttons
@@ -2976,11 +3242,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         var catName = getCurrentCat(catKey).label;
         if (isLowerBetter) {
-            dom.playerPrompt.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black">' + catName + '</span> is <span class="text-red-500 dark:text-purple-400">LOWER</span>?';
+            dom.playerPrompt.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + catKey + '">' + catName + '</span> is <span class="text-red-500 dark:text-purple-400">LOWER</span>?';
         } else {
-            dom.playerPrompt.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black">' + catName + '</span> is HIGHER?';
+            dom.playerPrompt.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + catKey + '">' + catName + '</span> is HIGHER?';
         }
         dom.playerPrompt.className = 'text-center text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 mt-4';
+        var catSpan = dom.playerPrompt.querySelector('[data-cat-key]');
+        if (catSpan) catSpan.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
         updateScoreColor(score);
 
         var curCatF = getCurrentCat(catKey);
@@ -3291,10 +3559,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (i >= 10) return;
             var row = document.createElement('div');
             row.className = 'sbs-grid';
-            row.innerHTML = '<div class="sbs-row-label">' + cat.label + '</div>' +
+            row.innerHTML = '<div class="sbs-row-label cursor-pointer" data-cat-key="' + cat.key + '">' + cat.label + '</div>' +
                 '<div class="sbs-cell" data-row="' + i + '" data-pick="A">' + A.name.split(' ').pop() + '</div>' +
                 '<div class="sbs-cell" data-row="' + i + '" data-pick="B">' + B.name.split(' ').pop() + '</div>';
             dom.sbsContainer.appendChild(row);
+        });
+
+        // Attach click handlers to sbs-row-labels for tooltip
+        dom.sbsContainer.querySelectorAll('.sbs-row-label[data-cat-key]').forEach(function(lbl) {
+            lbl.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
         });
 
         // Attach click handlers to all sbs-cells
@@ -3534,7 +3807,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         var promptContainer = document.getElementById('pickem-prompt-container');
         if (promptContainer) {
-            promptContainer.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black">' + catConfigR.label + '</span> is <span class="text-gray-900 dark:text-white" id="pickem-thresh-val">' + op + ' ' + displayThresh + '</span>?';
+            promptContainer.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + catKey + '">' + catConfigR.label + '</span> is <span class="text-gray-900 dark:text-white" id="pickem-thresh-val">' + op + ' ' + displayThresh + '</span>?';
+            var catSpanPE = promptContainer.querySelector('[data-cat-key]');
+            if (catSpanPE) catSpanPE.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
+        }
+
+        // Chain guidance message
+        var chainGuide = document.getElementById('pickem-chain-guide');
+        if (chainGuide) {
+            var highLow = catConfigR.lowerBetter ? 'lowest' : 'highest';
+            chainGuide.innerHTML = '<span class="text-amber-600 dark:text-amber-400">Pick the player with the ' + highLow + ' value first!</span>';
         }
 
         var grid = document.getElementById('pickem-grid');
@@ -3605,11 +3887,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (useAnimations) bonusEl.classList.add('animate-text-pop');
                 } else {
                     pickEmState.chainActive = false;
+                    var chainGuideB = document.getElementById('pickem-chain-guide');
+                    if (chainGuideB) chainGuideB.innerHTML = '<span class="text-red-500 dark:text-red-400">Chain broken!</span>';
                 }
             }
 
             pickEmState.totalRoundPts += pts;
             pickEmState.lastVal = val;
+
+            // Update chain guidance after successful pick
+            var chainGuideU = document.getElementById('pickem-chain-guide');
+            if (chainGuideU && pickEmState.chainActive) {
+                var catCfgCG = BASE_CATS[catKey];
+                var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
+                var displayVal = formatStat(val, catKey);
+                chainGuideU.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400">Chain active! Next pick: value ' + op2 + ' ' + displayVal + '</span>';
+            }
 
             var oldScore = score, newScore = score + pts;
             score = newScore;
@@ -3618,6 +3911,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (pickEmState.picksMade >= 5) endPickEmRound(true);
         } else {
             styleRed.forEach(function(c) { card.classList.add(c); });
+            var chainGuideW = document.getElementById('pickem-chain-guide');
+            if (chainGuideW) chainGuideW.innerHTML = '<span class="text-red-500 dark:text-red-400">Wrong pick!</span>';
             endPickEmRound(false);
         }
     }
@@ -3923,10 +4218,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var query = sb.from('leaderboard').select('*').order('score', { ascending: false }).limit(50);
             var fMode = dom.lbFilterMode.value;
-            var fPool = dom.lbFilterPool.value;
+            var fElig = dom.lbFilterElig.value;
             var fDate = dom.lbFilterDate.value;
             if (fMode !== 'all') query = query.eq('game_mode', fMode);
-            if (fPool !== 'all_pools') query = query.eq('player_pool', fPool);
+            if (fElig !== 'all_elig') query = query.eq('eligibility', fElig);
             if (fDate === 'today') {
                 query = query.eq('date', new Date().toLocaleDateString());
             } else if (fDate === 'this_month') {
@@ -4002,7 +4297,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         try {
             var res = await sb.from('leaderboard').insert([{
                 name: name, score: score, date: new Date().toLocaleDateString(),
-                game_mode: gameMode, player_pool: playerPool
+                game_mode: gameMode, player_pool: playerPool, eligibility: eligibility
             }]);
             if (res.error) throw res.error;
             await fetchLeaderboard();
@@ -4018,6 +4313,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     async function checkHighScoreTrigger() {
+        // Never show main leaderboard save for custom eligibility games
+        if (eligibility === 'custom') {
+            dom.hsContainer.classList.add('hidden');
+            return;
+        }
         var isHigh = await isHighScore(score);
         if (isHigh) {
             dom.hsContainer.classList.remove('hidden');
@@ -4072,11 +4372,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var btn = document.getElementById('save-challenge-score-btn');
         btn.textContent = 'Saving...'; btn.disabled = true;
         try {
-            var res = await sb.from('challenge_scores').insert([{
+            var res = await sb.from('challenge_scores').upsert([{
                 challenge_id: currentChallengeId, name: name, score: score
-            }]).select();
+            }], { onConflict: 'challenge_id' }).select();
             if (res.error) {
-                console.error('Supabase challenge_scores insert error:', JSON.stringify(res.error));
+                console.error('Supabase challenge_scores upsert error:', JSON.stringify(res.error));
                 throw res.error;
             }
             document.getElementById('challenge-lb-save').classList.add('hidden');
@@ -4310,7 +4610,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             leaderboardBody:    document.getElementById('leaderboard-body'),
             emptyLeaderboardMsg:document.getElementById('empty-leaderboard-msg'),
             lbFilterMode:       document.getElementById('lb-filter-mode'),
-            lbFilterPool:       document.getElementById('lb-filter-pool'),
+            lbFilterElig:       document.getElementById('lb-filter-elig'),
             lbFilterDate:       document.getElementById('lb-filter-date'),
             minInput:  document.getElementById('min-input'),
             maxInput:  document.getElementById('max-input'),
@@ -4373,6 +4673,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             document.getElementById('custom-filter-rows').appendChild(createFilterRow());
         });
         document.getElementById('apply-custom-elig').addEventListener('click', applyCustomFilters);
+        document.getElementById('custom-tab-presets').addEventListener('click', function() { switchCustomTab('presets'); });
+        document.getElementById('custom-tab-customize').addEventListener('click', function() {
+            switchCustomTab('customize');
+            var container = document.getElementById('custom-filter-rows');
+            if (container.children.length === 0) container.appendChild(createFilterRow());
+        });
+        document.getElementById('apply-presets-btn').addEventListener('click', applyPresets);
 
         document.getElementById('close-custom-info').addEventListener('click', function() {
             document.getElementById('custom-info-popup').classList.add('hidden');
@@ -4380,6 +4687,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         document.getElementById('custom-info-overlay').addEventListener('click', function() {
             document.getElementById('custom-info-popup').classList.add('hidden');
         });
+
+        // Category tooltip
+        document.getElementById('close-cat-tooltip').addEventListener('click', closeCatTooltip);
+        document.getElementById('cat-tooltip-overlay').addEventListener('click', closeCatTooltip);
 
         // Game mode help modal
         document.getElementById('gamemode-help-btn').addEventListener('click', function(e) {
@@ -4410,7 +4721,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             // Pre-filter to current game settings if a game is active
             if (dom.startScreen.classList.contains('hidden')) {
                 dom.lbFilterMode.value = gameMode || 'all';
-                dom.lbFilterPool.value = playerPool || 'all_pools';
+                dom.lbFilterElig.value = eligibility || 'all_elig';
                 dom.lbFilterDate.value = 'today';
             }
             renderLeaderboard();
@@ -4419,13 +4730,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var closeLeaderboard = function() {
             dom.leaderboardModal.classList.add('hidden');
             if (dom.lbFilterMode) dom.lbFilterMode.value = 'all';
-            if (dom.lbFilterPool) dom.lbFilterPool.value = 'all_pools';
+            if (dom.lbFilterElig) dom.lbFilterElig.value = 'all_elig';
             if (dom.lbFilterDate) dom.lbFilterDate.value = 'all_time';
         };
         dom.closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
         document.getElementById('leaderboard-overlay').addEventListener('click', closeLeaderboard);
         dom.lbFilterMode.addEventListener('change', function() { renderLeaderboard(); });
-        dom.lbFilterPool.addEventListener('change', function() { renderLeaderboard(); });
+        dom.lbFilterElig.addEventListener('change', function() { renderLeaderboard(); });
         dom.lbFilterDate.addEventListener('change', function() { renderLeaderboard(); });
 
         // Settings popover
