@@ -551,9 +551,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">
         </div>
 
-    <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-2">
+    <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
         </div>
-    <div id="pickem-chain-guide" class="text-center text-xs font-bold mb-2 min-h-[1.25rem]"></div>
 </div>
 
             <div class="mt-2">
@@ -561,6 +560,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <button id="next-btn" disabled class="primary-btn mt-2 hidden">Next Round</button>
             </div>
             
+            <div id="pickem-chain-guide" class="text-center text-xs font-bold min-h-[1.25rem] hidden"></div>
             <div id="round-feedback" class="mt-4 flex flex-col items-center space-y-1 min-h-[2rem]"></div>
         </div>
 
@@ -2377,20 +2377,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         // Build compact filter list
         html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Active Filters</div>';
-        html += '<table class="w-full text-xs mb-0"><tbody>';
+        html += '<div class="space-y-1">';
         relevantFilters.forEach(function(f) {
             var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
             var label = opt ? opt.label : f.stat;
             var filterDir = f.dir;
             if (!filterDir) filterDir = opt ? opt.dir : 'min';
             var symbol = filterDir === 'max' ? '\u2264' : '\u2265';
-            html += '<tr class="border-b border-gray-100 dark:border-gray-800">';
-            html += '<td class="py-1 font-semibold text-gray-700 dark:text-gray-200">' + label + '</td>';
-            html += '<td class="py-1 text-center font-bold text-blue-600 dark:text-blue-400 w-10 text-base">' + symbol + '</td>';
-            html += '<td class="py-1 text-right font-bold text-gray-800 dark:text-white">' + f.value + '</td>';
-            html += '</tr>';
+            html += '<div class="flex items-center gap-1.5 text-xs border-b border-gray-100 dark:border-gray-800 py-1">';
+            html += '<span class="font-semibold text-gray-700 dark:text-gray-200">' + label + '</span>';
+            html += '<span class="font-bold text-blue-600 dark:text-blue-400 text-base leading-none">' + symbol + '</span>';
+            html += '<span class="font-bold text-gray-800 dark:text-white">' + f.value + '</span>';
+            html += '</div>';
         });
-        html += '</tbody></table>';
+        html += '</div>';
 
         // Determine if the round is over (post lock-in)
         var roundOver = false;
@@ -2990,6 +2990,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.submitBtn.className = 'primary-btn';
         dom.feedback.innerHTML = '';
         dom.roundDisp.textContent = 'Round ' + round + '/10';
+        var chainGuideEl = document.getElementById('pickem-chain-guide');
+        if (chainGuideEl) { chainGuideEl.classList.add('hidden'); chainGuideEl.innerHTML = ''; }
 
         // Era label
         if (eraMode === 'modern') dom.eraLabel.textContent = 'Modern Era (1970+)';
@@ -3087,6 +3089,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     function goHome() {
         currentChallengeId = null;
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
+        var chainGuideHome = document.getElementById('pickem-chain-guide');
+        if (chainGuideHome) { chainGuideHome.classList.add('hidden'); chainGuideHome.innerHTML = ''; }
         challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
         isDailyChallenge = false;
         gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = []; selectedPresets = { hitter: null, pitcher: null };
@@ -3815,6 +3819,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         // Chain guidance message
         var chainGuide = document.getElementById('pickem-chain-guide');
         if (chainGuide) {
+            chainGuide.classList.remove('hidden');
             var highLow = catConfigR.lowerBetter ? 'lowest' : 'highest';
             chainGuide.innerHTML = '<span class="text-amber-600 dark:text-amber-400">Pick the player with the ' + highLow + ' value first!</span>';
         }
@@ -3888,7 +3893,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 } else {
                     pickEmState.chainActive = false;
                     var chainGuideB = document.getElementById('pickem-chain-guide');
-                    if (chainGuideB) chainGuideB.innerHTML = '<span class="text-red-500 dark:text-red-400">Chain broken!</span>';
+                    if (chainGuideB) chainGuideB.innerHTML = '<span class="text-amber-500 dark:text-amber-400">Chain broken!</span>';
                 }
             }
 
@@ -3911,8 +3916,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (pickEmState.picksMade >= 5) endPickEmRound(true);
         } else {
             styleRed.forEach(function(c) { card.classList.add(c); });
-            var chainGuideW = document.getElementById('pickem-chain-guide');
-            if (chainGuideW) chainGuideW.innerHTML = '<span class="text-red-500 dark:text-red-400">Wrong pick!</span>';
             endPickEmRound(false);
         }
     }
@@ -4295,26 +4298,35 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.saveScoreBtn.textContent = 'Saving...';
         dom.saveScoreBtn.disabled = true;
         try {
-            var res = await sb.from('leaderboard').insert([{
+            var row = {
                 name: name, score: score, date: new Date().toLocaleDateString(),
-                game_mode: gameMode, player_pool: playerPool, eligibility: eligibility
-            }]);
-            if (res.error) throw res.error;
+                game_mode: gameMode, player_pool: playerPool
+            };
+            if (eligibility) row.eligibility = eligibility;
+            var res = await sb.from('leaderboard').insert([row]);
+            if (res.error) {
+                // If eligibility column doesn't exist yet, retry without it
+                if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
+                    delete row.eligibility;
+                    res = await sb.from('leaderboard').insert([row]);
+                }
+                if (res.error) throw res.error;
+            }
             await fetchLeaderboard();
             renderLeaderboard(true, name, score);
             dom.leaderboardModal.classList.remove('hidden');
             dom.hsContainer.classList.add('hidden');
         } catch (e) {
-            alert('Error saving score. Please try again.');
-            console.error(e);
+            alert('Error saving score: ' + (e.message || 'Unknown error'));
+            console.error('saveHighScore error:', e);
             dom.saveScoreBtn.disabled = false;
             dom.saveScoreBtn.textContent = 'Save to Leaderboard';
         }
     }
 
     async function checkHighScoreTrigger() {
-        // Never show main leaderboard save for custom eligibility games
-        if (eligibility === 'custom') {
+        // Never show main leaderboard save for custom eligibility or challenge games
+        if (eligibility === 'custom' || isPlayingChallenge || isDailyChallenge) {
             dom.hsContainer.classList.add('hidden');
             return;
         }
