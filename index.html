@@ -3894,8 +3894,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     if (useAnimations) bonusEl.classList.add('animate-text-pop');
                 } else {
                     pickEmState.chainActive = false;
-                    var chainGuideB = document.getElementById('pickem-chain-guide');
-                    if (chainGuideB) chainGuideB.innerHTML = '<span class="text-amber-500 dark:text-amber-400">Chain broken!</span>';
+                    pickEmState.chainJustBroke = true;
                 }
             }
 
@@ -3905,7 +3904,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             // Update chain guidance after successful pick
             var chainGuideU = document.getElementById('pickem-chain-guide');
             if (chainGuideU) {
-                if (pickEmState.chainActive) {
+                if (pickEmState.chainJustBroke) {
+                    pickEmState.chainJustBroke = false;
+                    chainGuideU.innerHTML = '<span class="text-amber-500 dark:text-amber-400">Chain broken!</span>';
+                    chainGuideU.classList.remove('hidden');
+                } else if (pickEmState.chainActive) {
                     var catCfgCG = BASE_CATS[catKey];
                     var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
                     var displayVal = formatStat(val, catKey);
@@ -3923,6 +3926,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (pickEmState.picksMade >= 5) endPickEmRound(true);
         } else {
             styleRed.forEach(function(c) { card.classList.add(c); });
+            var chainGuideWrong = document.getElementById('pickem-chain-guide');
+            if (chainGuideWrong) { chainGuideWrong.classList.add('hidden'); chainGuideWrong.innerHTML = ''; }
             endPickEmRound(false);
         }
     }
