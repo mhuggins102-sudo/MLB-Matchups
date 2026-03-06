@@ -560,8 +560,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <button id="next-btn" disabled class="primary-btn mt-2 hidden">Next Round</button>
             </div>
             
-            <div id="pickem-chain-guide" class="text-center text-xs font-bold min-h-[1.25rem] hidden"></div>
             <div id="round-feedback" class="mt-4 flex flex-col items-center space-y-1 min-h-[2rem]"></div>
+            <div id="pickem-chain-guide" class="text-center text-sm font-bold hidden"></div>
         </div>
 
         <div id="game-over-screen" class="hidden flex-col items-center justify-center h-full text-center animate-enter pb-12">
@@ -3950,6 +3950,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (pickEmState.totalRoundPts >= 1000) roundResults.push('\uD83D\uDC8E');
             else roundResults.push(pickEmState.picksMade);
             dom.feedback.innerHTML = '<div class="font-black text-lg animate-enter ' + (won ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">Round Over! (+' + pickEmState.totalRoundPts + ')</div>';
+            var chainGuideEnd = document.getElementById('pickem-chain-guide');
+            if (chainGuideEnd) { chainGuideEnd.classList.add('hidden'); chainGuideEnd.innerHTML = ''; }
         };
 
         if (!useAnimations) {
@@ -4312,6 +4314,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 }
                 if (res.error) throw res.error;
             }
+            // Set filters to match the game just played
+            dom.lbFilterMode.value = gameMode;
+            dom.lbFilterElig.value = eligibility || 'all_elig';
+            dom.lbFilterDate.value = 'today';
             await fetchLeaderboard();
             renderLeaderboard(true, name, score);
             dom.leaderboardModal.classList.remove('hidden');
@@ -4384,12 +4390,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var btn = document.getElementById('save-challenge-score-btn');
         btn.textContent = 'Saving...'; btn.disabled = true;
         try {
-            var res = await sb.from('challenge_scores').upsert([{
+            // Try insert first; if duplicate key, fall back to update
+            var res = await sb.from('challenge_scores').insert([{
                 challenge_id: currentChallengeId, name: name, score: score
-            }], { onConflict: 'challenge_id' }).select();
+            }]);
             if (res.error) {
-                console.error('Supabase challenge_scores upsert error:', JSON.stringify(res.error));
-                throw res.error;
+                if (res.error.code === '23505') {
+                    // Duplicate key — update existing row
+                    var res2 = await sb.from('challenge_scores').update({ name: name, score: score })
+                        .eq('challenge_id', currentChallengeId);
+                    if (res2.error) throw res2.error;
+                } else {
+                    throw res.error;
+                }
             }
             document.getElementById('challenge-lb-save').classList.add('hidden');
             renderChallengeLeaderboard(currentChallengeId, true, name, score);
