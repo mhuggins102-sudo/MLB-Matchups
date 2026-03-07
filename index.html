@@ -4334,6 +4334,25 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } catch (e) { return false; }
     }
 
+    async function saveToMainLeaderboard(name) {
+        if (!sb || eligibility === 'custom') return;
+        try {
+            var row = {
+                name: name, score: score, date: new Date().toLocaleDateString(),
+                game_mode: gameMode, player_pool: playerPool
+            };
+            if (eligibility) row.eligibility = eligibility;
+            var res = await sb.from('leaderboard').insert([row]);
+            if (res.error) {
+                if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
+                    delete row.eligibility;
+                    res = await sb.from('leaderboard').insert([row]);
+                }
+                if (res.error) console.error('Auto-save to main leaderboard failed:', res.error);
+            }
+        } catch (e) { console.error('Auto-save to main leaderboard error:', e); }
+    }
+
     async function saveHighScore() {
         if (!sb) { showAlert('Online features unavailable.', 'bg-red-500'); return; }
         var name = dom.nameInput.value.trim() || 'Anonymous';
@@ -4440,6 +4459,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 challenge_id: currentChallengeId, name: name, score: score
             }]);
             if (res.error) throw res.error;
+            // Also save to main leaderboard if eligible (non-custom, non-daily)
+            if (eligibility !== 'custom' && !isDailyChallenge) {
+                await saveToMainLeaderboard(name);
+            }
             document.getElementById('challenge-lb-save').classList.add('hidden');
             await renderChallengeLeaderboard(currentChallengeId, true, name, score);
             // If leaderboard is still empty (RLS blocking SELECT), show the score locally
@@ -4509,6 +4532,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 var newId = await saveChallenge(resolvedName);
                 if (newId) currentChallengeId = newId;
                 if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
+                // Auto-save to main leaderboard if eligible
+                if (eligibility !== 'custom') {
+                    await saveToMainLeaderboard(resolvedName);
+                    dom.hsContainer.classList.add('hidden');
+                }
             } else {
                 if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
             }
