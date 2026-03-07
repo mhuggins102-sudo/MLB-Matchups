@@ -628,7 +628,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             </div>
             <div class="p-5 text-center">
                 <input type="text" id="challenge-code-input" placeholder="e.g. ABC23" maxlength="5" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-black text-2xl tracking-[0.3em] uppercase focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off" autocapitalize="characters">
-                <button id="challenge-code-go" class="primary-btn bg-purple-600 hover:bg-purple-700 w-full mb-2">Play Challenge</button>
+                <button id="challenge-code-go" class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-lg rounded-2xl shadow-lg transition-transform active:scale-[0.98] mb-2">Play Challenge</button>
                 <button id="challenge-code-lb" class="w-full py-3 text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-2xl transition">View Leaderboard</button>
             </div>
         </div>
@@ -4761,9 +4761,24 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         document.getElementById('close-challenge-code').addEventListener('click', closeChallengeCodeModal);
         document.getElementById('challenge-code-overlay').addEventListener('click', closeChallengeCodeModal);
         document.getElementById('challenge-code-go').addEventListener('click', loadChallengeByCode);
-        document.getElementById('challenge-code-lb').addEventListener('click', function() {
+        var challengeLbReturnToCode = false;
+        var challengeLbReturnCode = '';
+
+        document.getElementById('challenge-code-lb').addEventListener('click', async function() {
             var code = document.getElementById('challenge-code-input').value.trim().toUpperCase();
             if (!code || code.length < 3) { showAlert('Enter a valid code.', 'bg-red-500'); return; }
+            // Fetch challenge config to get OP info for highlighting
+            if (sb) {
+                try {
+                    var result = await sb.from('challenges').select('config').eq('id', code).single();
+                    if (result.data && result.data.config) {
+                        challengerName = result.data.config.challengerName || null;
+                        challengerScore = result.data.config.score != null ? result.data.config.score : null;
+                    }
+                } catch (e) { /* ok, just won't highlight OP */ }
+            }
+            challengeLbReturnToCode = true;
+            challengeLbReturnCode = code;
             closeChallengeCodeModal();
             showChallengeLeaderboard(code, false);
         });
@@ -4784,8 +4799,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         });
 
         // Challenge leaderboard modal
-        document.getElementById('close-challenge-lb').addEventListener('click', function() { document.getElementById('challenge-lb-modal').classList.add('hidden'); });
-        document.getElementById('challenge-lb-overlay').addEventListener('click', function() { document.getElementById('challenge-lb-modal').classList.add('hidden'); });
+        var closeChallengeLeaderboardModal = function() {
+            document.getElementById('challenge-lb-modal').classList.add('hidden');
+            if (challengeLbReturnToCode) {
+                challengeLbReturnToCode = false;
+                // Clear OP info that was temporarily loaded for display
+                challengerName = null; challengerScore = null;
+                document.getElementById('challenge-code-input').value = challengeLbReturnCode;
+                document.getElementById('challenge-code-modal').classList.remove('hidden');
+                challengeLbReturnCode = '';
+            }
+        };
+        document.getElementById('close-challenge-lb').addEventListener('click', closeChallengeLeaderboardModal);
+        document.getElementById('challenge-lb-overlay').addEventListener('click', closeChallengeLeaderboardModal);
         document.getElementById('save-challenge-score-btn').addEventListener('click', saveChallengeScore);
 
         // Custom eligibility modal
