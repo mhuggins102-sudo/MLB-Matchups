@@ -628,7 +628,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             </div>
             <div class="p-5 text-center">
                 <input type="text" id="challenge-code-input" placeholder="e.g. ABC23" maxlength="5" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-black text-2xl tracking-[0.3em] uppercase focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off" autocapitalize="characters">
-                <button id="challenge-code-go" class="primary-btn bg-purple-600 hover:bg-purple-700 w-full">Play Challenge</button>
+                <button id="challenge-code-go" class="primary-btn bg-purple-600 hover:bg-purple-700 w-full mb-2">Play Challenge</button>
+                <button id="challenge-code-lb" class="w-full py-3 text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-2xl transition">View Leaderboard</button>
             </div>
         </div>
     </div>
@@ -4483,7 +4484,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
     }
 
-    function showChallengeLeaderboard(challengeId) {
+    function showChallengeLeaderboard(challengeId, showSave) {
         var title = document.getElementById('challenge-lb-title');
         if (challengeId.startsWith('D')) {
             var mm = challengeId.slice(3, 5), dd = challengeId.slice(5, 7);
@@ -4491,10 +4492,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             title.textContent = 'Challenge ' + challengeId;
         }
-        var btn = document.getElementById('save-challenge-score-btn');
-        btn.disabled = false; btn.textContent = 'Save Score';
-        document.getElementById('challenge-lb-save').classList.remove('hidden');
-        document.getElementById('challenge-name-input').value = '';
+        if (showSave !== false) {
+            var btn = document.getElementById('save-challenge-score-btn');
+            btn.disabled = false; btn.textContent = 'Save Score';
+            document.getElementById('challenge-lb-save').classList.remove('hidden');
+            document.getElementById('challenge-name-input').value = '';
+        } else {
+            document.getElementById('challenge-lb-save').classList.add('hidden');
+        }
         renderChallengeLeaderboard(challengeId);
         document.getElementById('challenge-lb-modal').classList.remove('hidden');
     }
@@ -4564,15 +4569,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#1e3a8a');
             ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, 800, 800);
 
-            // Title: "MLB Matchups"
+            // Title: "MLBMatchups" (no space, matching home screen)
             ctx.textBaseline = 'alphabetic';
             ctx.font = '900 65px Inter, sans-serif'; ctx.textAlign = 'left';
             var w1 = ctx.measureText('MLB').width;
-            var gap2 = ctx.measureText(' ').width;
-            var totalW = w1 + gap2 + ctx.measureText('Matchups').width;
+            var totalW = w1 + ctx.measureText('Matchups').width;
             var startX = centerX - totalW / 2;
             ctx.fillStyle = '#ffffff'; ctx.fillText('MLB', startX, 110);
-            ctx.fillStyle = '#3b82f6'; ctx.fillText('Matchups', startX + w1 + gap2, 110);
+            ctx.fillStyle = '#3b82f6'; ctx.fillText('Matchups', startX + w1, 110);
 
             // Tagline
             ctx.textAlign = 'center';
@@ -4757,6 +4761,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         document.getElementById('close-challenge-code').addEventListener('click', closeChallengeCodeModal);
         document.getElementById('challenge-code-overlay').addEventListener('click', closeChallengeCodeModal);
         document.getElementById('challenge-code-go').addEventListener('click', loadChallengeByCode);
+        document.getElementById('challenge-code-lb').addEventListener('click', function() {
+            var code = document.getElementById('challenge-code-input').value.trim().toUpperCase();
+            if (!code || code.length < 3) { showAlert('Enter a valid code.', 'bg-red-500'); return; }
+            closeChallengeCodeModal();
+            showChallengeLeaderboard(code, false);
+        });
         document.getElementById('challenge-code-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') loadChallengeByCode();
         });
