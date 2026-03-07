@@ -602,6 +602,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     </div>
 
+    <!-- Share Name Prompt Modal -->
+    <div id="share-name-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="share-name-overlay"></div>
+        <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Your Name</h3>
+                <button id="close-share-name" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+            </div>
+            <div class="p-5 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Enter your name so challengers know who they're up against!</p>
+                <input type="text" id="share-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off">
+                <button id="share-name-go" class="primary-btn bg-indigo-600 hover:bg-indigo-700 w-full">Share Challenge</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Challenge Code Entry Modal -->
     <div id="challenge-code-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-code-overlay"></div>
@@ -1240,6 +1256,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var currentChallengeId = null;
     var challengerScore    = null;
     var challengerRoundScores = null;
+    var challengerName     = null;
     var isPlayingChallenge = false;
     var isDailyChallenge   = false;
 
@@ -1530,7 +1547,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         return out;
     }
 
-    async function saveChallenge() {
+    async function saveChallenge(opName) {
         if (!sb) { showAlert('Online features unavailable.', 'bg-red-500'); return null; }
         var id = generateId();
         var res = await sb.from('challenges').insert([{
@@ -1538,11 +1555,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             config: {
                 mode: gameMode, pool: playerPool, elig: eligibility, customFilters: customFilters,
                 era: eraMode, decade: selectedDecade,
-                score: score, roundScores: roundScores
+                score: score, roundScores: roundScores,
+                challengerName: opName || 'Anonymous'
             },
             matchups: matchHistory
         }]);
         if (res.error) { console.error('Save failed:', res.error); return null; }
+        // Also save the OP's score to the challenge leaderboard
+        try {
+            await sb.from('challenge_scores').insert([{
+                challenge_id: id, name: opName || 'Anonymous', score: score
+            }]);
+        } catch (e) { console.error('Auto-save OP score failed:', e); }
         return id;
     }
 
@@ -1574,6 +1598,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             currentChallengeId = cId;
             challengerScore = data.config.score != null ? data.config.score : null;
             challengerRoundScores = data.config.roundScores || null;
+            challengerName = data.config.challengerName || null;
 
             dom.loadingScreen.classList.add('hidden');
             showAlert('Challenge ' + cId + ' Loaded!', 'bg-purple-600');
@@ -1635,6 +1660,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             currentChallengeId = code;
             challengerScore = data.config.score != null ? data.config.score : null;
             challengerRoundScores = data.config.roundScores || null;
+            challengerName = data.config.challengerName || null;
 
             // Update URL to reflect challenge
             var url = new URL(window.location);
@@ -2496,8 +2522,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (hasRoundScores) {
             // Show per-round comparison table
             html += '<table class="w-full text-center mb-4">';
+            var opLabel = challengerName || 'Challenger';
             html += '<thead><tr class="text-xs font-bold text-gray-400 uppercase">';
-            html += '<th class="py-1">Round</th><th class="py-1">You</th><th class="py-1">Challenger</th></tr></thead><tbody>';
+            html += '<th class="py-1">Round</th><th class="py-1">You</th><th class="py-1">' + opLabel + '</th></tr></thead><tbody>';
 
             var myRunning = 0, theirRunning = 0;
             var totalChallengerRounds = challengerRoundScores.length;
@@ -2541,7 +2568,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             html += '<div class="text-center space-y-4">';
             html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
             html += '<div class="text-4xl font-black text-blue-600 dark:text-blue-400">' + score + '</div></div>';
-            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Challenger\'s Score</div>';
+            var opLabel2 = challengerName ? (challengerName + '\'s Score') : 'Challenger\'s Score';
+            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">' + opLabel2 + '</div>';
             html += '<div class="text-4xl font-black text-purple-600 dark:text-purple-400">' + challengerScore + '</div></div>';
 
             var diff2 = score - challengerScore;
@@ -3093,7 +3121,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
         var chainGuideHome = document.getElementById('pickem-chain-guide');
         if (chainGuideHome) { chainGuideHome.classList.add('hidden'); chainGuideHome.innerHTML = ''; }
-        challengerScore = null; challengerRoundScores = null; isPlayingChallenge = false;
+        challengerScore = null; challengerRoundScores = null; challengerName = null; isPlayingChallenge = false;
         isDailyChallenge = false;
         gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = []; selectedPresets = { hitter: null, pitcher: null };
         eraMode = 'modern'; selectedDecade = null;
@@ -4382,14 +4410,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             document.getElementById('challenge-lb-empty').classList.remove('hidden');
         } else {
             document.getElementById('challenge-lb-empty').classList.add('hidden');
+            var opTagged = false;
             scores.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
                 var isMatch = highlightNew && entry.name === newName && entry.score === newScore;
-                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '');
+                var isOP = !opTagged && challengerName && entry.name === challengerName && challengerScore != null && entry.score === challengerScore;
+                if (isOP) opTagged = true;
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' +
+                    (isMatch ? 'leaderboard-new ' : '') +
+                    (isOP ? 'bg-purple-50 dark:bg-purple-900/20 ' : '');
                 var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
+                var nameHtml = entry.name + (isOP ? ' <span class="text-[10px] font-black text-purple-500 dark:text-purple-400 ml-1">OP</span>' : '');
                 tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
-                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
+                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + nameHtml + '</td>';
                 body.appendChild(tr);
             });
         }
@@ -4445,7 +4479,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     // §19  SHARE GAME
     // ═══════════════════════════════════════
-    async function shareGame() {
+    var pendingShareName = null;
+
+    async function shareGame(opName) {
         var shareBtn = document.getElementById('share-btn');
         var originalText = shareBtn.innerHTML;
         shareBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
@@ -4456,11 +4492,21 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var shareUrl = baseDomain;
 
             // If playing a challenge, share the existing challenge link (don't create a new one)
-            // If normal game, create a new challenge as before
+            // If normal game, create a new challenge — need name first
             if (isPlayingChallenge && currentChallengeId) {
                 shareUrl += '?c=' + currentChallengeId;
             } else if (!currentChallengeId) {
-                var newId = await saveChallenge();
+                // Determine the OP name: from leaderboard save, passed param, or prompt
+                var resolvedName = opName || dom.nameInput.value.trim() || null;
+                if (!resolvedName) {
+                    // Need to prompt for name first
+                    shareBtn.innerHTML = originalText; shareBtn.disabled = false;
+                    document.getElementById('share-name-input').value = '';
+                    document.getElementById('share-name-modal').classList.remove('hidden');
+                    setTimeout(function() { document.getElementById('share-name-input').focus(); }, 100);
+                    return;
+                }
+                var newId = await saveChallenge(resolvedName);
                 if (newId) currentChallengeId = newId;
                 if (currentChallengeId) shareUrl += '?c=' + currentChallengeId;
             } else {
@@ -4550,12 +4596,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     ctx.fillStyle = '#22c55e'; ctx.font = '900 34px Inter, sans-serif';
                     ctx.fillText('I BEAT CHALLENGE ' + currentChallengeId + '!', centerX, 630);
                     ctx.fillStyle = '#86efac'; ctx.font = '600 22px Inter, sans-serif';
-                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString(), centerX, 665);
+                    ctx.fillText((challengerName || 'Challenger') + ' scored ' + challengerScore.toLocaleString(), centerX, 665);
                 } else {
                     ctx.fillStyle = '#ef4444'; ctx.font = '900 34px Inter, sans-serif';
                     ctx.fillText('CHALLENGE ' + currentChallengeId, centerX, 630);
                     ctx.fillStyle = '#fca5a5'; ctx.font = '600 22px Inter, sans-serif';
-                    ctx.fillText('Challenger scored ' + challengerScore.toLocaleString() + ' \u2014 Can you beat it?', centerX, 665);
+                    ctx.fillText((challengerName || 'Challenger') + ' scored ' + challengerScore.toLocaleString() + ' \u2014 Can you beat it?', centerX, 665);
                 }
             } else if (currentChallengeId) {
                 ctx.fillStyle = '#e5e7eb'; ctx.font = '700 34px Inter, sans-serif';
@@ -4784,7 +4830,20 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.animBtn.addEventListener('click', toggleAnimations);
         dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
         dom.saveScoreBtn.addEventListener('click', saveHighScore);
-        document.getElementById('share-btn').addEventListener('click', shareGame);
+        document.getElementById('share-btn').addEventListener('click', function() { shareGame(); });
+
+        // Share name prompt modal
+        document.getElementById('close-share-name').addEventListener('click', function() {
+            document.getElementById('share-name-modal').classList.add('hidden');
+        });
+        document.getElementById('share-name-overlay').addEventListener('click', function() {
+            document.getElementById('share-name-modal').classList.add('hidden');
+        });
+        document.getElementById('share-name-go').addEventListener('click', function() {
+            var name = document.getElementById('share-name-input').value.trim() || 'Anonymous';
+            document.getElementById('share-name-modal').classList.add('hidden');
+            shareGame(name);
+        });
 
         // Score click for challenge comparison
         dom.scoreDisp.addEventListener('click', showChallengePopup);
