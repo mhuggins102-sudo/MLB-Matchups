@@ -363,6 +363,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <span class="text-sm font-semibold">Dead Zone</span>
     <div id="dead-zone-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
 </div>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-pbs-row">
+                    <span class="text-sm font-semibold">Clear PBs</span>
+                    <div class="text-xs font-bold px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded">RESET</div>
+                </div>
             </div>
         </div>
     </header>
@@ -427,6 +431,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 </div>
             </div>
             <button id="start-game-btn" class="primary-btn mt-2">Start Game</button>
+            <div id="start-pb-hint" class="text-xs text-gray-400 dark:text-gray-500 font-semibold mt-2 hidden"></div>
             <div class="h-8"></div>
         </div>
 
@@ -550,7 +555,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 <div id="ui-pick-em" class="w-full hidden">
     <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">
         </div>
-
+    <div id="pickem-chain-bar" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-center text-xs font-bold text-amber-700 dark:text-amber-300"></div>
     <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
         </div>
 </div>
@@ -569,7 +574,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div id="game-over-screen" class="hidden flex-col items-center justify-center h-full text-center animate-enter pb-12">
             <div id="ribbon-emoji" class="text-8xl mb-4">🏆</div>
             <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-2">Game Over!</h2>
-            <p id="ribbon-text" class="text-lg text-gray-500 mb-8">Great effort!</p>
+            <p id="ribbon-text" class="text-lg text-gray-500 mb-4">Great effort!</p>
+            <div id="round-breakdown" class="w-full max-w-xs mb-4"></div>
+            <div id="personal-best-display" class="text-sm text-gray-500 dark:text-gray-400 mb-2 hidden"></div>
             <div class="bg-white dark:bg-gray-900 px-10 py-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 mb-8 w-full max-w-xs">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
                 <div class="text-6xl font-black text-blue-600 dark:text-blue-400" id="final-score">0</div>
@@ -3086,6 +3093,62 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         startRound();
     }
 
+    function getPBKey() {
+        return 'pb_' + gameMode + '_' + eligibility + '_' + playerPool;
+    }
+
+    function checkAndSavePersonalBest() {
+        var key = getPBKey();
+        var prev = parseInt(localStorage.getItem(key)) || 0;
+        var pbDisp = document.getElementById('personal-best-display');
+        if (score > prev) {
+            localStorage.setItem(key, String(score));
+            if (pbDisp) {
+                pbDisp.classList.remove('hidden');
+                if (prev > 0) {
+                    pbDisp.innerHTML = '<span class="text-green-600 dark:text-green-400 font-bold animate-pulse">New Personal Best! (Previous: ' + prev + ')</span>';
+                } else {
+                    pbDisp.innerHTML = '<span class="text-green-600 dark:text-green-400 font-bold animate-pulse">Personal Best Set!</span>';
+                }
+            }
+        } else if (prev > 0 && pbDisp) {
+            pbDisp.classList.remove('hidden');
+            pbDisp.innerHTML = 'Personal Best: ' + prev;
+        }
+    }
+
+    function updateStartPBHint() {
+        var hint = document.getElementById('start-pb-hint');
+        if (!hint) return;
+        var key = getPBKey();
+        var pb = parseInt(localStorage.getItem(key)) || 0;
+        if (pb > 0) {
+            hint.classList.remove('hidden');
+            hint.textContent = 'Personal Best: ' + pb;
+        } else {
+            hint.classList.add('hidden');
+            hint.textContent = '';
+        }
+    }
+
+    function renderRoundBreakdown() {
+        var container = document.getElementById('round-breakdown');
+        if (!container) return;
+        var html = '<table class="w-full text-sm border-collapse">';
+        html += '<thead><tr class="text-xs text-gray-400 uppercase tracking-wide"><th class="py-1 text-left w-8">#</th><th class="py-1 text-center">Result</th><th class="py-1 text-right">Points</th></tr></thead><tbody>';
+        var total = 0;
+        for (var i = 0; i < roundScores.length; i++) {
+            var pts = roundScores[i] || 0;
+            total += pts;
+            var result = roundResults[i] !== undefined ? roundResults[i] : '-';
+            var ptColor = pts > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500';
+            html += '<tr class="border-t border-gray-100 dark:border-gray-800"><td class="py-1 text-gray-400 font-bold">' + (i + 1) + '</td><td class="py-1 text-center">' + result + '</td><td class="py-1 text-right font-bold ' + ptColor + '">' + pts + '</td></tr>';
+        }
+        html += '<tr class="border-t-2 border-gray-300 dark:border-gray-600 font-black"><td class="py-1" colspan="2">Total</td><td class="py-1 text-right text-blue-600 dark:text-blue-400">' + total + '</td></tr>';
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
     function nextRound() {
         if (round >= 10) {
             dom.gameScreen.classList.add('hidden');
@@ -3100,6 +3163,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else if (score >= 2000) { emoji.textContent = '\uD83E\uDD49'; txt.textContent = 'Bronze Medal! Solid Season.'; txt.className = 'text-lg score-bronze font-bold'; }
             else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-500 font-bold'; }
             dom.rerollBtn.classList.add('hidden');
+            renderRoundBreakdown();
+            checkAndSavePersonalBest();
             checkHighScoreTrigger();
             // Show challenge leaderboard for any challenge game
             if (isPlayingChallenge && currentChallengeId) {
@@ -3122,6 +3187,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         challengeQueue = []; matchHistory = []; roundResults = []; roundScores = [];
         var chainGuideHome = document.getElementById('pickem-chain-guide');
         if (chainGuideHome) { chainGuideHome.classList.add('hidden'); chainGuideHome.innerHTML = ''; }
+        var chainBarHome = document.getElementById('pickem-chain-bar');
+        if (chainBarHome) { chainBarHome.classList.add('hidden'); chainBarHome.innerHTML = ''; }
+        var rbHome = document.getElementById('round-breakdown');
+        if (rbHome) rbHome.innerHTML = '';
+        var pbDisp = document.getElementById('personal-best-display');
+        if (pbDisp) { pbDisp.classList.add('hidden'); pbDisp.innerHTML = ''; }
         challengerScore = null; challengerRoundScores = null; challengerName = null; isPlayingChallenge = false;
         isDailyChallenge = false;
         gameMode = 'howMuch'; playerPool = 'all'; eligibility = 'standard'; customFilters = []; selectedPresets = { hitter: null, pitcher: null };
@@ -3186,6 +3257,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         document.getElementById('daily-btn').classList.remove('hidden');
         document.getElementById('challenge-code-btn').classList.remove('hidden');
         dom.leaderboardBtn.classList.remove('hidden');
+        updateStartPBHint();
     }
 
     // ═══════════════════════════════════════
@@ -3852,7 +3924,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (chainGuide) {
             chainGuide.classList.remove('hidden');
             var highLow = catConfigR.lowerBetter ? 'lowest' : 'highest';
-            chainGuide.innerHTML = '<span class="text-amber-600 dark:text-amber-400">Pick the player with the ' + highLow + ' value first!</span>';
+            chainGuide.innerHTML = '<span class="text-amber-600 dark:text-amber-400">Pick the player with the ' + highLow + ' value first for chain bonus! (+50, +100, +150...)</span>';
+        }
+
+        // Chain bar
+        var chainBar = document.getElementById('pickem-chain-bar');
+        if (chainBar) {
+            if (pickEmState.chainActive && pickEmState.chainCount > 0) {
+                chainBar.classList.remove('hidden');
+                chainBar.innerHTML = '\u26A1 Chain x' + pickEmState.chainCount + ' \u2014 Next bonus: +' + ((pickEmState.chainCount + 1) * 50);
+            } else if (pickEmState.chainActive) {
+                chainBar.classList.remove('hidden');
+                chainBar.innerHTML = '\u26A1 Chain ready \u2014 Pick closest to threshold first!';
+            } else {
+                chainBar.classList.add('hidden');
+                chainBar.innerHTML = '';
+            }
         }
 
         var grid = document.getElementById('pickem-grid');
@@ -3930,22 +4017,31 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             pickEmState.totalRoundPts += pts;
             pickEmState.lastVal = val;
 
-            // Update chain guidance after successful pick
+            // Update chain guidance and chain bar after successful pick
             var chainGuideU = document.getElementById('pickem-chain-guide');
-            if (chainGuideU) {
-                if (pickEmState.chainJustBroke) {
-                    pickEmState.chainJustBroke = false;
-                    chainGuideU.innerHTML = '<span class="text-amber-500 dark:text-amber-400">Chain broken!</span>';
+            var chainBarU = document.getElementById('pickem-chain-bar');
+            if (pickEmState.chainJustBroke) {
+                pickEmState.chainJustBroke = false;
+                if (chainGuideU) {
+                    chainGuideU.innerHTML = '<span class="inline-block px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700">Chain broken! No more bonus this round.</span>';
                     chainGuideU.classList.remove('hidden');
-                } else if (pickEmState.chainActive) {
-                    var catCfgCG = BASE_CATS[catKey];
-                    var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
-                    var displayVal = formatStat(val, catKey);
-                    chainGuideU.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400">Chain active! Next pick ' + op2 + ' ' + displayVal + '</span>';
-                } else {
-                    chainGuideU.classList.add('hidden');
-                    chainGuideU.innerHTML = '';
                 }
+                if (chainBarU) { chainBarU.classList.add('hidden'); chainBarU.innerHTML = ''; }
+            } else if (pickEmState.chainActive) {
+                var catCfgCG = BASE_CATS[catKey];
+                var op2 = catCfgCG.lowerBetter ? '\u2265' : '\u2264';
+                var displayVal = formatStat(val, catKey);
+                if (chainGuideU) {
+                    chainGuideU.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400">Chain active! Next pick ' + op2 + ' ' + displayVal + '</span>';
+                    chainGuideU.classList.remove('hidden');
+                }
+                if (chainBarU) {
+                    chainBarU.classList.remove('hidden');
+                    chainBarU.innerHTML = '\u26A1 Chain x' + pickEmState.chainCount + ' \u2014 Next bonus: +' + ((pickEmState.chainCount + 1) * 50);
+                }
+            } else {
+                if (chainGuideU) { chainGuideU.classList.add('hidden'); chainGuideU.innerHTML = ''; }
+                if (chainBarU) { chainBarU.classList.add('hidden'); chainBarU.innerHTML = ''; }
             }
 
             var oldScore = score, newScore = score + pts;
@@ -3957,6 +4053,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             styleRed.forEach(function(c) { card.classList.add(c); });
             var chainGuideWrong = document.getElementById('pickem-chain-guide');
             if (chainGuideWrong) { chainGuideWrong.classList.add('hidden'); chainGuideWrong.innerHTML = ''; }
+            var chainBarWrong = document.getElementById('pickem-chain-bar');
+            if (chainBarWrong) { chainBarWrong.classList.add('hidden'); chainBarWrong.innerHTML = ''; }
             endPickEmRound(false);
         }
     }
@@ -3993,6 +4091,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.feedback.innerHTML = '<div class="font-black text-lg animate-enter ' + (won ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">Round Over! (+' + pickEmState.totalRoundPts + ')</div>';
             var chainGuideEnd = document.getElementById('pickem-chain-guide');
             if (chainGuideEnd) { chainGuideEnd.classList.add('hidden'); chainGuideEnd.innerHTML = ''; }
+            var chainBarEnd = document.getElementById('pickem-chain-bar');
+            if (chainBarEnd) { chainBarEnd.classList.add('hidden'); chainBarEnd.innerHTML = ''; }
         };
 
         if (!useAnimations) {
@@ -4893,6 +4993,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.formatBtn.addEventListener('click', toggleFormat);
         dom.animBtn.addEventListener('click', toggleAnimations);
         dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
+        document.getElementById('clear-pbs-row').addEventListener('click', function() {
+            var keys = Object.keys(localStorage).filter(function(k) { return k.startsWith('pb_'); });
+            if (keys.length === 0) { showAlert('No personal bests to clear', 'bg-gray-600'); return; }
+            keys.forEach(function(k) { localStorage.removeItem(k); });
+            showAlert('Personal bests cleared!', 'bg-red-600');
+            updateStartPBHint();
+        });
         dom.saveScoreBtn.addEventListener('click', saveHighScore);
         document.getElementById('share-btn').addEventListener('click', function() { shareGame(); });
 
@@ -4939,6 +5046,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 self.classList.remove('text-gray-500','dark:text-gray-400');
                 gameMode = self.dataset.mode;
+                updateStartPBHint();
             });
         });
 
@@ -4953,6 +5061,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 self.classList.remove('text-gray-500','dark:text-gray-400');
                 playerPool = self.dataset.pool;
+                updateStartPBHint();
             });
         });
 
@@ -4967,6 +5076,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
                 self.classList.remove('text-gray-500','dark:text-gray-400');
                 eligibility = self.dataset.elig;
+                updateStartPBHint();
                 if (eligibility === 'custom') {
                     openCustomEligModal();
                 }
@@ -5026,6 +5136,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             cacheDom();
             wireEvents();
             initPreferences();
+            updateStartPBHint();
             populateDateDropdown();
             loadAll(function() {
                 try { buildAgg(); renderDecadeGrid(); }
