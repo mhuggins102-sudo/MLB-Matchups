@@ -367,10 +367,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     <span class="text-sm font-semibold">Clear Name</span>
                     <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]"></div>
                 </div>
-                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-pbs-row">
-                    <span class="text-sm font-semibold">Clear PBs</span>
-                    <div class="text-xs font-bold px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded">RESET</div>
-                </div>
             </div>
         </div>
     </header>
@@ -3112,18 +3108,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         startRound();
     }
 
-    function getPBKey() {
-        return 'pb_' + gameMode + '_' + eligibility + '_' + playerPool;
-    }
-
-    function checkAndSavePersonalBest() {
-        var key = getPBKey();
-        var prev = parseInt(localStorage.getItem(key)) || 0;
-        if (score > prev) {
-            localStorage.setItem(key, String(score));
-        }
-    }
-
     function renderRoundBreakdown() {
         var container = document.getElementById('round-breakdown');
         if (!container) return;
@@ -3156,7 +3140,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else if (score >= 2000) { emoji.textContent = '\uD83E\uDD49'; txt.textContent = 'Bronze Medal! Solid Season.'; txt.className = 'text-lg score-bronze font-bold'; }
             else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-500 font-bold'; }
             dom.rerollBtn.classList.add('hidden');
-            checkAndSavePersonalBest();
             checkHighScoreTrigger();
             // Show challenge leaderboard for any challenge game
             if (isPlayingChallenge && currentChallengeId) {
@@ -5061,12 +5044,6 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             localStorage.removeItem('screenName');
             document.getElementById('clear-screen-name-row').classList.add('hidden');
             showAlert('Screen name cleared', 'bg-red-600');
-        });
-        document.getElementById('clear-pbs-row').addEventListener('click', function() {
-            var keys = Object.keys(localStorage).filter(function(k) { return k.startsWith('pb_'); });
-            if (keys.length === 0) { showAlert('No personal bests to clear', 'bg-gray-600'); return; }
-            keys.forEach(function(k) { localStorage.removeItem(k); });
-            showAlert('Personal bests cleared!', 'bg-red-600');
         });
         dom.saveScoreBtn.addEventListener('click', saveHighScore);
         document.getElementById('share-btn').addEventListener('click', function() { shareGame(); });
