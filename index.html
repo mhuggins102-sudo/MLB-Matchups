@@ -4372,40 +4372,45 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.emptyLeaderboardMsg.classList.remove('hidden');
         } else {
             dom.emptyLeaderboardMsg.classList.add('hidden');
-            var top10 = lb.slice(0, 10);
+            // Build display list: top 9 + PB in 10th slot if PB is outside top 10
             var pbFoundInTop10 = false;
+            var pbRank = 0;
+            if (screenName && pbScore > 0) {
+                for (var r = 0; r < lb.length; r++) {
+                    if (lb[r].name === screenName && lb[r].score === pbScore) { pbRank = r + 1; break; }
+                }
+                pbFoundInTop10 = pbRank > 0 && pbRank <= 10;
+            }
 
-            top10.forEach(function(entry, i) {
+            var displayList;
+            if (screenName && pbScore > 0 && !pbFoundInTop10) {
+                displayList = lb.slice(0, 9);
+                displayList.push({ name: screenName, score: pbScore, _isPBSlot: true, _pbRank: pbRank });
+            } else {
+                displayList = lb.slice(0, 10);
+            }
+
+            displayList.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
                 var isMatch = highlightNew && entry.name === newName && entry.score === newScore;
-                var isPB = screenName && entry.name === screenName && entry.score === pbScore && pbScore > 0 && !pbFoundInTop10;
-                if (isPB) pbFoundInTop10 = true;
-                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '') + (isPB ? ' bg-amber-50 dark:bg-amber-900/20' : '');
-                var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
-                var pbTag = isPB ? ' <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 ml-1">PB</span>' : '';
+                var isUser = screenName && entry.name === screenName;
+                var isPB = isUser && entry.score === pbScore && pbScore > 0;
+                var showRank = entry._isPBSlot ? entry._pbRank : (i + 1);
+                var rankStr = entry._isPBSlot ? showRank + '.' : (i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : showRank + '.')));
+                var pbTag = isPB ? ' <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 ml-1">PB</span>' : '';
+                var rowBg = isUser ? ' bg-emerald-50 dark:bg-emerald-900/20' : '';
+                if (entry._isPBSlot) {
+                    // Add separator before PB row
+                    var sepTr = document.createElement('tr');
+                    sepTr.innerHTML = '<td colspan="3" class="text-center text-gray-300 dark:text-gray-600 text-xs py-1">···</td>';
+                    tbody.appendChild(sepTr);
+                }
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '') + rowBg;
                 tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
                     '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + pbTag + '</td>';
                 tbody.appendChild(tr);
             });
-
-            // If PB not in top 10, show below with rank among the filtered results
-            if (screenName && pbScore > 0 && !pbFoundInTop10) {
-                var pbRank = 1;
-                for (var r = 0; r < lb.length; r++) {
-                    if (lb[r].score > pbScore) pbRank++;
-                    else break;
-                }
-                var sepTr = document.createElement('tr');
-                sepTr.innerHTML = '<td colspan="3" class="text-center text-gray-300 dark:text-gray-600 text-xs py-1">···</td>';
-                tbody.appendChild(sepTr);
-                var pbTr = document.createElement('tr');
-                pbTr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 bg-amber-50 dark:bg-amber-900/20';
-                pbTr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + pbRank + '.</td>' +
-                    '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + pbScore + '</td>' +
-                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + screenName + ' <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 ml-1">PB</span></td>';
-                tbody.appendChild(pbTr);
-            }
         }
     }
 
