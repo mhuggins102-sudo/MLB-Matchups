@@ -363,9 +363,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <span class="text-sm font-semibold">Dead Zone</span>
     <div id="dead-zone-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
 </div>
-                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-screen-name-row">
-                    <span class="text-sm font-semibold">Screen Name</span>
-                    <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]">None</div>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1 hidden" id="clear-screen-name-row">
+                    <span class="text-sm font-semibold">Clear Name</span>
+                    <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]"></div>
                 </div>
                 <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-pbs-row">
                     <span class="text-sm font-semibold">Clear PBs</span>
@@ -4469,6 +4469,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var rememberCheck = document.getElementById('remember-name-check');
         if (rememberCheck && rememberCheck.checked && name !== 'Anonymous') {
             localStorage.setItem('screenName', name);
+            document.getElementById('screen-name-indicator').textContent = name;
+            document.getElementById('clear-screen-name-row').classList.remove('hidden');
         }
         dom.saveScoreBtn.textContent = 'Saving...';
         dom.saveScoreBtn.disabled = true;
@@ -4511,14 +4513,30 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
         var isHigh = await isHighScore(score);
         if (isHigh) {
-            dom.hsContainer.classList.remove('hidden');
-            dom.saveScoreBtn.disabled = false;
-            dom.saveScoreBtn.textContent = 'Save to Leaderboard';
             var saved = localStorage.getItem('screenName');
             if (saved) {
-                dom.nameInput.value = saved;
-                document.getElementById('remember-name-row').classList.add('hidden');
+                // Auto-save with screen name
+                dom.hsContainer.classList.add('hidden');
+                try {
+                    var row = {
+                        name: saved, score: score, date: new Date().toLocaleDateString(),
+                        game_mode: gameMode, player_pool: playerPool
+                    };
+                    if (eligibility) row.eligibility = eligibility;
+                    var res = await sb.from('leaderboard').insert([row]);
+                    if (res.error) {
+                        if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
+                            delete row.eligibility;
+                            res = await sb.from('leaderboard').insert([row]);
+                        }
+                        if (res.error) console.error('Auto-save failed:', res.error);
+                    }
+                    showAlert('Score saved!', 'bg-green-600');
+                } catch (e) { console.error('Auto-save error:', e); }
             } else {
+                dom.hsContainer.classList.remove('hidden');
+                dom.saveScoreBtn.disabled = false;
+                dom.saveScoreBtn.textContent = 'Save to Leaderboard';
                 document.getElementById('remember-name-row').classList.remove('hidden');
             }
         } else {
@@ -4576,6 +4594,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var rememberCheckC = document.getElementById('remember-name-check-challenge');
         if (rememberCheckC && rememberCheckC.checked && name !== 'Anonymous') {
             localStorage.setItem('screenName', name);
+            document.getElementById('screen-name-indicator').textContent = name;
+            document.getElementById('clear-screen-name-row').classList.remove('hidden');
         }
         var btn = document.getElementById('save-challenge-score-btn');
         btn.textContent = 'Saving...'; btn.disabled = true;
@@ -4617,14 +4637,27 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             title.textContent = 'Challenge ' + challengeId;
         }
         if (showSave !== false) {
-            var btn = document.getElementById('save-challenge-score-btn');
-            btn.disabled = false; btn.textContent = 'Save Score';
-            document.getElementById('challenge-lb-save').classList.remove('hidden');
             var savedC = localStorage.getItem('screenName');
             if (savedC) {
-                document.getElementById('challenge-name-input').value = savedC;
-                document.getElementById('remember-name-row-challenge').classList.add('hidden');
+                // Auto-save challenge score with screen name
+                document.getElementById('challenge-lb-save').classList.add('hidden');
+                (async function() {
+                    try {
+                        var res = await sb.from('challenge_scores').insert([{
+                            challenge_id: challengeId, name: savedC, score: score
+                        }]);
+                        if (res.error) console.error('Auto-save challenge score failed:', res.error);
+                        if (eligibility !== 'custom' && !isDailyChallenge) {
+                            await saveToMainLeaderboard(savedC);
+                        }
+                        await renderChallengeLeaderboard(challengeId, true, savedC, score);
+                        showAlert('Score saved!', 'bg-green-600');
+                    } catch (e) { console.error('Auto-save challenge error:', e); }
+                })();
             } else {
+                var btn = document.getElementById('save-challenge-score-btn');
+                btn.disabled = false; btn.textContent = 'Save Score';
+                document.getElementById('challenge-lb-save').classList.remove('hidden');
                 document.getElementById('challenge-name-input').value = '';
                 document.getElementById('remember-name-row-challenge').classList.remove('hidden');
             }
@@ -5025,14 +5058,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.animBtn.addEventListener('click', toggleAnimations);
         dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
         document.getElementById('clear-screen-name-row').addEventListener('click', function() {
-            var current = localStorage.getItem('screenName');
-            if (current) {
-                localStorage.removeItem('screenName');
-                document.getElementById('screen-name-indicator').textContent = 'None';
-                showAlert('Screen name cleared', 'bg-red-600');
-            } else {
-                showAlert('No screen name set', 'bg-gray-600');
-            }
+            localStorage.removeItem('screenName');
+            document.getElementById('clear-screen-name-row').classList.add('hidden');
+            showAlert('Screen name cleared', 'bg-red-600');
         });
         document.getElementById('clear-pbs-row').addEventListener('click', function() {
             var keys = Object.keys(localStorage).filter(function(k) { return k.startsWith('pb_'); });
@@ -5176,7 +5204,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         updateAnimUI();
         updateDeadZoneUI();
         var sn = localStorage.getItem('screenName');
-        if (sn) document.getElementById('screen-name-indicator').textContent = sn;
+        if (sn) {
+            document.getElementById('screen-name-indicator').textContent = sn;
+            document.getElementById('clear-screen-name-row').classList.remove('hidden');
+        }
     }
 
     function populateDateDropdown() {
