@@ -4317,29 +4317,36 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     async function fetchLeaderboard() {
         if (!sb) return [];
         try {
-            var query = sb.from('leaderboard').select('*').order('score', { ascending: false }).limit(50);
+            var query = sb.from('leaderboard').select('*').order('score', { ascending: false }).limit(200);
             var fMode = dom.lbFilterMode.value;
             var fElig = dom.lbFilterElig.value;
             var fDate = dom.lbFilterDate.value;
             if (fMode !== 'all') query = query.eq('game_mode', fMode);
             if (fElig !== 'all_elig') query = query.eq('eligibility', fElig);
-            if (fDate === 'today') {
-                query = query.eq('date', new Date().toLocaleDateString());
-            } else if (fDate === 'this_month') {
-                var now = new Date();
-                var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-                var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                query = query.gte('date', firstDay.toLocaleDateString()).lte('date', lastDay.toLocaleDateString());
-            } else if (fDate === 'last_month') {
-                var now2 = new Date();
-                var firstDayLM = new Date(now2.getFullYear(), now2.getMonth() - 1, 1);
-                var lastDayLM = new Date(now2.getFullYear(), now2.getMonth(), 0);
-                query = query.gte('date', firstDayLM.toLocaleDateString()).lte('date', lastDayLM.toLocaleDateString());
-            }
-            // all_time: no date filter
             var result = await query;
             if (result.error) throw result.error;
-            cachedLeaderboard = result.data || [];
+            var data = result.data || [];
+
+            // Client-side date filtering (locale date strings don't sort properly in DB)
+            if (fDate !== 'all_time') {
+                var now = new Date();
+                data = data.filter(function(entry) {
+                    var d = new Date(entry.date);
+                    if (isNaN(d.getTime())) return false;
+                    if (fDate === 'today') {
+                        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+                    } else if (fDate === 'this_month') {
+                        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+                    } else if (fDate === 'last_month') {
+                        var lmYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                        var lmMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+                        return d.getFullYear() === lmYear && d.getMonth() === lmMonth;
+                    }
+                    return true;
+                });
+            }
+
+            cachedLeaderboard = data;
             return cachedLeaderboard;
         } catch (e) { console.error('Fetch leaderboard error:', e); return []; }
     }
@@ -4349,26 +4356,30 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var lb = await fetchLeaderboard();
         var tbody = dom.leaderboardBody;
         tbody.innerHTML = '';
-        if (lb.length === 0) {
+
+        // Fetch PB separately: user's best score with current mode/elig filters (no date filter)
+        var screenName = localStorage.getItem('screenName');
+        var pbScore = 0;
+        if (screenName && sb) {
+            try {
+                var pbQuery = sb.from('leaderboard').select('score').eq('name', screenName).order('score', { ascending: false }).limit(1);
+                var fMode = dom.lbFilterMode.value;
+                var fElig = dom.lbFilterElig.value;
+                if (fMode !== 'all') pbQuery = pbQuery.eq('game_mode', fMode);
+                if (fElig !== 'all_elig') pbQuery = pbQuery.eq('eligibility', fElig);
+                var pbResult = await pbQuery;
+                if (!pbResult.error && pbResult.data && pbResult.data.length > 0) {
+                    pbScore = pbResult.data[0].score;
+                }
+            } catch (e) { /* ignore PB fetch errors */ }
+        }
+
+        if (lb.length === 0 && pbScore === 0) {
             dom.emptyLeaderboardMsg.classList.remove('hidden');
         } else {
             dom.emptyLeaderboardMsg.classList.add('hidden');
             var top10 = lb.slice(0, 10);
-
-            // Find PB: match by screen name
-            var screenName = localStorage.getItem('screenName');
-            var pbScore = 0;
             var pbFoundInTop10 = false;
-            if (screenName) {
-                // Find best score for this user in the full result set
-                var bestUserEntry = null;
-                lb.forEach(function(entry) {
-                    if (entry.name === screenName && entry.score > pbScore) {
-                        pbScore = entry.score;
-                        bestUserEntry = entry;
-                    }
-                });
-            }
 
             top10.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
@@ -4384,7 +4395,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 tbody.appendChild(tr);
             });
 
-            // If PB not in top 10, show below with rank
+            // If PB not in top 10, show below with rank among the filtered results
             if (screenName && pbScore > 0 && !pbFoundInTop10) {
                 var pbRank = 1;
                 for (var r = 0; r < lb.length; r++) {
