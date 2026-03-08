@@ -2105,51 +2105,52 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             empty.classList.remove('hidden');
         } else {
             empty.classList.add('hidden');
-            var top10 = scores.slice(0, 10);
+            var screenName = localStorage.getItem('screenName');
             var myInTop10 = false;
             var myRank = null;
+            var myEntry = null;
 
-            // Find player's rank in full list
-            if (myScore !== null) {
+            // Find player's rank and entry in full list
+            if (myScore !== null && screenName) {
                 for (var r = 0; r < scores.length; r++) {
-                    if (scores[r].score === myScore) { myRank = r; myInTop10 = r < 10; break; }
-                }
-                // If score not found in DB yet (just played, not saved), find insert position
-                if (myRank === null) {
-                    myRank = scores.length;
-                    for (var r2 = 0; r2 < scores.length; r2++) {
-                        if (myScore > scores[r2].score) { myRank = r2; break; }
-                    }
-                    myInTop10 = myRank < 10;
+                    if (scores[r].name === screenName && scores[r].score === myScore) { myRank = r; myEntry = scores[r]; myInTop10 = r < 10; break; }
                 }
             }
+            if (myScore !== null && myRank === null) {
+                for (var r = 0; r < scores.length; r++) {
+                    if (scores[r].score === myScore) { myRank = r; myEntry = scores[r]; myInTop10 = r < 10; break; }
+                }
+            }
+            // If score not found in DB yet (just played, not saved), find insert position
+            if (myScore !== null && myRank === null) {
+                myRank = scores.length;
+                for (var r2 = 0; r2 < scores.length; r2++) {
+                    if (myScore > scores[r2].score) { myRank = r2; break; }
+                }
+                myInTop10 = myRank < 10;
+            }
 
-            top10.forEach(function(entry, i) {
+            // Build display list: top 9 + player in 10th slot if outside top 10
+            var displayList;
+            if (myScore !== null && !myInTop10) {
+                displayList = scores.slice(0, 9);
+                var myName = myEntry ? myEntry.name : (screenName || 'You');
+                displayList.push({ name: myName, score: myScore, _isMySlot: true, _myRank: myRank + 1 });
+            } else {
+                displayList = scores.slice(0, 10);
+            }
+
+            displayList.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
-                var isMe = myScore !== null && entry.score === myScore && myInTop10;
-                tr.className = 'border-b border-gray-100 dark:border-gray-800' + (isMe ? ' bg-amber-50 dark:bg-amber-900/20' : '');
-                var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
+                var isMe = myScore !== null && ((screenName && entry.name === screenName) || entry._isMySlot || (!screenName && entry.score === myScore && myInTop10));
+                var showRank = entry._isMySlot ? entry._myRank : (i + 1);
+                var rankStr = entry._isMySlot ? showRank + '.' : (i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : showRank + '.')));
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800' + (isMe ? ' leaderboard-pb' : '');
                 tr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-black ' + (isMe ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400') + ' w-20">' + entry.score + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-bold ' + (isMe ? 'text-amber-700 dark:text-amber-300' : 'text-gray-800 dark:text-gray-200') + ' truncate max-w-[150px]">' + entry.name + (isMe ? ' (You)' : '') + '</td>';
+                    '<td class="px-4 py-2.5 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
+                    '<td class="px-4 py-2.5 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
                 body.appendChild(tr);
             });
-
-            // If player not in top 10, show them at the bottom with their rank
-            if (myScore !== null && !myInTop10) {
-                // Separator
-                var sepTr = document.createElement('tr');
-                sepTr.innerHTML = '<td colspan="3" class="text-center py-1 text-gray-300 dark:text-gray-600 text-xs">···</td>';
-                body.appendChild(sepTr);
-                // Player's row
-                var myTr = document.createElement('tr');
-                myTr.className = 'bg-amber-50 dark:bg-amber-900/20';
-                var myRankDisplay = (myRank + 1) + '.';
-                myTr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-amber-600 dark:text-amber-400">' + myRankDisplay + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-black text-amber-600 dark:text-amber-400 w-20">' + myScore + '</td>' +
-                    '<td class="px-4 py-2.5 text-left font-bold text-amber-700 dark:text-amber-300">You</td>';
-                body.appendChild(myTr);
-            }
         }
     }
 
