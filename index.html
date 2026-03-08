@@ -363,6 +363,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <span class="text-sm font-semibold">Dead Zone</span>
     <div id="dead-zone-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
 </div>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-screen-name-row">
+                    <span class="text-sm font-semibold">Screen Name</span>
+                    <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]">None</div>
+                </div>
                 <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="clear-pbs-row">
                     <span class="text-sm font-semibold">Clear PBs</span>
                     <div class="text-xs font-bold px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded">RESET</div>
@@ -582,6 +586,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div id="highscore-input-container" class="hidden w-full max-w-xs mb-4">
                 <div class="text-green-600 dark:text-green-400 font-bold text-sm mb-2 animate-pulse">NEW HIGH SCORE!</div>
                 <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
+                <label id="remember-name-row" class="flex items-center justify-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" id="remember-name-check" checked class="w-4 h-4 accent-blue-600">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold">Remember my name</span>
+                </label>
                 <button id="save-score-btn" class="primary-btn bg-green-600 hover:bg-green-700 mb-2">Save to Leaderboard</button>
             </div>
             <div class="flex gap-2 w-full max-w-xs">
@@ -1081,6 +1089,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             </div>
             <div id="challenge-lb-save" class="p-4 border-t border-gray-100 dark:border-gray-800">
                 <input type="text" id="challenge-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
+                <label id="remember-name-row-challenge" class="flex items-center justify-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" id="remember-name-check-challenge" checked class="w-4 h-4 accent-blue-600">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold">Remember my name</span>
+                </label>
                 <button id="save-challenge-score-btn" class="primary-btn bg-amber-600 hover:bg-amber-700 w-full">Save Score</button>
             </div>
         </div>
@@ -4360,40 +4372,37 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.emptyLeaderboardMsg.classList.add('hidden');
             var top10 = lb.slice(0, 10);
 
-            // Check for personal best in current filter context
-            var fMode = dom.lbFilterMode.value;
-            var fElig = dom.lbFilterElig.value;
+            // Find PB: match by screen name
+            var screenName = localStorage.getItem('screenName');
             var pbScore = 0;
-            if (fMode !== 'all' && fElig !== 'all_elig') {
-                var pools = ['all', 'batters', 'pitchers'];
-                pools.forEach(function(pool) {
-                    var k = 'pb_' + fMode + '_' + fElig + '_' + pool;
-                    var v = parseInt(localStorage.getItem(k)) || 0;
-                    if (v > pbScore) pbScore = v;
+            var pbFoundInTop10 = false;
+            if (screenName) {
+                // Find best score for this user in the full result set
+                var bestUserEntry = null;
+                lb.forEach(function(entry) {
+                    if (entry.name === screenName && entry.score > pbScore) {
+                        pbScore = entry.score;
+                        bestUserEntry = entry;
+                    }
                 });
-            } else if (fMode !== 'all') {
-                var eligs = ['standard', 'allStar', 'hof'];
-                var pools2 = ['all', 'batters', 'pitchers'];
-                eligs.forEach(function(e) { pools2.forEach(function(pool) {
-                    var k = 'pb_' + fMode + '_' + e + '_' + pool;
-                    var v = parseInt(localStorage.getItem(k)) || 0;
-                    if (v > pbScore) pbScore = v;
-                }); });
             }
 
             top10.forEach(function(entry, i) {
                 var tr = document.createElement('tr');
                 var isMatch = highlightNew && entry.name === newName && entry.score === newScore;
-                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '');
+                var isPB = screenName && entry.name === screenName && entry.score === pbScore && pbScore > 0 && !pbFoundInTop10;
+                if (isPB) pbFoundInTop10 = true;
+                tr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '') + (isPB ? ' bg-amber-50 dark:bg-amber-900/20' : '');
                 var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
+                var pbTag = isPB ? ' <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 ml-1">PB</span>' : '';
                 tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
-                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
+                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + pbTag + '</td>';
                 tbody.appendChild(tr);
             });
 
-            // Show PB row below leaderboard with rank
-            if (pbScore > 0) {
+            // If PB not in top 10, show below with rank
+            if (screenName && pbScore > 0 && !pbFoundInTop10) {
                 var pbRank = 1;
                 for (var r = 0; r < lb.length; r++) {
                     if (lb[r].score > pbScore) pbRank++;
@@ -4406,7 +4415,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 pbTr.className = 'leaderboard-row border-b border-gray-100 dark:border-gray-800 bg-amber-50 dark:bg-amber-900/20';
                 pbTr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + pbRank + '.</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + pbScore + '</td>' +
-                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">You <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 ml-1">PB</span></td>';
+                    '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + screenName + ' <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 ml-1">PB</span></td>';
                 tbody.appendChild(pbTr);
             }
         }
@@ -4457,6 +4466,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     async function saveHighScore() {
         if (!sb) { showAlert('Online features unavailable.', 'bg-red-500'); return; }
         var name = dom.nameInput.value.trim() || 'Anonymous';
+        var rememberCheck = document.getElementById('remember-name-check');
+        if (rememberCheck && rememberCheck.checked && name !== 'Anonymous') {
+            localStorage.setItem('screenName', name);
+        }
         dom.saveScoreBtn.textContent = 'Saving...';
         dom.saveScoreBtn.disabled = true;
         try {
@@ -4501,6 +4514,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.hsContainer.classList.remove('hidden');
             dom.saveScoreBtn.disabled = false;
             dom.saveScoreBtn.textContent = 'Save to Leaderboard';
+            var saved = localStorage.getItem('screenName');
+            if (saved) {
+                dom.nameInput.value = saved;
+                document.getElementById('remember-name-row').classList.add('hidden');
+            } else {
+                document.getElementById('remember-name-row').classList.remove('hidden');
+            }
         } else {
             dom.hsContainer.classList.add('hidden');
         }
@@ -4553,6 +4573,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (!sb || !currentChallengeId) { showAlert('Online features unavailable.', 'bg-red-500'); return; }
         var nameInput = document.getElementById('challenge-name-input');
         var name = nameInput.value.trim() || 'Anonymous';
+        var rememberCheckC = document.getElementById('remember-name-check-challenge');
+        if (rememberCheckC && rememberCheckC.checked && name !== 'Anonymous') {
+            localStorage.setItem('screenName', name);
+        }
         var btn = document.getElementById('save-challenge-score-btn');
         btn.textContent = 'Saving...'; btn.disabled = true;
         try {
@@ -4596,7 +4620,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var btn = document.getElementById('save-challenge-score-btn');
             btn.disabled = false; btn.textContent = 'Save Score';
             document.getElementById('challenge-lb-save').classList.remove('hidden');
-            document.getElementById('challenge-name-input').value = '';
+            var savedC = localStorage.getItem('screenName');
+            if (savedC) {
+                document.getElementById('challenge-name-input').value = savedC;
+                document.getElementById('remember-name-row-challenge').classList.add('hidden');
+            } else {
+                document.getElementById('challenge-name-input').value = '';
+                document.getElementById('remember-name-row-challenge').classList.remove('hidden');
+            }
         } else {
             document.getElementById('challenge-lb-save').classList.add('hidden');
         }
@@ -4625,11 +4656,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 shareUrl += '?c=' + currentChallengeId;
             } else if (!currentChallengeId) {
                 // Determine the OP name: from leaderboard save, passed param, or prompt
-                var resolvedName = opName || dom.nameInput.value.trim() || null;
+                var resolvedName = opName || dom.nameInput.value.trim() || localStorage.getItem('screenName') || null;
                 if (!resolvedName) {
                     // Need to prompt for name first
                     shareBtn.innerHTML = originalText; shareBtn.disabled = false;
-                    document.getElementById('share-name-input').value = '';
+                    document.getElementById('share-name-input').value = localStorage.getItem('screenName') || '';
                     document.getElementById('share-name-modal').classList.remove('hidden');
                     setTimeout(function() { document.getElementById('share-name-input').focus(); }, 100);
                     return;
@@ -4993,12 +5024,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.formatBtn.addEventListener('click', toggleFormat);
         dom.animBtn.addEventListener('click', toggleAnimations);
         dom.deadZoneBtn.addEventListener('click', toggleDeadZone);
+        document.getElementById('clear-screen-name-row').addEventListener('click', function() {
+            var current = localStorage.getItem('screenName');
+            if (current) {
+                localStorage.removeItem('screenName');
+                document.getElementById('screen-name-indicator').textContent = 'None';
+                showAlert('Screen name cleared', 'bg-red-600');
+            } else {
+                showAlert('No screen name set', 'bg-gray-600');
+            }
+        });
         document.getElementById('clear-pbs-row').addEventListener('click', function() {
             var keys = Object.keys(localStorage).filter(function(k) { return k.startsWith('pb_'); });
             if (keys.length === 0) { showAlert('No personal bests to clear', 'bg-gray-600'); return; }
             keys.forEach(function(k) { localStorage.removeItem(k); });
             showAlert('Personal bests cleared!', 'bg-red-600');
-            });
+        });
         dom.saveScoreBtn.addEventListener('click', saveHighScore);
         document.getElementById('share-btn').addEventListener('click', function() { shareGame(); });
         document.getElementById('view-breakdown-btn').addEventListener('click', function() {
@@ -5134,6 +5175,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         updateThemeIcon();
         updateAnimUI();
         updateDeadZoneUI();
+        var sn = localStorage.getItem('screenName');
+        if (sn) document.getElementById('screen-name-indicator').textContent = sn;
     }
 
     function populateDateDropdown() {
