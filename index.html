@@ -1286,6 +1286,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var challengerName     = null;
     var isPlayingChallenge = false;
     var isDailyChallenge   = false;
+    var savedToMainLB      = false;
 
     var pickEmState = {
         threshold: 0, correctIDs: new Set(), picksMade: 0,
@@ -2994,7 +2995,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function startGame() {
         if (!validateCustomPool()) return;
-        score = 0; round = 1; hasUsedReroll = false;
+        score = 0; round = 1; hasUsedReroll = false; savedToMainLB = false;
         roundResults = []; roundScores = []; matchHistory = []; categoryHistory = {};
         usedPlayerIDs.clear();
         isPlayingChallenge = challengeQueue.length > 0;
@@ -4434,7 +4435,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     async function saveToMainLeaderboard(name) {
-        if (!sb || eligibility === 'custom') return;
+        if (!sb || eligibility === 'custom' || savedToMainLB) return;
         try {
             var row = {
                 name: name, score: score, date: new Date().toLocaleDateString(),
@@ -4448,6 +4449,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     res = await sb.from('leaderboard').insert([row]);
                 }
                 if (res.error) console.error('Auto-save to main leaderboard failed:', res.error);
+                else savedToMainLB = true;
+            } else {
+                savedToMainLB = true;
             }
         } catch (e) { console.error('Auto-save to main leaderboard error:', e); }
     }
@@ -4469,14 +4473,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 game_mode: gameMode, player_pool: playerPool
             };
             if (eligibility) row.eligibility = eligibility;
-            var res = await sb.from('leaderboard').insert([row]);
-            if (res.error) {
-                // If eligibility column doesn't exist yet, retry without it
-                if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
-                    delete row.eligibility;
-                    res = await sb.from('leaderboard').insert([row]);
+            if (!savedToMainLB) {
+                var res = await sb.from('leaderboard').insert([row]);
+                if (res.error) {
+                    // If eligibility column doesn't exist yet, retry without it
+                    if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
+                        delete row.eligibility;
+                        res = await sb.from('leaderboard').insert([row]);
+                    }
+                    if (res.error) throw res.error;
                 }
-                if (res.error) throw res.error;
+                savedToMainLB = true;
             }
             // Set filters to match the game just played
             dom.lbFilterMode.value = gameMode;
@@ -4506,22 +4513,27 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (saved) {
                 // Auto-save with screen name
                 dom.hsContainer.classList.add('hidden');
-                try {
-                    var row = {
-                        name: saved, score: score, date: new Date().toLocaleDateString(),
-                        game_mode: gameMode, player_pool: playerPool
-                    };
-                    if (eligibility) row.eligibility = eligibility;
-                    var res = await sb.from('leaderboard').insert([row]);
-                    if (res.error) {
-                        if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
-                            delete row.eligibility;
-                            res = await sb.from('leaderboard').insert([row]);
+                if (!savedToMainLB) {
+                    try {
+                        var row = {
+                            name: saved, score: score, date: new Date().toLocaleDateString(),
+                            game_mode: gameMode, player_pool: playerPool
+                        };
+                        if (eligibility) row.eligibility = eligibility;
+                        var res = await sb.from('leaderboard').insert([row]);
+                        if (res.error) {
+                            if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
+                                delete row.eligibility;
+                                res = await sb.from('leaderboard').insert([row]);
+                            }
+                            if (res.error) console.error('Auto-save failed:', res.error);
+                            else savedToMainLB = true;
+                        } else {
+                            savedToMainLB = true;
                         }
-                        if (res.error) console.error('Auto-save failed:', res.error);
-                    }
-                    showAlert('Score saved!', 'bg-green-600');
-                } catch (e) { console.error('Auto-save error:', e); }
+                        showAlert('Score saved!', 'bg-green-600');
+                    } catch (e) { console.error('Auto-save error:', e); }
+                }
             } else {
                 dom.hsContainer.classList.remove('hidden');
                 dom.saveScoreBtn.disabled = false;
