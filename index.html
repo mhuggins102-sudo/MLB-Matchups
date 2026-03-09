@@ -186,7 +186,7 @@
             height: 2rem; /* Smaller height */
             border-radius: 0.5rem;
             background-color: #f3f4f6;
-            border: 2px solid transparent;
+            border: 2px solid #d1d5db;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -196,7 +196,7 @@
             color: #6b7280; /* Gray text */
             transition: all 0.15s;
         }
-        html.dark .sbs-cell { background-color: #1f2937; color: #9ca3af; }
+        html.dark .sbs-cell { background-color: #1f2937; color: #9ca3af; border-color: transparent; }
         
         .sbs-cell.selected { 
             border-color: var(--color-primary); 
@@ -381,18 +381,18 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div id="loading-screen" class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-950 z-40 hidden" style="display:none;">
             <div class="text-center">
                 <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p class="text-sm text-gray-500">Loading stats...</p>
+                <p class="text-sm text-gray-600 dark:text-gray-500">Loading stats...</p>
             </div>
         </div>
 
         <div id="start-screen" class="flex flex-col gap-6 w-full pt-4">
             <div class="text-center space-y-1 mb-2 mt-4">
     <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">MLB<span class="text-blue-600">Matchups</span></h2>
-    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
+    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
 </div>
             <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 space-y-6">
                 <div>
-                        <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
+                        <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
 <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
     <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
     <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
@@ -400,7 +400,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Player Pool</label>
+                    <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Player Pool</label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
                         <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all pool-btn" data-pool="all">All</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="batters">Batters</button>
@@ -408,7 +408,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </div>
                 </div>
                 <div>
-                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
+                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
                         <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Veteran</button>
                         <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
@@ -417,10 +417,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </div>
                 </div>
                <div class="relative w-fit">
-    <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Era</label>
+    <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Era</label>
     <button id="era-trigger-btn" class="w-auto min-w-[100px] flex justify-center items-center bg-blue-50 dark:bg-gray-700 shadow-sm hover:bg-blue-100 dark:hover:bg-gray-600 text-left px-3 py-2 rounded-xl transition-colors">
         <span id="era-display-text" class="text-xs sm:text-sm font-semibold text-blue-600 dark:text-white">Modern</span>
-        <svg class="w-4 h-4 text-gray-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <svg class="w-4 h-4 text-gray-600 dark:text-gray-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
     </button>
     
     <div id="era-popover" class="hidden absolute top-0 left-full ml-2 w-56 z-50 grid grid-cols-3 gap-1 bg-white dark:bg-gray-900 p-2 rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl animate-enter">
@@ -488,7 +488,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div class="flex justify-center items-end mb-2 gap-4 sm:gap-8">
         <!-- Min Control -->
         <div class="flex flex-col items-center gap-1">
-            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">MIN DIFF</span>
+            <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">MIN DIFF</span>
             <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
                 <button class="slider-adj-btn" onclick="adjustSlider('min', -1)">-</button>
                 <span id="slider-display-min" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
@@ -498,7 +498,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         <!-- Max Control -->
         <div class="flex flex-col items-center gap-1">
-            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">MAX DIFF</span>
+            <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">MAX DIFF</span>
             <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
                 <button class="slider-adj-btn" onclick="adjustSlider('max', -1)">-</button>
                 <span id="slider-display-max" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
@@ -547,8 +547,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             <div id="ui-side-by-side" class="w-full hidden">
                 <div class="grid grid-cols-3 gap-1 mb-2 mt-4 text-center items-end">
-                    <div></div> <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200" id="sbs-name-A">Player A</div>
-                    <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200" id="sbs-name-B">Player B</div>
+                    <div></div> <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200 border-2 border-gray-300 dark:border-transparent" id="sbs-name-A">Player A</div>
+                    <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200 border-2 border-gray-300 dark:border-transparent" id="sbs-name-B">Player B</div>
                 </div>
                 <div id="sbs-container" class="flex flex-col gap-1 mb-4">
                     </div>
@@ -576,17 +576,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-2">Game Over!</h2>
             <p id="ribbon-text" class="text-lg text-gray-600 mb-4">Great effort!</p>
             <div class="bg-white dark:bg-gray-900 px-10 py-6 rounded-3xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 w-full max-w-xs">
-                <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
+                <div class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
                 <div class="text-6xl font-black text-blue-600 dark:text-blue-400" id="final-score">0</div>
             </div>
-            <button id="view-breakdown-btn" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition mb-6 underline decoration-dotted">View Breakdown</button>
+            <button id="view-breakdown-btn" class="text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition mb-6 underline decoration-dotted">View Breakdown</button>
             
             <div id="highscore-input-container" class="hidden w-full max-w-xs mb-4">
                 <div class="text-green-600 dark:text-green-400 font-bold text-sm mb-2 animate-pulse">NEW HIGH SCORE!</div>
                 <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
                 <label id="remember-name-row" class="flex items-center justify-center gap-2 mb-2 cursor-pointer">
                     <input type="checkbox" id="remember-name-check" checked class="w-4 h-4 accent-blue-600">
-                    <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold">Remember my name</span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Remember my name</span>
                 </label>
                 <button id="save-score-btn" class="primary-btn bg-green-600 hover:bg-green-700 mb-2">Save to Leaderboard</button>
             </div>
@@ -606,7 +606,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Round Breakdown</h3>
-                <button id="close-breakdown" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500 text-xl">&times;</button>
+                <button id="close-breakdown" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500 text-xl">&times;</button>
             </div>
             <div id="round-breakdown" class="p-5"></div>
         </div>
@@ -618,7 +618,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Challenge Tracker</h3>
-                <button id="close-challenge-popup" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-challenge-popup" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div id="challenge-popup-body" class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-300"></div>
         </div>
@@ -630,10 +630,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Your Name</h3>
-                <button id="close-share-name" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-share-name" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-center">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Enter your name so challengers know who they're up against!</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Enter your name so challengers know who they're up against!</p>
                 <input type="text" id="share-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off">
                 <button id="share-name-go" class="primary-btn bg-indigo-600 hover:bg-indigo-700 w-full">Share Challenge</button>
             </div>
@@ -646,7 +646,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Enter Challenge Code</h3>
-                <button id="close-challenge-code" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-challenge-code" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-center">
                 <input type="text" id="challenge-code-input" placeholder="e.g. ABC23" maxlength="5" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-black text-2xl tracking-[0.3em] uppercase focus:outline-none focus:border-blue-500 dark:text-white mb-4" autocomplete="off" autocapitalize="characters">
@@ -662,7 +662,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Custom Filters</h3>
-                <button id="close-custom-info" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-custom-info" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div id="custom-info-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto"></div>
         </div>
@@ -674,7 +674,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 id="cat-tooltip-title" class="text-lg font-black tracking-wide text-gray-900 dark:text-white"></h3>
-                <button id="close-cat-tooltip" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-cat-tooltip" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div id="cat-tooltip-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-3"></div>
         </div>
@@ -686,7 +686,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Custom Eligibility</h3>
-                <button id="close-custom-elig" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-custom-elig" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-5">
                 <!-- Presets / Customize toggle -->
@@ -696,9 +696,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 </div>
                 <!-- Presets view -->
                 <div id="custom-presets-view">
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Hitter Presets</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-2">Hitter Presets</div>
                     <div id="preset-hitter-list" class="space-y-2 mb-4"></div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Pitcher Presets</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-2">Pitcher Presets</div>
                     <div id="preset-pitcher-list" class="space-y-2 mb-4"></div>
                     <div id="preset-combo-note" class="hidden text-[10px] text-center text-amber-600 dark:text-amber-400 font-semibold mb-3">Playing with "All Players"? Pick up to 1 hitter + 1 pitcher preset.</div>
                     <button id="apply-presets-btn" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Presets</button>
@@ -719,17 +719,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Game Modes</h3>
-                <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-5 overflow-y-auto">
                 <div>
                     <div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div>
                     <div class="text-xs leading-relaxed mb-2">Pick which player has the higher stat, then estimate the difference using a range slider. The tighter your range, the more points you earn.</div>
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                         <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Career HR</div>
                         <div class="flex justify-center gap-6">
                             <span>Mike Trout</span>
-                            <span class="text-gray-500 dark:text-gray-400">vs</span>
+                            <span class="text-gray-600 dark:text-gray-400">vs</span>
                             <span>Manny Ramirez</span>
                         </div>
                         <div class="mt-1 text-[10px]">By how much? &nbsp;|&mdash;&mdash; 50-120 &mdash;&mdash;|</div>
@@ -738,10 +738,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
                     <div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div>
                     <div class="text-xs leading-relaxed mb-2">Two players go head-to-head across 10 stat categories. For each category, pick who you think has the higher (or lower) value. Score is based on how many you get right out of 10.</div>
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                         <div class="flex justify-center gap-4 font-bold text-gray-700 dark:text-gray-300 mb-1">
                             <span>Griffey Jr.</span>
-                            <span class="text-gray-500 dark:text-gray-400">vs</span>
+                            <span class="text-gray-600 dark:text-gray-400">vs</span>
                             <span>A-Rod</span>
                         </div>
                         <div class="text-[10px]">Career HR &bull; Career BA &bull; Career OPS &bull; ...</div>
@@ -750,7 +750,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
                     <div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div>
                     <div class="text-xs leading-relaxed mb-2">Given a stat and a threshold, pick the players from a grid of 10 who meet the criteria. Earn points for each correct pick, but wrong picks end the streak.</div>
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                         <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Career HR &ge; 300</div>
                         <div class="text-[10px]">Pick the players who qualify from a 10-player grid</div>
                     </div>
@@ -765,7 +765,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Eligibility Criteria</h3>
-                <button id="close-elig-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-elig-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto">
                 <div>
@@ -802,7 +802,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Rules &amp; Scoring</h3>
-                <button id="close-rules-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                <button id="close-rules-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-0 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 
@@ -810,7 +810,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <details open class="group border-b border-gray-200 dark:border-gray-800">
                     <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                         <span>How to Play</span>
-                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-500 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
                         <div>
@@ -854,7 +854,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <details class="group border-b border-gray-200 dark:border-gray-800">
                     <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                         <span>Scoring Breakdown</span>
-                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-500 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
                         <div>
@@ -922,7 +922,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <details class="group border-b border-gray-200 dark:border-gray-800">
                     <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                         <span>Eligibility Criteria</span>
-                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-500 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-4">
                         <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
@@ -974,7 +974,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <details class="group border-b border-gray-200 dark:border-gray-800">
                     <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                         <span>Special Features</span>
-                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-500 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-3">
                         <div>
@@ -1015,7 +1015,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 space-y-3">
                 <div class="flex justify-between items-center">
                      <h3 class="text-sm font-black uppercase tracking-wide text-gray-600 dark:text-gray-400">Leaderboard</h3>
-                     <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                     <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-2">
@@ -1044,7 +1044,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             <div class="p-0 overflow-y-auto">
                 <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
+                    <thead class="text-xs text-gray-600 dark:text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
                         <tr>
                             <th class="px-4 py-3 text-center w-12 font-bold">#</th>
                             <th class="px-4 py-3 text-left w-24 font-bold">Score</th>
@@ -1053,7 +1053,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </thead>
                     <tbody id="leaderboard-body" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
                 </table>
-                <div id="empty-leaderboard-msg" class="hidden p-8 text-center text-gray-500 text-sm">
+                <div id="empty-leaderboard-msg" class="hidden p-8 text-center text-gray-600 dark:text-gray-500 text-sm">
                     No scores found for this filter.
                 </div>
             </div>
@@ -1067,12 +1067,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <div class="flex justify-between items-center">
                     <h3 id="challenge-lb-title" class="text-sm font-black uppercase tracking-wide text-gray-600 dark:text-gray-400">Challenge Leaderboard</h3>
-                    <button id="close-challenge-lb" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
+                    <button id="close-challenge-lb" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
                 </div>
             </div>
             <div class="p-0 overflow-y-auto">
                 <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
+                    <thead class="text-xs text-gray-600 dark:text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
                         <tr>
                             <th class="px-4 py-3 text-center w-12 font-bold">#</th>
                             <th class="px-4 py-3 text-left w-24 font-bold">Score</th>
@@ -1081,7 +1081,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </thead>
                     <tbody id="challenge-lb-body" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
                 </table>
-                <div id="challenge-lb-empty" class="hidden p-8 text-center text-gray-500 text-sm">
+                <div id="challenge-lb-empty" class="hidden p-8 text-center text-gray-600 dark:text-gray-500 text-sm">
                     No scores yet. Be the first!
                 </div>
             </div>
@@ -1089,7 +1089,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <input type="text" id="challenge-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-blue-500 dark:text-white mb-2">
                 <label id="remember-name-row-challenge" class="flex items-center justify-center gap-2 mb-2 cursor-pointer">
                     <input type="checkbox" id="remember-name-check-challenge" checked class="w-4 h-4 accent-blue-600">
-                    <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold">Remember my name</span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Remember my name</span>
                 </label>
                 <button id="save-challenge-score-btn" class="primary-btn bg-amber-600 hover:bg-amber-700 w-full">Save Score</button>
             </div>
@@ -1125,11 +1125,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <!-- Leaderboard -->
             <div class="border-t border-gray-200 dark:border-gray-800 flex flex-col min-h-0">
                 <div class="px-4 py-2 bg-gray-100 dark:bg-gray-800/50 flex-none">
-                    <span class="text-xs font-black uppercase tracking-wide text-gray-500">Leaderboard</span>
+                    <span class="text-xs font-black uppercase tracking-wide text-gray-600 dark:text-gray-500">Leaderboard</span>
                 </div>
                 <div class="overflow-y-auto" style="max-height:35vh;">
                     <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
+                        <thead class="text-xs text-gray-600 dark:text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
                             <tr>
                                 <th class="px-4 py-2 text-center w-12 font-bold">#</th>
                                 <th class="px-4 py-2 text-left w-24 font-bold">Score</th>
@@ -1138,14 +1138,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         </thead>
                         <tbody id="daily-popup-lb" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
                     </table>
-                    <div id="daily-popup-empty" class="hidden p-6 text-center text-gray-500 text-sm">
+                    <div id="daily-popup-empty" class="hidden p-6 text-center text-gray-600 dark:text-gray-500 text-sm">
                         No scores yet. Be the first!
                     </div>
                 </div>
             </div>
             <!-- Close -->
             <div class="p-3 border-t border-gray-200 dark:border-gray-800 flex-none">
-                <button id="daily-popup-close" class="w-full text-center text-sm font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 py-2 transition">Close</button>
+                <button id="daily-popup-close" class="w-full text-center text-sm font-bold text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 py-2 transition">Close</button>
             </div>
         </div>
     </div>
@@ -2095,7 +2095,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         // Load leaderboard
         var body = document.getElementById('daily-popup-lb');
         var empty = document.getElementById('daily-popup-empty');
-        body.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Loading...</td></tr>';
+        body.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-600 dark:text-gray-500">Loading...</td></tr>';
         empty.classList.add('hidden');
 
         var scores = await fetchChallengeScores(dailyId);
@@ -2146,7 +2146,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 var showRank = entry._isMySlot ? entry._myRank : (i + 1);
                 var rankStr = entry._isMySlot ? showRank + '.' : (i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : showRank + '.')));
                 tr.className = 'leaderboard-row border-b border-gray-200 dark:border-gray-800' + (isMe ? ' leaderboard-pb' : '');
-                tr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
+                tr.innerHTML = '<td class="px-4 py-2.5 text-center font-bold w-12 text-gray-600 dark:text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-2.5 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
                     '<td class="px-4 py-2.5 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + '</td>';
                 body.appendChild(tr);
@@ -2246,7 +2246,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var html = '<div>' + info.desc + '</div>';
         if (info.calc) {
             html += '<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700">';
-            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Calculation</div>';
+            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Calculation</div>';
             html += '<div class="font-semibold text-gray-700 dark:text-gray-200 text-xs">' + info.calc + '</div>';
             html += '</div>';
         }
@@ -2284,8 +2284,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 return label + ' ' + sym + ' ' + f.value;
             }).join(', ');
             card.innerHTML = '<div class="font-black text-sm text-gray-800 dark:text-white">' + preset.name + '</div>' +
-                '<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">' + preset.desc + '</div>' +
-                '<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-semibold">' + filtersDesc + '</div>';
+                '<div class="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">' + preset.desc + '</div>' +
+                '<div class="text-[10px] text-gray-600 dark:text-gray-400 mt-1 font-semibold">' + filtersDesc + '</div>';
             card.addEventListener('click', function() {
                 if (preset.type === 'hitter') {
                     selectedPresets.hitter = selectedPresets.hitter === preset.id ? null : preset.id;
@@ -2433,7 +2433,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var relevantFilters = getRelevantFilters();
 
         // Build compact filter list
-        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Active Filters</div>';
+        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Active Filters</div>';
         html += '<div class="space-y-1">';
         relevantFilters.forEach(function(f) {
             var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
@@ -2485,14 +2485,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     });
                 }
 
-                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 mt-2">Player Values</div>';
+                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1 mt-2">Player Values</div>';
                 html += '<div class="overflow-x-auto -mx-5 px-5"><table class="text-xs" style="min-width:100%"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
-                html += '<th class="py-1 text-left font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap pr-3 sticky left-0 bg-white dark:bg-gray-900 z-10">Player</th>';
+                html += '<th class="py-1 text-left font-bold text-gray-600 dark:text-gray-400 whitespace-nowrap pr-3 sticky left-0 bg-white dark:bg-gray-900 z-10">Player</th>';
                 relevantFilters.forEach(function(f) {
                     var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
                     var shortLabel = opt ? opt.label.replace('Career ', '').replace('Highest ', 'Hi ').replace('Season High ', 'Hi ').replace('Best ', 'Best ') : f.stat;
                     var arrow = customInfoSortKey === f.stat ? (customInfoSortAsc ? ' \u25B2' : ' \u25BC') : '';
-                    html += '<th class="py-1 text-right font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap pl-3 cursor-pointer hover:text-blue-500" data-sort-stat="' + f.stat + '">' + shortLabel + arrow + '</th>';
+                    html += '<th class="py-1 text-right font-bold text-gray-600 dark:text-gray-400 whitespace-nowrap pl-3 cursor-pointer hover:text-blue-500" data-sort-stat="' + f.stat + '">' + shortLabel + arrow + '</th>';
                 });
                 html += '</tr></thead><tbody>';
 
@@ -2552,7 +2552,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             // Show per-round comparison table
             html += '<table class="w-full text-center mb-4">';
             var opLabel = challengerName || 'Challenger';
-            html += '<thead><tr class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">';
+            html += '<thead><tr class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">';
             html += '<th class="py-1">Round</th><th class="py-1">You</th><th class="py-1">' + opLabel + '</th></tr></thead><tbody>';
 
             var myRunning = 0, theirRunning = 0;
@@ -2566,7 +2566,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
                 var rowClass = i < completedRounds ? '' : ' class="opacity-40"';
                 html += '<tr' + rowClass + '>';
-                html += '<td class="py-1 font-bold text-gray-500">' + (i + 1) + '</td>';
+                html += '<td class="py-1 font-bold text-gray-600 dark:text-gray-500">' + (i + 1) + '</td>';
                 html += '<td class="py-1 font-bold">' + (myPts !== null ? '+' + myPts : '-') + '</td>';
                 html += '<td class="py-1 font-bold">' + (theirPts !== null ? '+' + theirPts : '-') + '</td>';
                 html += '</tr>';
@@ -2595,10 +2595,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             // Fallback: just show challenger total score and difference
             html += '<div class="text-center space-y-4">';
-            html += '<div><div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
+            html += '<div><div class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
             html += '<div class="text-4xl font-black text-blue-600 dark:text-blue-400">' + score + '</div></div>';
             var opLabel2 = challengerName ? (challengerName + '\'s Score') : 'Challenger\'s Score';
-            html += '<div><div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">' + opLabel2 + '</div>';
+            html += '<div><div class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">' + opLabel2 + '</div>';
             html += '<div class="text-4xl font-black text-purple-600 dark:text-purple-400">' + challengerScore + '</div></div>';
 
             var diff2 = score - challengerScore;
@@ -3116,7 +3116,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var container = document.getElementById('round-breakdown');
         if (!container) return;
         var html = '<table class="w-full text-sm border-collapse">';
-        html += '<thead><tr class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide"><th class="py-1 text-left w-8">#</th><th class="py-1 text-center">Result</th><th class="py-1 text-right">Points</th></tr></thead><tbody>';
+        html += '<thead><tr class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide"><th class="py-1 text-left w-8">#</th><th class="py-1 text-center">Result</th><th class="py-1 text-right">Points</th></tr></thead><tbody>';
         var total = 0;
         for (var i = 0; i < roundScores.length; i++) {
             var pts = roundScores[i] || 0;
@@ -3142,7 +3142,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else if (score >= 4000) { emoji.textContent = '\uD83E\uDD47'; txt.textContent = 'Gold Medal! All-Time Great!'; txt.className = 'text-lg score-gold font-bold'; }
             else if (score >= 3000) { emoji.textContent = '\uD83E\uDD48'; txt.textContent = 'Silver Medal! All-Star Performance!'; txt.className = 'text-lg score-silver font-bold'; }
             else if (score >= 2000) { emoji.textContent = '\uD83E\uDD49'; txt.textContent = 'Bronze Medal! Solid Season.'; txt.className = 'text-lg score-bronze font-bold'; }
-            else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-500 font-bold'; }
+            else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-600 dark:text-gray-500 font-bold'; }
             dom.rerollBtn.classList.add('hidden');
             checkHighScoreTrigger();
             // Show challenge leaderboard for any challenge game
@@ -3321,7 +3321,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var label = poolLabel[playerPool] || 'All Players';
         label = (eligLabel[eligibility] || 'Veteran') + ' \u2022 ' + label;
         setCatLabel(label);
-        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wide mt-1';
 
         var catName = getCurrentCat(catKey).label;
         if (isLowerBetter) {
@@ -3570,7 +3570,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var lbl = poolLbl[playerPool] || 'All Players';
         lbl = (eligLbl[eligibility] || 'Veteran') + ' \u2022 ' + lbl;
         setCatLabel(lbl);
-        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wide mt-1';
         dom.playerPrompt.textContent = '';
         sbsPicks = new Array(10).fill(null);
 
@@ -3879,7 +3879,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var eligLabelMap = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         headerText = (eligLabelMap[eligibility] || 'Veteran') + ' \u2022 ' + headerText;
         setCatLabel(headerText);
-        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wide mt-1';
 
         var op = catConfigR.lowerBetter ? '\u2264' : '\u2265';
         var displayThresh;
@@ -4404,7 +4404,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 var pbTag = isPB ? ' <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 ml-1">PB</span>' : '';
                 var rowBg = isPB ? ' leaderboard-pb' : (isUser ? ' bg-emerald-50 dark:bg-emerald-900/20' : '');
                 tr.className = 'leaderboard-row border-b border-gray-200 dark:border-gray-800 ' + (isMatch ? 'leaderboard-new' : '') + rowBg;
-                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
+                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-600 dark:text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
                     '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + entry.name + pbTag + '</td>';
                 tbody.appendChild(tr);
@@ -4581,7 +4581,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     (isOP ? 'bg-purple-50 dark:bg-purple-900/20 ' : '');
                 var rankStr = i === 0 ? '\uD83E\uDD47' : (i === 1 ? '\uD83E\uDD48' : (i === 2 ? '\uD83E\uDD49' : (i + 1) + '.'));
                 var nameHtml = entry.name + (isOP ? ' <span class="text-[10px] font-black text-purple-500 dark:text-purple-400 ml-1">OP</span>' : '');
-                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">' + rankStr + '</td>' +
+                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-600 dark:text-gray-500">' + rankStr + '</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + entry.score + '</td>' +
                     '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">' + nameHtml + '</td>';
                 body.appendChild(tr);
@@ -4618,7 +4618,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 document.getElementById('challenge-lb-empty').classList.add('hidden');
                 var tr = document.createElement('tr');
                 tr.className = 'leaderboard-row border-b border-gray-200 dark:border-gray-800 leaderboard-new';
-                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-500">\uD83E\uDD47</td>' +
+                tr.innerHTML = '<td class="px-4 py-3 text-center font-bold w-12 text-gray-600 dark:text-gray-500">\uD83E\uDD47</td>' +
                     '<td class="px-4 py-3 text-left font-black text-blue-600 dark:text-blue-400 w-20">' + score + '</td>' +
                     '<td class="px-4 py-3 text-left font-bold text-gray-800 dark:text-gray-200">' + name + '</td>';
                 body.appendChild(tr);
