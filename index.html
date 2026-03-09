@@ -154,7 +154,7 @@
         .primary-btn:hover:not(:disabled) { background-color: var(--color-primary); }
         .primary-btn:active:not(:disabled) { transform: scale(0.98); }
         .primary-btn:disabled {
-            background-color: #e5e7eb; /* gray-200 */
+            background-color: #d1d5db; /* gray-300 */
             color: #6b7280; /* gray-500 */
             box-shadow: none;
             cursor: not-allowed;
@@ -461,13 +461,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <div id="player-prompt" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
 
                 <div class="grid grid-cols-2 gap-3 mb-6">
-                    <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
                         <div id="name-A-container" class="w-full text-center z-10">
                             <span id="name-A" class="text-sm sm:text-base font-black leading-tight text-center group-hover:scale-105 transition-transform block">Player A</span>
                         </div>
                         <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-A">--</div>
                     </button>
-                    <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
                         <div id="name-B-container" class="w-full text-center z-10">
                             <span id="name-B" class="text-sm sm:text-base font-black leading-tight text-center group-hover:scale-105 transition-transform block">Player B</span>
                         </div>
@@ -547,8 +547,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             <div id="ui-side-by-side" class="w-full hidden">
                 <div class="grid grid-cols-3 gap-1 mb-2 mt-4 text-center items-end">
-                    <div></div> <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200" id="sbs-name-A">Player A</div>
-                    <div class="text-sm font-black leading-tight bg-gray-100 dark:bg-gray-800 rounded-lg py-1 text-gray-700 dark:text-gray-200" id="sbs-name-B">Player B</div>
+                    <div></div> <div class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200" id="sbs-name-A">Player A</div>
+                    <div class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200" id="sbs-name-B">Player B</div>
                 </div>
                 <div id="sbs-container" class="flex flex-col gap-1 mb-4">
                     </div>
@@ -3241,7 +3241,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     function startRoundHowMuch() {
         versusPick = null;
-        var defaultCardClass = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]';
+        var defaultCardClass = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]';
         dom.cardA.className = defaultCardClass;
         dom.cardB.className = defaultCardClass;
         dom.nameA.innerHTML = ''; dom.nameA.textContent = 'Player A';
@@ -3413,7 +3413,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         // Card styling helper
         var setCardStyles = function() {
             [dom.cardA, dom.cardB].forEach(function(c) {
-                c.classList.remove('bg-white','dark:bg-gray-900','border-transparent','shadow-sm','ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+                c.classList.remove('bg-white','dark:bg-gray-900','border-transparent','border-gray-300','dark:border-transparent','shadow-sm','ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
                 c.classList.add('border-2');
             });
             var styleGreen = ['bg-green-100','dark:bg-green-900/40','border-green-600','dark:border-green-500','text-green-800','dark:text-green-300'];
@@ -3491,10 +3491,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
 
         // Correct player – animated sequence
-        winnerCard.classList.remove('bg-white','dark:bg-gray-900','border-transparent','shadow-sm','ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+        winnerCard.classList.remove('bg-white','dark:bg-gray-900','border-transparent','border-gray-300','dark:border-transparent','shadow-sm','ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
         winnerCard.classList.add('border-2');
         styleGreenAnim.forEach(function(c) { winnerCard.classList.add(c); });
-        loserCard.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
+        loserCard.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20','border-gray-300','dark:border-transparent');
         loserCard.classList.add('opacity-50','bg-gray-100','dark:bg-gray-800','border-transparent');
 
         winnerStat.textContent = fmt(winnerVal);
@@ -3919,7 +3919,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         gridPlayers.forEach(function(p) {
             var card = document.createElement('div');
-            card.className = 'bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border-2 border-transparent cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex flex-col items-center justify-center h-16 relative active:scale-95';
+            card.className = 'bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border-2 border-gray-300 dark:border-transparent cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex flex-col items-center justify-center h-16 relative active:scale-95';
             card.innerHTML = '<div class="pickem-name text-sm sm:text-base font-black leading-tight text-center pointer-events-none">' + p.name + '</div>' +
                 '<div class="stat-val text-xs font-black mt-0.5 hidden pointer-events-none"></div>' +
                 '<div class="base-pts-tag absolute bottom-1 left-1 text-[9px] font-black text-green-600 dark:text-green-400 hidden pointer-events-none"></div>' +
@@ -3952,7 +3952,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
 
         card.classList.add('revealed','border-2');
-        card.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700');
+        card.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
         valEl.textContent = formatStat(val, catKey);
         valEl.classList.remove('hidden');
 
@@ -4060,7 +4060,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 var isC = pickEmState.correctIDs.has(id);
                 var val = parseFloat(c.dataset.val);
                 c.classList.add('revealed','border-2');
-                c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700');
+                c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
                 c.querySelector('.stat-val').textContent = formatStat(val, catKey);
                 c.querySelector('.stat-val').classList.remove('hidden');
                 if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
@@ -4077,7 +4077,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     var isC = pickEmState.correctIDs.has(id);
                     var val = parseFloat(c.dataset.val);
                     c.classList.add('revealed','border-2');
-                    c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700');
+                    c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
                     c.querySelector('.stat-val').textContent = formatStat(val, catKey);
                     c.querySelector('.stat-val').classList.remove('hidden');
                     if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
