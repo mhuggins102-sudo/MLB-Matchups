@@ -179,7 +179,7 @@
         
         /* Showdown Grid */
         .sbs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.25rem; align-items: center; }
-        .sbs-row-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #6b7280; text-align: left; line-height: 1.1; }
+        .sbs-row-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: left; line-height: 1.1; }
         html.dark .sbs-row-label { color: #9ca3af; }
         
         .sbs-cell {
@@ -390,44 +390,44 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">MLB<span class="text-blue-600">Matchups</span></h2>
     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
 </div>
-            <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
+            <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 space-y-6">
                 <div>
-                        <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
+                        <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
 <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
-    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
-    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="pickEm">Pick 'Em</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="pickEm">Pick 'Em</button>
 </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Player Pool</label>
+                    <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Player Pool</label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all pool-btn" data-pool="all">All</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="batters">Batters</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="pitchers">Pitchers</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all pool-btn" data-pool="all">All</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="batters">Batters</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="pitchers">Pitchers</button>
                     </div>
                 </div>
                 <div>
-                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-black text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
+                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Eligibility Criteria<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Veteran</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="hof">Hall of Fame</button>
-                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="custom">Custom</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Veteran</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All Star</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="hof">Hall of Fame</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="custom">Custom</button>
                     </div>
                 </div>
                <div class="relative w-fit">
-    <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Era</label>
-    <button id="era-trigger-btn" class="w-auto min-w-[100px] flex justify-center items-center bg-white dark:bg-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-left px-3 py-2 rounded-xl transition-colors">
+    <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2 tracking-wider">Era</label>
+    <button id="era-trigger-btn" class="w-auto min-w-[100px] flex justify-center items-center bg-blue-50 dark:bg-gray-700 shadow-sm hover:bg-blue-100 dark:hover:bg-gray-600 text-left px-3 py-2 rounded-xl transition-colors">
         <span id="era-display-text" class="text-xs sm:text-sm font-semibold text-blue-600 dark:text-white">Modern</span>
         <svg class="w-4 h-4 text-gray-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
     </button>
     
     <div id="era-popover" class="hidden absolute top-0 left-full ml-2 w-56 z-50 grid grid-cols-3 gap-1 bg-white dark:bg-gray-900 p-2 rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl animate-enter">
 
-<button class="era-option col-span-1 py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent" data-era="allEras">All Eras</button>
+<button class="era-option col-span-1 py-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent" data-era="allEras">All Eras</button>
 
-<button class="era-option col-span-2 py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm" data-era="modern">Modern Era (1970+)</button>
+<button class="era-option col-span-2 py-2 rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm" data-era="modern">Modern Era (1970+)</button>
         
         </div>
 </div>
@@ -442,15 +442,15 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 <!-- Left Side: Increased top margin (mt-1), removed gap (gap-0) to tighten text -->
                 <div class="flex flex-col gap-0 mt-0.5">
                      <!-- Era Label -->
-                     <div class="h-4 flex items-center text-xs font-bold text-gray-400" id="game-era-label">Era</div>
+                     <div class="h-4 flex items-center text-xs font-bold text-gray-500 dark:text-gray-400" id="game-era-label">Era</div>
                      <!-- Pool Label -->
-                     <div id="game-cat-label" class="text-xs font-bold text-gray-400 leading-none">Category</div>
+                     <div id="game-cat-label" class="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">Category</div>
                 </div>
                 
                 <!-- Right Side: Kept gap-1 for spacing between Round and Score -->
                 <div class="text-right flex flex-col gap-1">
                     <!-- Round Label -->
-                    <div class="h-4 flex items-center justify-end text-xs font-bold text-gray-400" id="round-display">Round 1/10</div>
+                    <div class="h-4 flex items-center justify-end text-xs font-bold text-gray-500 dark:text-gray-400" id="round-display">Round 1/10</div>
                     <!-- Score -->
                     <div class="text-lg font-black leading-none transition-colors duration-300" id="score-display">0</div>
                 </div>
@@ -458,7 +458,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             <div id="ui-how-much" class="w-full">
                 <!-- Removed 'uppercase' class -->
-                <div id="player-prompt" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
+                <div id="player-prompt" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
 
                 <div class="grid grid-cols-2 gap-3 mb-6">
                     <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-900 rounded-2xl border-2 border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
@@ -476,19 +476,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 </div>
 
                 <!-- "By How Much?" Label -->
-                <div class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">By How Much?</div>
+                <div class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">By How Much?</div>
 
 
 <input type="hidden" id="min-input" value="0">
 <input type="hidden" id="max-input" value="0">
 <!-- SLIDER CONTAINER -->
-<div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4 select-none">
+<div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 select-none">
     
     <!-- Controls / Header -->
     <div class="flex justify-center items-end mb-2 gap-4 sm:gap-8">
         <!-- Min Control -->
         <div class="flex flex-col items-center gap-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MIN DIFF</span>
+            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">MIN DIFF</span>
             <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
                 <button class="slider-adj-btn" onclick="adjustSlider('min', -1)">-</button>
                 <span id="slider-display-min" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
@@ -498,7 +498,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         <!-- Max Control -->
         <div class="flex flex-col items-center gap-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MAX DIFF</span>
+            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">MAX DIFF</span>
             <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
                 <button class="slider-adj-btn" onclick="adjustSlider('max', -1)">-</button>
                 <span id="slider-display-max" class="font-black text-xl w-14 text-center tabular-nums text-blue-600 dark:text-blue-400">0</span>
@@ -554,7 +554,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     </div>
             </div>
 <div id="ui-pick-em" class="w-full hidden">
-    <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wide mb-3 mt-4">
+    <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4">
         </div>
     <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
         </div>
@@ -574,9 +574,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div id="game-over-screen" class="hidden flex-col items-center justify-center h-full text-center animate-enter pb-12">
             <div id="ribbon-emoji" class="text-8xl mb-4">🏆</div>
             <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-2">Game Over!</h2>
-            <p id="ribbon-text" class="text-lg text-gray-500 mb-4">Great effort!</p>
-            <div class="bg-white dark:bg-gray-900 px-10 py-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4 w-full max-w-xs">
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
+            <p id="ribbon-text" class="text-lg text-gray-600 mb-4">Great effort!</p>
+            <div class="bg-white dark:bg-gray-900 px-10 py-6 rounded-3xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 w-full max-w-xs">
+                <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Final Score</div>
                 <div class="text-6xl font-black text-blue-600 dark:text-blue-400" id="final-score">0</div>
             </div>
             <button id="view-breakdown-btn" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition mb-6 underline decoration-dotted">View Breakdown</button>
@@ -604,8 +604,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="breakdown-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="breakdown-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Round Breakdown</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Round Breakdown</h3>
                 <button id="close-breakdown" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500 text-xl">&times;</button>
             </div>
             <div id="round-breakdown" class="p-5"></div>
@@ -616,8 +616,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="challenge-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-popup-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Challenge Tracker</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Challenge Tracker</h3>
                 <button id="close-challenge-popup" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div id="challenge-popup-body" class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-300"></div>
@@ -628,8 +628,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="share-name-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="share-name-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Your Name</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Your Name</h3>
                 <button id="close-share-name" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-center">
@@ -644,8 +644,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="challenge-code-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-code-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Enter Challenge Code</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Enter Challenge Code</h3>
                 <button id="close-challenge-code" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-center">
@@ -660,8 +660,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="custom-info-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-info-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Custom Filters</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Custom Filters</h3>
                 <button id="close-custom-info" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div id="custom-info-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto"></div>
@@ -672,8 +672,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="cat-tooltip-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="cat-tooltip-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 id="cat-tooltip-title" class="text-lg font-black tracking-wide text-gray-800 dark:text-white"></h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 id="cat-tooltip-title" class="text-lg font-black tracking-wide text-gray-900 dark:text-white"></h3>
                 <button id="close-cat-tooltip" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div id="cat-tooltip-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-3"></div>
@@ -684,21 +684,21 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="custom-elig-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="custom-elig-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Custom Eligibility</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Custom Eligibility</h3>
                 <button id="close-custom-elig" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5">
                 <!-- Presets / Customize toggle -->
                 <div class="flex mb-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
-                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Presets</button>
-                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 dark:text-gray-400 transition-all">Customize</button>
+                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Presets</button>
+                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 transition-all">Customize</button>
                 </div>
                 <!-- Presets view -->
                 <div id="custom-presets-view">
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">Hitter Presets</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Hitter Presets</div>
                     <div id="preset-hitter-list" class="space-y-2 mb-4"></div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">Pitcher Presets</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Pitcher Presets</div>
                     <div id="preset-pitcher-list" class="space-y-2 mb-4"></div>
                     <div id="preset-combo-note" class="hidden text-[10px] text-center text-amber-600 dark:text-amber-400 font-semibold mb-3">Playing with "All Players"? Pick up to 1 hitter + 1 pitcher preset.</div>
                     <button id="apply-presets-btn" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Presets</button>
@@ -717,8 +717,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="gamemode-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="gamemode-help-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Game Modes</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Game Modes</h3>
                 <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-5 overflow-y-auto">
@@ -763,8 +763,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="elig-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="elig-help-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-black tracking-wide text-gray-800 dark:text-white">Eligibility Criteria</h3>
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <h3 class="text-lg font-black tracking-wide text-gray-900 dark:text-white">Eligibility Criteria</h3>
                 <button id="close-elig-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
             <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4 overflow-y-auto">
@@ -800,7 +800,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="rules-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="rules-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Rules &amp; Scoring</h3>
                 <button id="close-rules-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
             </div>
@@ -812,7 +812,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <span>How to Play</span>
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
-                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
+                    <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
                         <div>
                             <h4 class="font-black text-blue-600 dark:text-blue-400 uppercase text-xs tracking-widest mb-2">How Much?</h4>
                             <ol class="list-decimal ml-5 space-y-2">
@@ -856,7 +856,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <span>Scoring Breakdown</span>
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
-                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 space-y-4">
+                    <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
                         <div>
                             <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">How Much? (Max 1,000 pts/round)</h4>
                             <ul class="space-y-2">
@@ -924,7 +924,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <span>Eligibility Criteria</span>
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
-                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 text-xs space-y-4">
+                    <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-4">
                         <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
 
                         <div>
@@ -976,7 +976,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <span>Special Features</span>
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
-                    <div class="px-4 pb-4 pt-0 text-gray-500 dark:text-gray-400 text-xs space-y-3">
+                    <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-3">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
@@ -1012,7 +1012,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="leaderboard-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             
-            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 space-y-3">
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 space-y-3">
                 <div class="flex justify-between items-center">
                      <h3 class="text-sm font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">Leaderboard</h3>
                      <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
@@ -1064,7 +1064,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <div id="challenge-lb-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="challenge-lb-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
-            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
                 <div class="flex justify-between items-center">
                     <h3 id="challenge-lb-title" class="text-sm font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">Challenge Leaderboard</h3>
                     <button id="close-challenge-lb" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500">&times;</button>
@@ -2246,7 +2246,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var html = '<div>' + info.desc + '</div>';
         if (info.calc) {
             html += '<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700">';
-            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-1">Calculation</div>';
+            html += '<div class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Calculation</div>';
             html += '<div class="font-semibold text-gray-700 dark:text-gray-200 text-xs">' + info.calc + '</div>';
             html += '</div>';
         }
@@ -2355,17 +2355,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var presetsView = document.getElementById('custom-presets-view');
         var customizeView = document.getElementById('custom-customize-view');
         if (tab === 'presets') {
-            presetsBtn.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
-            presetsBtn.classList.remove('text-gray-500','dark:text-gray-400');
-            customizeBtn.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
-            customizeBtn.classList.add('text-gray-500','dark:text-gray-400');
+            presetsBtn.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            presetsBtn.classList.remove('text-gray-600','dark:text-gray-400');
+            customizeBtn.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            customizeBtn.classList.add('text-gray-600','dark:text-gray-400');
             presetsView.classList.remove('hidden');
             customizeView.classList.add('hidden');
         } else {
-            customizeBtn.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
-            customizeBtn.classList.remove('text-gray-500','dark:text-gray-400');
-            presetsBtn.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
-            presetsBtn.classList.add('text-gray-500','dark:text-gray-400');
+            customizeBtn.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            customizeBtn.classList.remove('text-gray-600','dark:text-gray-400');
+            presetsBtn.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
+            presetsBtn.classList.add('text-gray-600','dark:text-gray-400');
             customizeView.classList.remove('hidden');
             presetsView.classList.add('hidden');
         }
@@ -2433,7 +2433,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var relevantFilters = getRelevantFilters();
 
         // Build compact filter list
-        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Active Filters</div>';
+        html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Active Filters</div>';
         html += '<div class="space-y-1">';
         relevantFilters.forEach(function(f) {
             var opt = CUSTOM_STAT_OPTIONS.find(function(o) { return o.key === f.stat; });
@@ -2485,7 +2485,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     });
                 }
 
-                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1 mt-2">Player Values</div>';
+                html += '<div class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 mt-2">Player Values</div>';
                 html += '<div class="overflow-x-auto -mx-5 px-5"><table class="text-xs" style="min-width:100%"><thead><tr class="border-b border-gray-200 dark:border-gray-700">';
                 html += '<th class="py-1 text-left font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap pr-3 sticky left-0 bg-white dark:bg-gray-900 z-10">Player</th>';
                 relevantFilters.forEach(function(f) {
@@ -2552,7 +2552,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             // Show per-round comparison table
             html += '<table class="w-full text-center mb-4">';
             var opLabel = challengerName || 'Challenger';
-            html += '<thead><tr class="text-xs font-bold text-gray-400 uppercase">';
+            html += '<thead><tr class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">';
             html += '<th class="py-1">Round</th><th class="py-1">You</th><th class="py-1">' + opLabel + '</th></tr></thead><tbody>';
 
             var myRunning = 0, theirRunning = 0;
@@ -2595,10 +2595,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             // Fallback: just show challenger total score and difference
             html += '<div class="text-center space-y-4">';
-            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
+            html += '<div><div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Your Score</div>';
             html += '<div class="text-4xl font-black text-blue-600 dark:text-blue-400">' + score + '</div></div>';
             var opLabel2 = challengerName ? (challengerName + '\'s Score') : 'Challenger\'s Score';
-            html += '<div><div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">' + opLabel2 + '</div>';
+            html += '<div><div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">' + opLabel2 + '</div>';
             html += '<div class="text-4xl font-black text-purple-600 dark:text-purple-400">' + challengerScore + '</div></div>';
 
             var diff2 = score - challengerScore;
@@ -2776,8 +2776,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     // §10  ERA DECADE GRID
     // ═══════════════════════════════════════
-    var ERA_INACTIVE = 'era-option py-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent';
-    var ERA_ACTIVE   = 'era-option py-2 rounded-lg bg-white dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm';
+    var ERA_INACTIVE = 'era-option py-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs sm:text-sm font-medium transition border border-transparent';
+    var ERA_ACTIVE   = 'era-option py-2 rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white font-semibold text-xs sm:text-sm border border-transparent shadow-sm';
 
     function eraClassFor(btn, active) {
         var base = active ? ERA_ACTIVE : ERA_INACTIVE;
@@ -3116,7 +3116,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var container = document.getElementById('round-breakdown');
         if (!container) return;
         var html = '<table class="w-full text-sm border-collapse">';
-        html += '<thead><tr class="text-xs text-gray-400 uppercase tracking-wide"><th class="py-1 text-left w-8">#</th><th class="py-1 text-center">Result</th><th class="py-1 text-right">Points</th></tr></thead><tbody>';
+        html += '<thead><tr class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide"><th class="py-1 text-left w-8">#</th><th class="py-1 text-center">Result</th><th class="py-1 text-right">Points</th></tr></thead><tbody>';
         var total = 0;
         for (var i = 0; i < roundScores.length; i++) {
             var pts = roundScores[i] || 0;
@@ -3177,31 +3177,31 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         // Reset game mode buttons
         document.querySelectorAll('.gamemode-btn').forEach(function(b) {
-            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-            b.classList.add('text-gray-500','dark:text-gray-400');
+            b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-600','dark:text-gray-400');
             if (b.dataset.mode === 'howMuch') {
-                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                b.classList.remove('text-gray-500','dark:text-gray-400');
+                b.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-600','dark:text-gray-400');
             }
         });
 
         // Reset pool buttons
         document.querySelectorAll('.pool-btn').forEach(function(b) {
-            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-            b.classList.add('text-gray-500','dark:text-gray-400');
+            b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-600','dark:text-gray-400');
             if (b.dataset.pool === 'all') {
-                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                b.classList.remove('text-gray-500','dark:text-gray-400');
+                b.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-600','dark:text-gray-400');
             }
         });
 
         // Reset eligibility buttons
         document.querySelectorAll('.elig-btn').forEach(function(b) {
-            b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-            b.classList.add('text-gray-500','dark:text-gray-400');
+            b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+            b.classList.add('text-gray-600','dark:text-gray-400');
             if (b.dataset.elig === 'standard') {
-                b.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                b.classList.remove('text-gray-500','dark:text-gray-400');
+                b.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                b.classList.remove('text-gray-600','dark:text-gray-400');
             }
         });
 
@@ -3321,7 +3321,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var label = poolLabel[playerPool] || 'All Players';
         label = (eligLabel[eligibility] || 'Veteran') + ' \u2022 ' + label;
         setCatLabel(label);
-        dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
 
         var catName = getCurrentCat(catKey).label;
         if (isLowerBetter) {
@@ -3329,7 +3329,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             dom.playerPrompt.innerHTML = 'Whose <span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + catKey + '">' + catName + '</span> is HIGHER?';
         }
-        dom.playerPrompt.className = 'text-center text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 mt-4';
+        dom.playerPrompt.className = 'text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-3 mt-4';
         var catSpan = dom.playerPrompt.querySelector('[data-cat-key]');
         if (catSpan) catSpan.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
         updateScoreColor(score);
@@ -3570,7 +3570,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var lbl = poolLbl[playerPool] || 'All Players';
         lbl = (eligLbl[eligibility] || 'Veteran') + ' \u2022 ' + lbl;
         setCatLabel(lbl);
-        dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
         dom.playerPrompt.textContent = '';
         sbsPicks = new Array(10).fill(null);
 
@@ -3879,7 +3879,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         var eligLabelMap = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
         headerText = (eligLabelMap[eligibility] || 'Veteran') + ' \u2022 ' + headerText;
         setCatLabel(headerText);
-        dom.catLabel.className = 'text-xs font-bold text-gray-400 tracking-wide mt-1';
+        dom.catLabel.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide mt-1';
 
         var op = catConfigR.lowerBetter ? '\u2264' : '\u2265';
         var displayThresh;
@@ -5114,11 +5114,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             btn.addEventListener('click', function() {
                 var self = this;
                 document.querySelectorAll('.gamemode-btn').forEach(function(b) {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
+                    b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-600','dark:text-gray-400');
                 });
-                self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                self.classList.remove('text-gray-500','dark:text-gray-400');
+                self.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                self.classList.remove('text-gray-600','dark:text-gray-400');
                 gameMode = self.dataset.mode;
 
             });
@@ -5129,11 +5129,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             btn.addEventListener('click', function() {
                 var self = this;
                 document.querySelectorAll('.pool-btn').forEach(function(b) {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
+                    b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-600','dark:text-gray-400');
                 });
-                self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                self.classList.remove('text-gray-500','dark:text-gray-400');
+                self.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                self.classList.remove('text-gray-600','dark:text-gray-400');
                 playerPool = self.dataset.pool;
 
             });
@@ -5144,11 +5144,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             btn.addEventListener('click', function() {
                 var self = this;
                 document.querySelectorAll('.elig-btn').forEach(function(b) {
-                    b.classList.remove('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                    b.classList.add('text-gray-500','dark:text-gray-400');
+                    b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                    b.classList.add('text-gray-600','dark:text-gray-400');
                 });
-                self.classList.add('bg-white','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
-                self.classList.remove('text-gray-500','dark:text-gray-400');
+                self.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
+                self.classList.remove('text-gray-600','dark:text-gray-400');
                 eligibility = self.dataset.elig;
 
                 if (eligibility === 'custom') {
