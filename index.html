@@ -562,7 +562,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             <div class="mt-2">
                 <button id="submit-btn" disabled class="primary-btn">Lock In</button>
-                <button id="next-btn" disabled class="primary-btn mt-2 hidden">Next Round</button>
+                <button id="next-btn" disabled class="primary-btn hidden">Next Round</button>
             </div>
 
             <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
@@ -691,16 +691,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div class="p-5">
                 <!-- Presets / Customize toggle -->
                 <div class="flex mb-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
-                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Presets</button>
-                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 transition-all">Customize</button>
+                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Customize</button>
+                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 transition-all">Presets</button>
                 </div>
                 <!-- Presets view -->
-                <div id="custom-presets-view">
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-2">Hitter Presets</div>
+                <div id="custom-presets-view" class="hidden">
+                    <div class="flex mb-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+                        <button id="preset-subtab-hitter" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Batters</button>
+                        <button id="preset-subtab-pitcher" class="flex-1 py-1.5 text-xs font-bold rounded-md text-gray-600 dark:text-gray-400 transition-all">Pitchers</button>
+                    </div>
                     <div id="preset-hitter-list" class="space-y-2 mb-4"></div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-2">Pitcher Presets</div>
-                    <div id="preset-pitcher-list" class="space-y-2 mb-4"></div>
-                    <div id="preset-combo-note" class="hidden text-[10px] text-center text-amber-600 dark:text-amber-400 font-semibold mb-3">Playing with "All Players"? Pick up to 1 hitter + 1 pitcher preset.</div>
+                    <div id="preset-pitcher-list" class="space-y-2 mb-4 hidden"></div>
                     <button id="apply-presets-btn" class="primary-btn bg-blue-600 hover:bg-blue-700 w-full">Apply Presets</button>
                 </div>
                 <!-- Customize view (existing) -->
@@ -1370,9 +1371,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             { stat: 'careerHR', value: 100, dir: 'max' }
         ]},
         { id: 'swing_for_fences', name: 'Swing for the Fences', type: 'hitter', desc: 'High XBH rate, moderate WAR, long careers', filters: [
-            { stat: 'careerXBHRate', value: 0.45, dir: 'min' },
+            { stat: 'careerXBHRate', value: 0.40, dir: 'min' },
             { stat: 'careerWARBat', value: 30, dir: 'max' },
             { stat: 'seasons', value: 10, dir: 'min' }
+        ]},
+        { id: 'pop_and_patience', name: 'Pop & Patience', type: 'hitter', desc: 'Power hitters who made contact', filters: [
+            { stat: 'careerHR', value: 250, dir: 'min' },
+            { stat: 'seasonHighKBat', value: 100, dir: 'max' }
         ]},
         { id: 'power_precision', name: 'Power & Precision', type: 'pitcher', desc: 'Elite command pitchers', filters: [
             { stat: 'careerKBB', value: 3, dir: 'min' },
@@ -1385,6 +1390,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     ];
 
     var selectedPresets = { hitter: null, pitcher: null };
+    var presetSubTab = 'hitter';
 
     var SBS_CATS_BAT = [
        {key:'careerWARBat', label:'Career WAR'},
@@ -2289,50 +2295,28 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             card.addEventListener('click', function() {
                 if (preset.type === 'hitter') {
                     selectedPresets.hitter = selectedPresets.hitter === preset.id ? null : preset.id;
+                    selectedPresets.pitcher = null;
                 } else {
                     selectedPresets.pitcher = selectedPresets.pitcher === preset.id ? null : preset.id;
+                    selectedPresets.hitter = null;
                 }
                 renderPresets();
             });
             if (preset.type === 'hitter') hitterList.appendChild(card);
             else pitcherList.appendChild(card);
         });
-        // Show combo note if player pool is "all"
-        var comboNote = document.getElementById('preset-combo-note');
-        if (playerPool === 'all') comboNote.classList.remove('hidden');
-        else comboNote.classList.add('hidden');
     }
 
     function applyPresets() {
-        var filters = [];
-        if (selectedPresets.hitter) {
-            var hp = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.hitter; });
-            if (hp) filters = filters.concat(hp.filters);
-        }
-        if (selectedPresets.pitcher) {
-            var pp = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.pitcher; });
-            if (pp) filters = filters.concat(pp.filters);
-        }
-        if (filters.length === 0) {
+        var selectedId = selectedPresets.hitter || selectedPresets.pitcher;
+        if (!selectedId) {
             showAlert('Select at least one preset.', 'bg-red-500');
             return;
         }
-        if (playerPool !== 'all' && selectedPresets.hitter && selectedPresets.pitcher) {
-            showAlert('Pick one preset when using Batters or Pitchers pool.', 'bg-red-500');
-            return;
-        }
-        customFilters = filters;
+        var preset = CUSTOM_PRESETS.find(function(p) { return p.id === selectedId; });
+        customFilters = preset ? preset.filters.slice() : [];
         closeCustomEligModal();
-        var names = [];
-        if (selectedPresets.hitter) {
-            var h = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.hitter; });
-            if (h) names.push(h.name);
-        }
-        if (selectedPresets.pitcher) {
-            var p2 = CUSTOM_PRESETS.find(function(p) { return p.id === selectedPresets.pitcher; });
-            if (p2) names.push(p2.name);
-        }
-        showAlert('Preset' + (names.length > 1 ? 's' : '') + ' applied: ' + names.join(' + '), 'bg-blue-600');
+        showAlert('Preset applied: ' + (preset ? preset.name : ''), 'bg-blue-600');
     }
 
     function openCustomEligModal() {
@@ -2343,8 +2327,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             container.appendChild(createFilterRow());
         }
-        // Show presets tab by default
-        switchCustomTab('presets');
+        // Show customize tab by default
+        presetSubTab = 'hitter';
+        switchCustomTab('customize');
         renderPresets();
         document.getElementById('custom-elig-modal').classList.remove('hidden');
     }
@@ -2361,6 +2346,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             customizeBtn.classList.add('text-gray-600','dark:text-gray-400');
             presetsView.classList.remove('hidden');
             customizeView.classList.add('hidden');
+            switchPresetSubTab(presetSubTab);
         } else {
             customizeBtn.classList.add('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm');
             customizeBtn.classList.remove('text-gray-600','dark:text-gray-400');
@@ -2369,6 +2355,34 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             customizeView.classList.remove('hidden');
             presetsView.classList.add('hidden');
         }
+    }
+
+    function switchPresetSubTab(tab) {
+        presetSubTab = tab;
+        var hitterBtn = document.getElementById('preset-subtab-hitter');
+        var pitcherBtn = document.getElementById('preset-subtab-pitcher');
+        var hitterList = document.getElementById('preset-hitter-list');
+        var pitcherList = document.getElementById('preset-pitcher-list');
+        var activeAdd = ['bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm'];
+        var activeRemove = ['text-gray-600','dark:text-gray-400'];
+        if (tab === 'hitter') {
+            hitterBtn.classList.add.apply(hitterBtn.classList, activeAdd);
+            hitterBtn.classList.remove.apply(hitterBtn.classList, activeRemove);
+            pitcherBtn.classList.remove.apply(pitcherBtn.classList, activeAdd);
+            pitcherBtn.classList.add.apply(pitcherBtn.classList, activeRemove);
+            hitterList.classList.remove('hidden');
+            pitcherList.classList.add('hidden');
+            selectedPresets.pitcher = null;
+        } else {
+            pitcherBtn.classList.add.apply(pitcherBtn.classList, activeAdd);
+            pitcherBtn.classList.remove.apply(pitcherBtn.classList, activeRemove);
+            hitterBtn.classList.remove.apply(hitterBtn.classList, activeAdd);
+            hitterBtn.classList.add.apply(hitterBtn.classList, activeRemove);
+            pitcherList.classList.remove('hidden');
+            hitterList.classList.add('hidden');
+            selectedPresets.hitter = null;
+        }
+        renderPresets();
     }
 
     function closeCustomEligModal() {
@@ -4994,6 +5008,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (container.children.length === 0) container.appendChild(createFilterRow());
         });
         document.getElementById('apply-presets-btn').addEventListener('click', applyPresets);
+        document.getElementById('preset-subtab-hitter').addEventListener('click', function() { switchPresetSubTab('hitter'); });
+        document.getElementById('preset-subtab-pitcher').addEventListener('click', function() { switchPresetSubTab('pitcher'); });
 
         document.getElementById('close-custom-info').addEventListener('click', function() {
             document.getElementById('custom-info-popup').classList.add('hidden');
