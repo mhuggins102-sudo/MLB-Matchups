@@ -691,11 +691,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             <div class="p-5">
                 <!-- Presets / Customize toggle -->
                 <div class="flex mb-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
-                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Customize</button>
-                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 transition-all">Presets</button>
+                    <button id="custom-tab-presets" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Presets</button>
+                    <button id="custom-tab-customize" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 transition-all">Customize</button>
                 </div>
                 <!-- Presets view -->
-                <div id="custom-presets-view" class="hidden">
+                <div id="custom-presets-view">
                     <div class="flex mb-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
                         <button id="preset-subtab-hitter" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all">Batters</button>
                         <button id="preset-subtab-pitcher" class="flex-1 py-1.5 text-xs font-bold rounded-md text-gray-600 dark:text-gray-400 transition-all">Pitchers</button>
@@ -2315,6 +2315,22 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
         var preset = CUSTOM_PRESETS.find(function(p) { return p.id === selectedId; });
         customFilters = preset ? preset.filters.slice() : [];
+        // Sync the player pool to match the preset type
+        if (preset) {
+            var newPool = preset.type === 'hitter' ? 'batters' : 'pitchers';
+            playerPool = newPool;
+            document.querySelectorAll('.pool-btn').forEach(function(b) {
+                var active = b.dataset.pool === newPool;
+                b.classList.toggle('bg-blue-50', active);
+                b.classList.toggle('dark:bg-gray-700', active);
+                b.classList.toggle('text-blue-600', active);
+                b.classList.toggle('dark:text-white', active);
+                b.classList.toggle('shadow-sm', active);
+                b.classList.toggle('font-semibold', active);
+                b.classList.toggle('text-gray-600', !active);
+                b.classList.toggle('dark:text-gray-400', !active);
+            });
+        }
         closeCustomEligModal();
         showAlert('Preset applied: ' + (preset ? preset.name : ''), 'bg-blue-600');
     }
@@ -2327,9 +2343,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         } else {
             container.appendChild(createFilterRow());
         }
-        // Show customize tab by default
+        // Show presets tab by default
         presetSubTab = 'hitter';
-        switchCustomTab('customize');
+        switchCustomTab('presets');
         renderPresets();
         document.getElementById('custom-elig-modal').classList.remove('hidden');
     }
@@ -2975,6 +2991,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     function validateCustomPool() {
         if (eligibility !== 'custom') return true;
         if (isPlayingChallenge) return true;
+        if (customFilters.length === 0) {
+            showAlert('Please select at least one custom setting first.', 'bg-red-500');
+            return false;
+        }
 
         var hitCount = 0, pitCount = 0;
         players.forEach(function(p) {
@@ -3051,7 +3071,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.leaderboardBtn.classList.add('hidden');
         } else {
             dailyBtn.classList.add('hidden');
-            dom.leaderboardBtn.classList.remove('hidden');
+            if (eligibility === 'custom') {
+                dom.leaderboardBtn.classList.add('hidden');
+            } else {
+                dom.leaderboardBtn.classList.remove('hidden');
+            }
         }
 
         startRound();
