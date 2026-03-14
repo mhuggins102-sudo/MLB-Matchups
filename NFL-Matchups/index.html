@@ -86,6 +86,7 @@
         html.dark .pickem-card.revealed.missed { background:rgba(120,53,15,0.3)!important; border-color:#f59e0b!important; color:#fcd34d!important; }
         .stat-val { font-size:0.65rem; color:#6b7280; font-weight:700; margin-top:0.15rem; }
         html.dark .stat-val { color:#9ca3af; }
+        .pickem-card.revealed .stat-val { color: inherit !important; }
         .leaderboard-row:nth-child(even) { background-color:rgba(0,0,0,0.05); }
         html.dark .leaderboard-row:nth-child(even) { background-color:rgba(255,255,255,0.02); }
         .player-card { border:2px solid #d1d5db; }
@@ -100,7 +101,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </button>
         <button id="rules-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </button>
         <button id="leaderboard-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
@@ -111,7 +112,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
         </button>
         <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
         <div id="settings-popover" class="hidden absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 animate-enter p-2">
             <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer" id="theme-toggle-row">
@@ -254,11 +255,6 @@
                 <div id="sbs-name-a" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
                 <div class="text-xs font-black text-gray-400 px-2">VS</div>
                 <div id="sbs-name-b" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
-            </div>
-            <div id="sbs-score-row" class="flex justify-between items-center mb-3 px-1">
-                <div id="sbs-wins-a" class="text-2xl font-black text-green-600 dark:text-green-400">0</div>
-                <div class="text-xs font-bold text-gray-400">WINS</div>
-                <div id="sbs-wins-b" class="text-2xl font-black text-green-600 dark:text-green-400">0</div>
             </div>
             <div id="sbs-grid-container" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-300 dark:border-gray-800 p-3 mb-4 space-y-2"></div>
             <button id="sbs-submit-btn" class="primary-btn" disabled>Lock In</button>
@@ -589,6 +585,7 @@ var correctPick     = null;
 var hasUsedReroll   = false;
 var usedPlayerIDs   = new Set();
 var categoryHistory = {};
+var userPickHowMuch = null;
 var sbsPicks        = new Array(10).fill(null);
 var pickEmState     = {threshold:0, correctIDs:new Set(), picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, roundOver:false};
 var sliderState     = {min:0, max:0, rangeMax:100, step:1, minLimit:0};
@@ -940,13 +937,15 @@ function startRound() {
     if (round > 10) { endGame(); return; }
     dom.roundDisp.textContent = 'Round ' + round + '/10';
     dom.eraLabel.textContent = {modern:'Modern Era',classic:'Classic Era',allEras:'All Eras'}[eraMode] || '';
+    var eligLabel = {standard:'Veteran', allStar:'All-Pro', hof:'HOF'}[eligibility] || eligibility;
+    var poolLabel = {all:'All', QB:'QBs', RB:'RBs', skill:'WR/TE'}[playerPool] || playerPool;
+    dom.catLabel.textContent = eligLabel + ' · ' + poolLabel;
 
     if (gameMode === 'howMuch') {
         var match = generateHowMuch();
         if (!match) { showAlert('Not enough players for these settings','bg-red-500'); return; }
         A = match.pA; B = match.pB; catKey = match.cat;
         var cat = BASE_CATS[catKey];
-        dom.catLabel.textContent = cat.label;
         dom.nameA.textContent = A.name;
         dom.nameB.textContent = B.name;
         dom.statA.textContent = '--'; dom.statA.classList.add('hidden');
@@ -956,6 +955,7 @@ function startRound() {
         dom.prompt.textContent = 'Whose ' + cat.label + ' is Higher?';
         if (cat.lowerBetter) dom.prompt.textContent = 'Whose ' + cat.label + ' is Lower?';
         correctPick = null;
+        userPickHowMuch = null;
         var sA = getStat(A, catKey), sB = getStat(B, catKey);
         trueDiff = Math.abs(sA - sB);
         var dMin = cat.dMin, dMax = cat.dMin * 5;
@@ -972,13 +972,11 @@ function startRound() {
         var cats = match.pos === 'QB' ? SBS_CATS_QB : (match.pos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
         dom.sbsNameA.textContent = A.name;
         dom.sbsNameB.textContent = B.name;
-        dom.sbsWinsA.textContent = '0'; dom.sbsWinsB.textContent = '0';
         sbsPicks = new Array(cats.length).fill(null);
         renderShowdownGrid(cats);
         dom.sbsSubmitBtn.disabled = true;
         dom.sbsSubmitBtn.textContent = 'Lock In';
         dom.sbsSubmitBtn.onclick = lockInShowdown;
-        dom.catLabel.textContent = 'Showdown';
         showUI('sideBySide');
     } else if (gameMode === 'pickEm') {
         var match = generatePickEm();
@@ -989,7 +987,6 @@ function startRound() {
         var op = cc.lowerBetter ? '≤' : '≥';
         dom.pickemThresh.textContent = op + ' ' + formatStat(match.threshold, catKey);
         dom.pickemCatLabel.textContent = cc.label;
-        dom.catLabel.textContent = cc.label;
         var grid = dom.pickemGrid;
         grid.innerHTML = '';
         match.cards.forEach(function(item) {
@@ -1012,7 +1009,7 @@ function showUI(mode) {
     dom.uiHowMuch.classList.add('hidden');
     dom.uiShowdown.classList.add('hidden');
     dom.uiPickem.classList.add('hidden');
-    dom.homeBtn.classList.add('hidden');
+    dom.homeBtn.classList.remove('hidden');
     dom.rerollBtn.classList.remove('hidden');
     dom.startScreen.classList.add('hidden');
     dom.gameScreen.classList.remove('hidden');
@@ -1024,24 +1021,12 @@ function showUI(mode) {
 }
 
 function onCardClick(which) {
-    if (correctPick !== null) return; // already picked
-    var sA = getStat(A, catKey), sB = getStat(B, catKey);
-    var cat = BASE_CATS[catKey];
-    if (cat.lowerBetter) {
-        correctPick = sA < sB ? 'A' : 'B';
-    } else {
-        correctPick = sA > sB ? 'A' : 'B';
-    }
-    var isCorrect = which === correctPick;
-    var winCard = which === 'A' ? dom.cardA : dom.cardB;
-    var loseCard = which === 'A' ? dom.cardB : dom.cardA;
-    winCard.className = winCard.className + (isCorrect ? ' border-green-500 bg-green-50 dark:bg-green-900/20' : ' border-red-500 bg-red-50 dark:bg-red-900/20');
-    if (!isCorrect) {
-        loseCard.className = loseCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
-        roundResults.push({round:round, pts:0, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:false});
-        finishRound(0);
-        return;
-    }
+    if (userPickHowMuch !== null) return; // already picked
+    userPickHowMuch = which;
+    var selectedCard = which === 'A' ? dom.cardA : dom.cardB;
+    var otherCard    = which === 'A' ? dom.cardB : dom.cardA;
+    selectedCard.className = selectedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
+    otherCard.style.opacity = '0.6';
     dom.submitBtn.disabled = false;
     dom.prompt.textContent = 'By How Much?';
 }
@@ -1053,10 +1038,22 @@ function lockInHowMuch() {
         return;
     }
     var diff = trueDiff;
-    var pts = 0;
-    if (correctPick !== null) {
-        pts = calcHowMuchScore(diff, sliderState.min, sliderState.max);
+    // Determine actual correct answer now
+    var sA = getStat(A, catKey), sB = getStat(B, catKey);
+    var cat = BASE_CATS[catKey];
+    correctPick = (cat.lowerBetter ? sA < sB : sA > sB) ? 'A' : 'B';
+    var isCorrect = userPickHowMuch === correctPick;
+    // Apply correct/incorrect card styling
+    var pickedCard   = userPickHowMuch === 'A' ? dom.cardA : dom.cardB;
+    var unpickedCard = userPickHowMuch === 'A' ? dom.cardB : dom.cardA;
+    unpickedCard.style.opacity = '1';
+    if (isCorrect) {
+        pickedCard.className = pickedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
+    } else {
+        pickedCard.className = pickedCard.className.replace(' border-green-500 bg-green-50 dark:bg-green-900/20', '') + ' border-red-500 bg-red-50 dark:bg-red-900/20';
+        unpickedCard.className = unpickedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
     }
+    var pts = isCorrect ? calcHowMuchScore(diff, sliderState.min, sliderState.max) : 0;
     // Show answer pin
     var pct = Math.min(100, (diff / sliderState.rangeMax) * 100);
     dom.pin.style.left = pct + '%';
@@ -1071,7 +1068,7 @@ function lockInHowMuch() {
     // Make names clickable
     dom.nameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
     dom.nameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
-    roundResults.push({round:round, pts:pts, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:correctPick!==null, diff:diff, min:sliderState.min, max:sliderState.max});
+    roundResults.push({round:round, pts:pts, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:isCorrect, diff:diff, min:sliderState.min, max:sliderState.max});
     finishRound(pts);
 }
 
@@ -1098,11 +1095,11 @@ function renderShowdownGrid(cats) {
         labelEl.textContent = cat.label;
         var cellA = document.createElement('div');
         cellA.className = 'sbs-cell';
-        cellA.textContent = getStat(A, cat.key) ? formatStat(getStat(A, cat.key), cat.key) : '?';
+        cellA.textContent = '?';
         cellA.dataset.idx = i; cellA.dataset.which = 'A';
         var cellB = document.createElement('div');
         cellB.className = 'sbs-cell';
-        cellB.textContent = getStat(B, cat.key) ? formatStat(getStat(B, cat.key), cat.key) : '?';
+        cellB.textContent = '?';
         cellB.dataset.idx = i; cellB.dataset.which = 'B';
         cellA.addEventListener('click', function() { onSBSCellClick(i, 'A', cats); });
         cellB.addEventListener('click', function() { onSBSCellClick(i, 'B', cats); });
@@ -1118,10 +1115,6 @@ function onSBSCellClick(idx, which, cats) {
     var cells = rows[idx].querySelectorAll('.sbs-cell');
     var pickedCell = which === 'A' ? cells[0] : cells[1];
     pickedCell.classList.add('selected');
-    // Update wins display
-    var wA = sbsPicks.filter(function(p) { return p === 'A'; }).length;
-    var wB = sbsPicks.filter(function(p) { return p === 'B'; }).length;
-    dom.sbsWinsA.textContent = wA; dom.sbsWinsB.textContent = wB;
     var allPicked = sbsPicks.slice(0, cats.length).every(function(p) { return p !== null; });
     if (allPicked) dom.sbsSubmitBtn.disabled = false;
 }
@@ -1158,8 +1151,6 @@ function lockInShowdown() {
         }
     });
     var pts = Math.round((correct / cats.length) * 1000);
-    dom.sbsWinsA.textContent = sbsPicks.filter(function(p) { return p === 'A'; }).length;
-    dom.sbsWinsB.textContent = sbsPicks.filter(function(p) { return p === 'B'; }).length;
     roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
     score += pts;
     dom.scoreDisp.textContent = score;
