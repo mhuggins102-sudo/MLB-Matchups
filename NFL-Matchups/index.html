@@ -126,6 +126,14 @@
                 <span class="text-sm font-semibold">Animations</span>
                 <div id="anim-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
             </div>
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="format-toggle-row">
+                <span class="text-sm font-semibold">Number Format</span>
+                <div id="format-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">.12</div>
+            </div>
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="dead-zone-toggle-row">
+                <span class="text-sm font-semibold">Dead Zone</span>
+                <div id="dead-zone-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
+            </div>
             <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1 hidden" id="clear-screen-name-row">
                 <span class="text-sm font-semibold">Clear Name</span>
                 <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]"></div>
@@ -571,6 +579,8 @@ var SBS_CATS_TE = SBS_CATS_WR; // TEs share same categories
 // STATE
 // ═══════════════════════════════════════
 var useAnimations   = localStorage.getItem('useAnimations') !== 'false';
+var useWholeNumbers  = localStorage.getItem('useWholeNumbers') === 'true';
+var deadZoneEnabled  = localStorage.getItem('deadZoneEnabled') !== 'false';
 var gameMode        = 'howMuch';
 var playerPool      = 'all';
 var eligibility     = 'standard';
@@ -923,11 +933,14 @@ function shuffle(arr) {
 function calcHowMuchScore(diff, min, max) {
     if (diff < min || diff > max) return 0;
     var span = max - min;
-    if (span <= 0) return 500;
+    var safeSpan = sliderState.rangeMax - sliderState.minLimit;
+    if (safeSpan <= 0) return 500;
+    var rangeWidth = span;
+    var norm = Math.max(0, (safeSpan - rangeWidth) / safeSpan);
+    var rangePts = Math.round(800 * Math.pow(norm, 2));
     var bull = BASE_BULL[catKey] || (sliderState.rangeMax * 0.05);
-    if (span <= bull * 2) return 500;
-    var tightnessRatio = 1 - (span / sliderState.rangeMax);
-    return Math.round(100 + tightnessRatio * 300);
+    var bullPts = (span <= bull * 2) ? 100 : 0;
+    return 200 + rangePts + bullPts;
 }
 
 // ═══════════════════════════════════════
@@ -1150,7 +1163,8 @@ function lockInShowdown() {
             (correctPick2 === 'A' ? cellA : cellB).classList.add('correct');
         }
     });
-    var pts = Math.round((correct / cats.length) * 1000);
+    var sbsScoreTable = [0, 0, 0, 0, 0, 0, 100, 250, 450, 700, 1000];
+    var pts = sbsScoreTable[Math.min(correct, 10)];
     roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
     score += pts;
     dom.scoreDisp.textContent = score;
