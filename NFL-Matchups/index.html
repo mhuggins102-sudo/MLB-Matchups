@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>NFL Matchups</title>
+    <meta property="og:title" content="NFL Matchups">
+    <meta property="og:description" content="The Ultimate NFL Stat Estimation Game.">
+    <meta property="og:type" content="website">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NFL Matchups">
+    <script data-cfasync="false">
+        if (localStorage.getItem('darkMode') !== 'disabled') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
+    <script data-cfasync="false">tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        .hidden { display: none !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap');
+        :root {
+            --color-primary: #16a34a;
+            --color-accent: #f59e0b;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f97316;
+            --color-bronze: #cd7f32;
+            --color-silver: #708090;
+            --color-gold: #ffd700;
+            --color-platinum: #80e0e0;
+        }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        @keyframes fade-in-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+        .animate-enter { animation: fade-in-up 0.3s ease-out forwards; }
+        @keyframes score-pop { 0%{transform:scale(1);}50%{transform:scale(1.5);}100%{transform:scale(1);} }
+        .animate-score-pop { animation: score-pop 0.4s ease-out; }
+        @keyframes text-pop { 0%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1.3);}100%{opacity:1;transform:scale(1);} }
+        .animate-text-pop { animation: text-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
+        .score-bronze { color: var(--color-bronze); }
+        .score-silver { color: var(--color-silver); }
+        .score-gold { color: var(--color-gold); }
+        .score-platinum { color: var(--color-platinum); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .primary-btn {
+            width:100%; padding:1rem 0; background-color:var(--color-primary);
+            color:white; font-weight:700; font-size:1.125rem; border-radius:1rem;
+            box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);
+            transition-property:transform,opacity,background-color; transition-duration:150ms;
+            border:none; cursor:pointer;
+        }
+        .primary-btn:active:not(:disabled) { transform:scale(0.98); }
+        .primary-btn:disabled { background-color:#d1d5db; color:#6b7280; box-shadow:none; cursor:not-allowed; opacity:1; }
+        html.dark .primary-btn:disabled { background-color:#1f2937; color:#9ca3af; }
+        details > summary { list-style:none; cursor:pointer; }
+        details > summary::-webkit-details-marker { display:none; }
+        .sbs-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.25rem; align-items:center; }
+        .sbs-row-label { font-size:0.65rem; font-weight:800; text-transform:uppercase; color:#4b5563; text-align:left; line-height:1.1; }
+        html.dark .sbs-row-label { color:#9ca3af; }
+        .sbs-cell { height:2rem; border-radius:0.5rem; background-color:#f3f4f6; border:2px solid #d1d5db; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:600; font-size:0.75rem; color:#4b5563; transition:all 0.15s; }
+        html.dark .sbs-cell { background-color:#1f2937; color:#9ca3af; border-color:transparent; }
+        .sbs-cell.selected { border-color:var(--color-primary); background-color:#f0fdf4; color:var(--color-primary); font-weight:700; }
+        html.dark .sbs-cell.selected { background-color:rgba(22,163,74,0.2); border-color:#4ade80; color:#4ade80; }
+        .sbs-cell.correct { background-color:#dcfce7!important; border-color:#16a34a!important; color:#166534!important; font-weight:800; }
+        html.dark .sbs-cell.correct { background-color:rgba(20,83,45,0.4)!important; border-color:#22c55e!important; color:#86efac!important; }
+        .sbs-cell.incorrect { background-color:#fee2e2!important; border-color:#ef4444!important; color:#b91c1c!important; font-weight:800; }
+        html.dark .sbs-cell.incorrect { background-color:rgba(127,29,29,0.4)!important; border-color:#ef4444!important; color:#fca5a5!important; }
+        .slider-adj-btn { width:28px; height:28px; border-radius:8px; background-color:#f3f4f6; color:#4b5563; font-weight:800; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s; user-select:none; }
+        .slider-adj-btn:active { background-color:#d1d5db; transform:scale(0.95); }
+        html.dark .slider-adj-btn { background-color:#374151; color:#e5e7eb; }
+        #slider-touch-area { touch-action:none; }
+        .thumb-active { transform:translate(-50%,-50%) scale(1.15)!important; cursor:grabbing!important; }
+        .stripe-pattern { background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px); }
+        .pickem-card { background:white; border:2px solid #e5e7eb; border-radius:0.75rem; padding:0.5rem 0.25rem; text-align:center; cursor:pointer; transition:all 0.15s; font-size:0.7rem; font-weight:600; color:#374151; }
+        html.dark .pickem-card { background:#1f2937; border-color:#374151; color:#d1d5db; }
+        .pickem-card:active:not(.revealed) { transform:scale(0.96); }
+        .pickem-card.selected { border-color:var(--color-primary); background:#f0fdf4; color:var(--color-primary); }
+        html.dark .pickem-card.selected { background:rgba(22,163,74,0.15); border-color:#4ade80; color:#4ade80; }
+        .pickem-card.revealed.correct { border-color:#16a34a!important; background:#dcfce7!important; color:#166534!important; }
+        html.dark .pickem-card.revealed.correct { background:rgba(20,83,45,0.4)!important; border-color:#22c55e!important; color:#86efac!important; }
+        .pickem-card.revealed.incorrect { border-color:#ef4444!important; background:#fee2e2!important; color:#991b1b!important; }
+        html.dark .pickem-card.revealed.incorrect { background:rgba(127,29,29,0.4)!important; border-color:#ef4444!important; color:#fca5a5!important; }
+        .pickem-card.revealed.missed { border-color:#f59e0b!important; background:#fef3c7!important; color:#92400e!important; }
+        html.dark .pickem-card.revealed.missed { background:rgba(120,53,15,0.3)!important; border-color:#f59e0b!important; color:#fcd34d!important; }
+        .stat-val { font-size:0.65rem; color:#6b7280; font-weight:700; margin-top:0.15rem; }
+        html.dark .stat-val { color:#9ca3af; }
+        .leaderboard-row:nth-child(even) { background-color:rgba(0,0,0,0.05); }
+        html.dark .leaderboard-row:nth-child(even) { background-color:rgba(255,255,255,0.02); }
+        .player-card { border:2px solid #d1d5db; }
+        html.dark .player-card { border-color:transparent; }
+    </style>
+</head>
+<body class="bg-gray-200 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 h-[100dvh] flex flex-col overflow-hidden">
+
+<header class="flex-none flex justify-between items-center px-5 py-3 z-50 w-full max-w-md mx-auto bg-gray-200/90 dark:bg-gray-950/90 backdrop-blur-sm">
+    <div class="flex items-center gap-1">
+        <button id="home-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400 hidden" aria-label="Home">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+        <button id="rules-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </button>
+        <button id="leaderboard-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </button>
+    </div>
+    <div class="flex items-center gap-2 relative">
+        <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+        </button>
+        <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+        <div id="settings-popover" class="hidden absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 animate-enter p-2">
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer" id="theme-toggle-row">
+                <span class="text-sm font-semibold">Theme</span>
+                <div class="flex items-center">
+                    <svg id="icon-sun" class="w-5 h-5 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="icon-moon" class="hidden w-5 h-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1" id="anim-toggle-row">
+                <span class="text-sm font-semibold">Animations</span>
+                <div id="anim-indicator" class="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">ON</div>
+            </div>
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer mt-1 hidden" id="clear-screen-name-row">
+                <span class="text-sm font-semibold">Clear Name</span>
+                <div id="screen-name-indicator" class="text-xs font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded truncate max-w-[80px]"></div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-md mx-auto px-5 overflow-y-auto no-scrollbar relative">
+    <div id="custom-alert" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white border border-green-700 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-0 pointer-events-none transition-all duration-300 text-center max-w-[calc(100%-2.5rem)]"></div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="flex flex-col gap-6 w-full pt-4">
+        <div class="text-center space-y-1 mb-2 mt-4">
+            <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">NFL<span class="text-green-600">Matchups</span></h2>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 space-y-6">
+            <div>
+                <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Game Mode
+                    <button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-green-500 hover:border-green-400 transition leading-none">?</button>
+                </label>
+                <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="pickEm">Pick 'Em</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Player Pool</label>
+                <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all pool-btn" data-pool="all">All</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="QB">QBs</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="RB">RBs</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn" data-pool="skill">WR/TE</button>
+                </div>
+            </div>
+            <div>
+                <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Eligibility
+                    <button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-green-500 hover:border-green-400 transition leading-none">?</button>
+                </label>
+                <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all elig-btn" data-elig="standard">Veteran</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="allStar">All-Pro</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn" data-elig="hof">HOF</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Era</label>
+                <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all era-btn" data-era="modern">Modern</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn" data-era="classic">Classic</button>
+                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn" data-era="allEras">All Eras</button>
+                </div>
+            </div>
+        </div>
+        <button id="start-game-btn" class="primary-btn mt-2">Start Game</button>
+        <div class="h-8"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hidden flex-col h-full w-full pb-8">
+        <div class="flex justify-between items-start mb-2 px-1">
+            <div class="flex flex-col gap-0 mt-0.5">
+                <div class="h-4 flex items-center text-xs font-bold text-gray-600 dark:text-gray-400" id="game-era-label"></div>
+                <div id="game-cat-label" class="text-xs font-bold text-gray-600 dark:text-gray-400 leading-none"></div>
+            </div>
+            <div class="text-right flex flex-col gap-1">
+                <div class="h-4 flex items-center justify-end text-xs font-bold text-gray-600 dark:text-gray-400" id="round-display">Round 1/10</div>
+                <div class="text-lg font-black leading-none" id="score-display">0</div>
+            </div>
+        </div>
+
+        <!-- HOW MUCH UI -->
+        <div id="ui-how-much" class="w-full">
+            <div id="player-prompt" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <span id="name-A" class="text-sm sm:text-base font-black leading-tight text-center block">Player A</span>
+                    <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-A">--</div>
+                </button>
+                <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <span id="name-B" class="text-sm sm:text-base font-black leading-tight text-center block">Player B</span>
+                    <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-B">--</div>
+                </button>
+            </div>
+            <div class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">By How Much?</div>
+            <div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 select-none">
+                <div class="flex justify-center items-end mb-2 gap-4 sm:gap-8">
+                    <div class="flex flex-col items-center gap-1">
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">MIN DIFF</span>
+                        <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                            <button class="slider-adj-btn" onclick="adjustSlider('min',-1)">-</button>
+                            <span id="slider-display-min" class="font-black text-xl w-14 text-center tabular-nums text-green-600 dark:text-green-400">0</span>
+                            <button class="slider-adj-btn" onclick="adjustSlider('min',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">MAX DIFF</span>
+                        <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                            <button class="slider-adj-btn" onclick="adjustSlider('max',-1)">-</button>
+                            <span id="slider-display-max" class="font-black text-xl w-14 text-center tabular-nums text-green-600 dark:text-green-400">0</span>
+                            <button class="slider-adj-btn" onclick="adjustSlider('max',1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative mx-2" style="height:3.5rem;" id="slider-touch-area">
+                    <div class="absolute w-full rounded-full" style="height:12px;top:1rem;background:#e5e7eb;" id="slider-track">
+                        <html.dark style="display:none"></html.dark>
+                        <div class="absolute h-full rounded-full stripe-pattern" style="background:rgba(22,163,74,0.1);" id="slider-invalid-zone"></div>
+                        <div class="absolute h-full rounded-full" style="background:rgba(22,163,74,0.45);display:none;" id="slider-fill-bar"></div>
+                        <div class="absolute h-full rounded-full" style="background:#f59e0b;opacity:0.9;display:none;" id="slider-bullseye-zone"></div>
+                        <div class="absolute" style="width:4px;height:28px;top:-8px;background:#10b981;border-radius:2px;transform:translateX(-50%);display:none;box-shadow:0 0 8px rgba(16,185,129,0.6);" id="slider-answer-pin"></div>
+                    </div>
+                    <div id="thumb-min" class="absolute rounded-full bg-white border-2 border-green-500 shadow-md cursor-grab" style="width:1.5rem;height:1.5rem;top:1.5rem;transform:translate(-50%,-50%);z-index:20;"></div>
+                    <div id="thumb-max" class="absolute rounded-full bg-white border-2 border-green-500 shadow-md cursor-grab" style="width:1.5rem;height:1.5rem;top:1.5rem;transform:translate(-50%,-50%);z-index:20;"></div>
+                    <div id="slider-ticks" class="absolute w-full" style="top:2.75rem;"></div>
+                </div>
+                <div id="slider-result-text" class="text-center font-black text-2xl mt-1 opacity-0 text-green-600 dark:text-green-400 transition-all"></div>
+            </div>
+            <button id="submit-btn" class="primary-btn" disabled>Lock In</button>
+        </div>
+
+        <!-- SHOWDOWN UI -->
+        <div id="ui-showdown" class="w-full hidden">
+            <div class="flex justify-between items-center mb-3 mt-2">
+                <div id="sbs-name-a" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
+                <div class="text-xs font-black text-gray-400 px-2">VS</div>
+                <div id="sbs-name-b" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
+            </div>
+            <div id="sbs-score-row" class="flex justify-between items-center mb-3 px-1">
+                <div id="sbs-wins-a" class="text-2xl font-black text-green-600 dark:text-green-400">0</div>
+                <div class="text-xs font-bold text-gray-400">WINS</div>
+                <div id="sbs-wins-b" class="text-2xl font-black text-green-600 dark:text-green-400">0</div>
+            </div>
+            <div id="sbs-grid-container" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-300 dark:border-gray-800 p-3 mb-4 space-y-2"></div>
+            <button id="sbs-submit-btn" class="primary-btn" disabled>Lock In</button>
+        </div>
+
+        <!-- PICK 'EM UI -->
+        <div id="ui-pickem" class="w-full hidden">
+            <div class="text-center mb-3 mt-2">
+                <div class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Pick players with</div>
+                <div id="pickem-thresh-val" class="text-xl font-black text-gray-900 dark:text-white"></div>
+                <div id="pickem-cat-label" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"></div>
+            </div>
+            <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4"></div>
+            <button id="pickem-submit-btn" class="primary-btn" disabled>Reveal</button>
+        </div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="end-screen" class="hidden flex flex-col items-center justify-center h-full pt-8">
+        <div class="text-center mb-6 space-y-2">
+            <div class="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">Final Score</div>
+            <div class="text-6xl font-black text-green-600 dark:text-green-400" id="final-score">0</div>
+        </div>
+        <button id="view-breakdown-btn" class="text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-green-600 transition mb-6 underline decoration-dotted">View Breakdown</button>
+        <div id="highscore-input-container" class="hidden w-full max-w-xs mb-4">
+            <div class="text-green-600 dark:text-green-400 font-bold text-sm mb-2 animate-pulse">NEW HIGH SCORE!</div>
+            <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="10" class="w-full text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg focus:outline-none focus:border-green-500 dark:text-white mb-2">
+            <label class="flex items-center justify-center gap-2 mb-2 cursor-pointer">
+                <input type="checkbox" id="remember-name-check" checked class="w-4 h-4 accent-green-600">
+                <span class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Remember my name</span>
+            </label>
+            <button id="save-score-btn" class="primary-btn mb-2">Save to Leaderboard</button>
+        </div>
+        <button id="play-again-btn" class="primary-btn max-w-xs">Play Again</button>
+    </div>
+</main>
+
+<!-- BREAKDOWN MODAL -->
+<div id="breakdown-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="breakdown-overlay"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white">Round Breakdown</h3>
+            <button id="close-breakdown" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500 text-xl">&times;</button>
+        </div>
+        <div id="round-breakdown" class="p-5 overflow-y-auto max-h-[60vh]"></div>
+    </div>
+</div>
+
+<!-- LEADERBOARD MODAL -->
+<div id="leaderboard-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="leaderboard-overlay"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 flex justify-between items-center">
+            <h3 class="text-sm font-black uppercase tracking-wide text-gray-600 dark:text-gray-400">Leaderboard</h3>
+            <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
+        </div>
+        <div class="p-0 overflow-y-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-600 dark:text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
+                    <tr><th class="px-4 py-3 text-center w-12 font-bold">#</th><th class="px-4 py-3 text-left w-24 font-bold">Score</th><th class="px-4 py-3 text-left font-bold">Player</th></tr>
+                </thead>
+                <tbody id="leaderboard-body" class="text-gray-700 dark:text-gray-300 font-medium"></tbody>
+            </table>
+            <div id="empty-leaderboard-msg" class="p-8 text-center text-gray-600 dark:text-gray-500 text-sm">No scores yet. Be the first!</div>
+        </div>
+    </div>
+</div>
+
+<!-- RULES MODAL -->
+<div id="rules-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="rules-overlay"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white">How to Play</h3>
+            <button id="close-rules" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500 text-xl">&times;</button>
+        </div>
+        <div class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-400 space-y-4">
+            <div><div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div><p class="text-xs leading-relaxed">Pick which player has the higher stat, then estimate the difference with the range slider. Tighter range = more points.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs leading-relaxed">Two players, 10 categories head-to-head. Pick who wins each. Score = (correct/10) × 1000.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div><p class="text-xs leading-relaxed">A threshold is shown. From 10 players, pick those who meet it. Each correct pick earns 100 pts + chain bonuses. Wrong pick ends round.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Scoring — How Much?</div>
+                <ul class="text-xs space-y-1 list-disc ml-4">
+                    <li>Bullseye (range ≤ 10% of answer): <span class="font-bold text-green-600">+500 pts</span></li>
+                    <li>Answer inside your range: up to 400 pts based on tightness</li>
+                    <li>Wrong player selected: <span class="font-bold text-red-500">0 pts</span></li>
+                </ul>
+            </div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Player Pool</div>
+                <p class="text-xs"><strong>Veteran:</strong> Multi-year starters (QBs: 64+ starts, RBs: 750+ carries, WRs/TEs: 250+ receptions).<br><strong>All-Pro:</strong> Career AV ≥ 80.<br><strong>HOF:</strong> All-time legends, Career AV ≥ 130.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GAMEMODE HELP MODAL -->
+<div id="gamemode-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="gamemode-help-overlay"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white">Game Modes</h3>
+            <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
+        </div>
+        <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4">
+            <div><div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div><p class="text-xs">Pick the player with the higher stat, then set a range for the difference. Tighter range = more points.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs">Two players, 10 stat categories. Pick who wins each. Score = (correct picks / 10) × 1000 pts.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div><p class="text-xs">A threshold is shown. From 10 players, pick those who meet it. Correct picks earn 100 pts + chain bonuses.</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ELIG HELP MODAL -->
+<div id="elig-help-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="elig-help-overlay"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white">Eligibility Tiers</h3>
+            <button id="close-elig-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
+        </div>
+        <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4">
+            <div><div class="font-black text-gray-800 dark:text-white mb-1">Veteran</div><p class="text-xs">Multi-year starters: QBs 64+ starts, RBs 750+ carries, WRs/TEs 250+ receptions.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">All-Pro</div><p class="text-xs">Elite contributors: Career AV ≥ 80.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">HOF</div><p class="text-xs">Legends only: Career AV ≥ 130 or position HOF thresholds.</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// NFL MATCHUPS — PLAYER DATA
+// Stats sourced from Pro Football Reference career totals
+// ═══════════════════════════════════════
+
+// Player format: { id, name, pos, av, gs, decades, stats: { ... } }
+// decades = Set of decade start years the player was active in
+
+var NFL_PLAYERS = [
+  // ── QBs ──────────────────────────────────────────────────────────────
+  {id:'brady',    name:'Tom Brady',         pos:'QB', av:243, gs:335, decades:[1990,2000,2010,2020], stats:{careerPassYards:89214,careerPassTDs:649,careerINTs:211,careerPasserRating:97.7,careerCompPct:0.641,careerQBWins:251,careerGamesStarted:335,careerQBRushYards:1121,seasonHighPassYards:5235,seasonHighPassTDs:50,seasons:23,careerProBowls:15,careerAllPro:3,careerAV:243}},
+  {id:'manning_p',name:'Peyton Manning',    pos:'QB', av:212, gs:266, decades:[1990,2000,2010], stats:{careerPassYards:71940,careerPassTDs:539,careerINTs:251,careerPasserRating:96.5,careerCompPct:0.651,careerQBWins:186,careerGamesStarted:266,careerQBRushYards:667,seasonHighPassYards:4700,seasonHighPassTDs:55,seasons:18,careerProBowls:14,careerAllPro:7,careerAV:212}},
+  {id:'favre',    name:'Brett Favre',       pos:'QB', av:172, gs:298, decades:[1990,2000,2010], stats:{careerPassYards:71838,careerPassTDs:508,careerINTs:336,careerPasserRating:86.0,careerCompPct:0.619,careerQBWins:186,careerGamesStarted:298,careerQBRushYards:1717,seasonHighPassYards:4413,seasonHighPassTDs:39,seasons:20,careerProBowls:11,careerAllPro:3,careerAV:172}},
+  {id:'rodgers',  name:'Aaron Rodgers',     pos:'QB', av:185, gs:234, decades:[2000,2010,2020], stats:{careerPassYards:59055,careerPassTDs:475,careerINTs:105,careerPasserRating:103.1,careerCompPct:0.653,careerQBWins:167,careerGamesStarted:234,careerQBRushYards:3477,seasonHighPassYards:4643,seasonHighPassTDs:48,seasons:19,careerProBowls:10,careerAllPro:5,careerAV:185}},
+  {id:'brees',    name:'Drew Brees',        pos:'QB', av:187, gs:268, decades:[2000,2010,2020], stats:{careerPassYards:80358,careerPassTDs:571,careerINTs:243,careerPasserRating:98.7,careerCompPct:0.668,careerQBWins:172,careerGamesStarted:268,careerQBRushYards:675,seasonHighPassYards:5476,seasonHighPassTDs:46,seasons:20,careerProBowls:13,careerAllPro:1,careerAV:187}},
+  {id:'mahomes',  name:'Patrick Mahomes',   pos:'QB', av:110, gs:116, decades:[2010,2020], stats:{careerPassYards:30440,careerPassTDs:240,careerINTs:65,careerPasserRating:105.2,careerCompPct:0.669,careerQBWins:91,careerGamesStarted:116,careerQBRushYards:2282,seasonHighPassYards:5097,seasonHighPassTDs:50,seasons:8,careerProBowls:6,careerAllPro:3,careerAV:110}},
+  {id:'montana',  name:'Joe Montana',       pos:'QB', av:133, gs:164, decades:[1970,1980,1990], stats:{careerPassYards:40551,careerPassTDs:273,careerINTs:139,careerPasserRating:92.3,careerCompPct:0.632,careerQBWins:117,careerGamesStarted:164,careerQBRushYards:1676,seasonHighPassYards:3910,seasonHighPassTDs:31,seasons:16,careerProBowls:8,careerAllPro:5,careerAV:133}},
+  {id:'elway',    name:'John Elway',        pos:'QB', av:148, gs:231, decades:[1980,1990], stats:{careerPassYards:51475,careerPassTDs:300,careerINTs:226,careerPasserRating:79.9,careerCompPct:0.562,careerQBWins:148,careerGamesStarted:231,careerQBRushYards:3407,seasonHighPassYards:4030,seasonHighPassTDs:27,seasons:16,careerProBowls:9,careerAllPro:1,careerAV:148}},
+  {id:'marino',   name:'Dan Marino',        pos:'QB', av:155, gs:240, decades:[1980,1990], stats:{careerPassYards:61361,careerPassTDs:420,careerINTs:252,careerPasserRating:86.4,careerCompPct:0.590,careerQBWins:147,careerGamesStarted:240,careerQBRushYards:87,seasonHighPassYards:5084,seasonHighPassTDs:48,seasons:17,careerProBowls:9,careerAllPro:3,careerAV:155}},
+  {id:'moon',     name:'Warren Moon',       pos:'QB', av:120, gs:208, decades:[1980,1990,2000], stats:{careerPassYards:49325,careerPassTDs:291,careerINTs:233,careerPasserRating:80.9,careerCompPct:0.587,careerQBWins:102,careerGamesStarted:208,careerQBRushYards:1736,seasonHighPassYards:4689,seasonHighPassTDs:33,seasons:17,careerProBowls:9,careerAllPro:1,careerAV:120}},
+  {id:'young',    name:'Steve Young',       pos:'QB', av:121, gs:169, decades:[1980,1990], stats:{careerPassYards:33124,careerPassTDs:232,careerINTs:107,careerPasserRating:96.8,careerCompPct:0.647,careerQBWins:94,careerGamesStarted:169,careerQBRushYards:4239,seasonHighPassYards:4170,seasonHighPassTDs:36,seasons:15,careerProBowls:7,careerAllPro:4,careerAV:121}},
+  {id:'stafford', name:'Matthew Stafford',  pos:'QB', av:135, gs:232, decades:[2000,2010,2020], stats:{careerPassYards:56753,careerPassTDs:382,careerINTs:192,careerPasserRating:89.6,careerCompPct:0.635,careerQBWins:131,careerGamesStarted:232,careerQBRushYards:1097,seasonHighPassYards:5038,seasonHighPassTDs:41,seasons:16,careerProBowls:1,careerAllPro:0,careerAV:135}},
+  {id:'rivers',   name:'Philip Rivers',     pos:'QB', av:163, gs:240, decades:[2000,2010,2020], stats:{careerPassYards:63440,careerPassTDs:421,careerINTs:209,careerPasserRating:95.2,careerCompPct:0.652,careerQBWins:134,careerGamesStarted:240,careerQBRushYards:361,seasonHighPassYards:4710,seasonHighPassTDs:34,seasons:17,careerProBowls:8,careerAllPro:1,careerAV:163}},
+  {id:'roethlis', name:'Ben Roethlisberger', pos:'QB', av:164, gs:240, decades:[2000,2010,2020], stats:{careerPassYards:64088,careerPassTDs:418,careerINTs:211,careerPasserRating:94.0,careerCompPct:0.641,careerQBWins:165,careerGamesStarted:240,careerQBRushYards:2400,seasonHighPassYards:4952,seasonHighPassTDs:34,seasons:18,careerProBowls:6,careerAllPro:1,careerAV:164}},
+  {id:'wilson_r', name:'Russell Wilson',    pos:'QB', av:135, gs:197, decades:[2010,2020], stats:{careerPassYards:42683,careerPassTDs:292,careerINTs:107,careerPasserRating:101.8,careerCompPct:0.651,careerQBWins:135,careerGamesStarted:197,careerQBRushYards:6791,seasonHighPassYards:4219,seasonHighPassTDs:34,seasons:13,careerProBowls:9,careerAllPro:3,careerAV:135}},
+  {id:'jackson_l',name:'Lamar Jackson',     pos:'QB', av:92,  gs:101, decades:[2010,2020], stats:{careerPassYards:17407,careerPassTDs:132,careerINTs:36,careerPasserRating:102.5,careerCompPct:0.640,careerQBWins:69,careerGamesStarted:101,careerQBRushYards:6146,seasonHighPassYards:3127,seasonHighPassTDs:36,seasons:7,careerProBowls:4,careerAllPro:2,careerAV:92}},
+  {id:'aikman',   name:'Troy Aikman',       pos:'QB', av:114, gs:165, decades:[1980,1990,2000], stats:{careerPassYards:32942,careerPassTDs:165,careerINTs:141,careerPasserRating:81.6,careerCompPct:0.615,careerQBWins:94,careerGamesStarted:165,careerQBRushYards:1016,seasonHighPassYards:3445,seasonHighPassTDs:23,seasons:12,careerProBowls:6,careerAllPro:1,careerAV:114}},
+  {id:'manning_e',name:'Eli Manning',       pos:'QB', av:141, gs:234, decades:[2000,2010], stats:{careerPassYards:57023,careerPassTDs:366,careerINTs:244,careerPasserRating:84.1,careerCompPct:0.601,careerQBWins:117,careerGamesStarted:234,careerQBRushYards:301,seasonHighPassYards:4410,seasonHighPassTDs:35,seasons:16,careerProBowls:4,careerAllPro:0,careerAV:141}},
+  {id:'luck',     name:'Andrew Luck',       pos:'QB', av:100, gs:86,  decades:[2010], stats:{careerPassYards:23671,careerPassTDs:171,careerINTs:83,careerPasserRating:89.5,careerCompPct:0.602,careerQBWins:53,careerGamesStarted:86,careerQBRushYards:1590,seasonHighPassYards:4761,seasonHighPassTDs:40,seasons:7,careerProBowls:4,careerAllPro:0,careerAV:100}},
+  {id:'newton',   name:'Cam Newton',        pos:'QB', av:128, gs:163, decades:[2010,2020], stats:{careerPassYards:29041,careerPassTDs:182,careerINTs:108,careerPasserRating:84.9,careerCompPct:0.594,careerQBWins:75,careerGamesStarted:163,careerQBRushYards:5628,seasonHighPassYards:3837,seasonHighPassTDs:35,seasons:11,careerProBowls:3,careerAllPro:1,careerAV:128}},
+  {id:'tarkenton',name:'Fran Tarkenton',    pos:'QB', av:135, gs:246, decades:[1960,1970,1980], stats:{careerPassYards:47003,careerPassTDs:342,careerINTs:266,careerPasserRating:80.4,careerCompPct:0.570,careerQBWins:124,careerGamesStarted:246,careerQBRushYards:3674,seasonHighPassYards:2561,seasonHighPassTDs:25,seasons:18,careerProBowls:9,careerAllPro:2,careerAV:135}},
+  {id:'ryan_m',   name:'Matt Ryan',         pos:'QB', av:152, gs:269, decades:[2000,2010,2020], stats:{careerPassYards:62792,careerPassTDs:396,careerINTs:203,careerPasserRating:94.1,careerPassPct:0.638,careerQBWins:159,careerGamesStarted:269,careerQBRushYards:1154,seasonHighPassYards:4944,seasonHighPassTDs:38,seasons:16,careerProBowls:4,careerAllPro:1,careerAV:152}},
+  {id:'romo',     name:'Tony Romo',         pos:'QB', av:97,  gs:127, decades:[2000,2010], stats:{careerPassYards:34183,careerPassTDs:248,careerINTs:117,careerPasserRating:97.1,careerCompPct:0.655,careerQBWins:78,careerGamesStarted:127,careerQBRushYards:1194,seasonHighPassYards:4903,seasonHighPassTDs:36,seasons:14,careerProBowls:4,careerAllPro:1,careerAV:97}},
+  {id:'allen_j',  name:'Josh Allen',        pos:'QB', av:95,  gs:108, decades:[2010,2020], stats:{careerPassYards:27133,careerPassTDs:216,careerINTs:78,careerPasserRating:94.3,careerCompPct:0.625,careerQBWins:76,careerGamesStarted:108,careerQBRushYards:4707,seasonHighPassYards:4544,seasonHighPassTDs:37,seasons:7,careerProBowls:5,careerAllPro:1,careerAV:95}},
+  // ── RBs ──────────────────────────────────────────────────────────────
+  {id:'payton',   name:'Walter Payton',     pos:'RB', av:173, gs:186, decades:[1970,1980], stats:{careerRushYards:16726,careerRushTDs:110,careerYPC:4.36,careerRushAttempts:3838,careerRecYards:4538,careerReceptions:492,careerRecTDs:15,careerYPR:9.2,careerFumbles:86,seasonHighRushYards:1852,seasonHighRushTDs:14,seasons:13,careerProBowls:9,careerAllPro:5,careerAV:173}},
+  {id:'sanders_b',name:'Barry Sanders',     pos:'RB', av:147, gs:153, decades:[1980,1990], stats:{careerRushYards:15269,careerRushTDs:99,careerYPC:4.99,careerRushAttempts:3062,careerRecYards:2921,careerReceptions:352,careerRecTDs:10,careerYPR:8.3,careerFumbles:41,seasonHighRushYards:2358,seasonHighRushTDs:16,seasons:10,careerProBowls:10,careerAllPro:6,careerAV:147}},
+  {id:'smith_e',  name:'Emmitt Smith',      pos:'RB', av:156, gs:226, decades:[1990,2000], stats:{careerRushYards:18355,careerRushTDs:164,careerYPC:4.17,careerRushAttempts:4409,careerRecYards:3224,careerReceptions:515,careerRecTDs:11,careerYPR:6.3,careerFumbles:44,seasonHighRushYards:1773,seasonHighRushTDs:25,seasons:15,careerProBowls:8,careerAllPro:4,careerAV:156}},
+  {id:'tomlinson',name:'LaDainian Tomlinson',pos:'RB',av:162, gs:228, decades:[2000,2010], stats:{careerRushYards:13684,careerRushTDs:145,careerYPC:4.34,careerRushAttempts:3174,careerRecYards:4772,careerReceptions:624,careerRecTDs:17,careerYPR:7.6,careerFumbles:49,seasonHighRushYards:1815,seasonHighRushTDs:28,seasons:11,careerProBowls:5,careerAllPro:4,careerAV:162}},
+  {id:'peterson', name:'Adrian Peterson',   pos:'RB', av:147, gs:176, decades:[2000,2010,2020], stats:{careerRushYards:14820,careerRushTDs:120,careerYPC:4.54,careerRushAttempts:3263,careerRecYards:2433,careerReceptions:339,careerRecTDs:6,careerYPR:7.2,careerFumbles:91,seasonHighRushYards:2097,seasonHighRushTDs:18,seasons:15,careerProBowls:7,careerAllPro:4,careerAV:147}},
+  {id:'dickerson',name:'Eric Dickerson',    pos:'RB', av:119, gs:144, decades:[1980,1990], stats:{careerRushYards:13259,careerRushTDs:90,careerYPC:4.40,careerRushAttempts:2996,careerRecYards:2137,careerReceptions:281,careerRecTDs:6,careerYPR:7.6,careerFumbles:78,seasonHighRushYards:2105,seasonHighRushTDs:18,seasons:11,careerProBowls:6,careerAllPro:3,careerAV:119}},
+  {id:'faulk_m',  name:'Marshall Faulk',    pos:'RB', av:149, gs:176, decades:[1990,2000], stats:{careerRushYards:12279,careerRushTDs:100,careerYPC:4.30,careerRushAttempts:2836,careerRecYards:6875,careerReceptions:767,careerRecTDs:36,careerYPR:8.97,careerFumbles:77,seasonHighRushYards:1359,seasonHighRushTDs:24,seasons:12,careerProBowls:7,careerAllPro:3,careerAV:149}},
+  {id:'henry',    name:'Derrick Henry',     pos:'RB', av:98,  gs:129, decades:[2010,2020], stats:{careerRushYards:10234,careerRushTDs:90,careerYPC:4.83,careerRushAttempts:2117,careerRecYards:1204,careerReceptions:163,careerRecTDs:4,careerYPR:7.4,careerFumbles:13,seasonHighRushYards:2027,seasonHighRushTDs:18,seasons:9,careerProBowls:4,careerAllPro:2,careerAV:98}},
+  {id:'bell',     name:'Le\'Veon Bell',     pos:'RB', av:89,  gs:95,  decades:[2010,2020], stats:{careerRushYards:7985,careerRushTDs:45,careerYPC:4.29,careerRushAttempts:1861,careerRecYards:3671,careerReceptions:483,careerRecTDs:18,careerYPR:7.6,careerFumbles:14,seasonHighRushYards:1884,seasonHighRushTDs:11,seasons:9,careerProBowls:3,careerAllPro:2,careerAV:89}},
+  {id:'elliot',   name:'Ezekiel Elliott',   pos:'RB', av:98,  gs:129, decades:[2010,2020], stats:{careerRushYards:9024,careerRushTDs:73,careerYPC:4.48,careerRushAttempts:2013,careerRecYards:2792,careerReceptions:380,careerRecTDs:16,careerYPR:7.3,careerFumbles:15,seasonHighRushYards:1631,seasonHighRushTDs:15,seasons:9,careerProBowls:3,careerAllPro:1,careerAV:98}},
+  {id:'taylor_j', name:'Jim Taylor',        pos:'RB', av:88,  gs:132, decades:[1950,1960,1970], stats:{careerRushYards:8597,careerRushTDs:83,careerYPC:4.38,careerRushAttempts:1941,careerRecYards:1756,careerReceptions:225,careerRecTDs:10,careerYPR:7.8,careerFumbles:30,seasonHighRushYards:1474,seasonHighRushTDs:19,seasons:10,careerProBowls:5,careerAllPro:4,careerAV:88}},
+  {id:'campbell_e',name:'Earl Campbell',    pos:'RB', av:99,  gs:115, decades:[1970,1980], stats:{careerRushYards:9407,careerRushTDs:74,careerYPC:4.32,careerRushAttempts:2187,careerRecYards:806,careerReceptions:121,careerRecTDs:3,careerYPR:6.7,careerFumbles:52,seasonHighRushYards:1934,seasonHighRushTDs:19,seasons:8,careerProBowls:5,careerAllPro:4,careerAV:99}},
+  {id:'gurley',   name:'Todd Gurley',       pos:'RB', av:96,  gs:97,  decades:[2010,2020], stats:{careerRushYards:6654,careerRushTDs:64,careerYPC:4.57,careerRushAttempts:1456,careerRecYards:2788,careerReceptions:373,careerRecTDs:19,careerYPR:7.5,careerFumbles:16,seasonHighRushYards:1305,seasonHighRushTDs:19,seasons:7,careerProBowls:2,careerAllPro:1,careerAV:96}},
+  {id:'mccaffrey',name:'Christian McCaffrey',pos:'RB',av:98, gs:106, decades:[2010,2020], stats:{careerRushYards:7481,careerRushTDs:57,careerYPC:4.49,careerRushAttempts:1666,careerRecYards:5186,careerReceptions:634,careerRecTDs:34,careerYPR:8.2,careerFumbles:12,seasonHighRushYards:1387,seasonHighRushTDs:14,seasons:8,careerProBowls:3,careerAllPro:1,careerAV:98}},
+  // ── WRs ──────────────────────────────────────────────────────────────
+  {id:'rice_j',   name:'Jerry Rice',        pos:'WR', av:219, gs:274, decades:[1980,1990,2000], stats:{careerRecYards:22895,careerReceptions:1549,careerRecTDs:197,careerYPR:14.78,seasonHighRecYards:1848,seasonHighReceptions:122,seasons:20,careerProBowls:13,careerAllPro:10,careerAV:219}},
+  {id:'moss_r',   name:'Randy Moss',        pos:'WR', av:148, gs:218, decades:[1990,2000,2010], stats:{careerRecYards:15292,careerReceptions:982,careerRecTDs:156,careerYPR:15.57,seasonHighRecYards:1632,seasonHighReceptions:106,seasons:14,careerProBowls:6,careerAllPro:4,careerAV:148}},
+  {id:'johnson_c',name:'Calvin Johnson',    pos:'WR', av:108, gs:135, decades:[2000,2010], stats:{careerRecYards:11619,careerReceptions:731,careerRecTDs:83,careerYPR:15.90,seasonHighRecYards:1964,seasonHighReceptions:122,seasons:9,careerProBowls:6,careerAllPro:3,careerAV:108}},
+  {id:'fitzgerald',name:'Larry Fitzgerald', pos:'WR', av:158, gs:271, decades:[2000,2010,2020], stats:{careerRecYards:17492,careerReceptions:1432,careerRecTDs:121,careerYPR:12.22,seasonHighRecYards:1431,seasonHighReceptions:107,seasons:17,careerProBowls:11,careerAllPro:1,careerAV:158}},
+  {id:'harrison_m',name:'Marvin Harrison',  pos:'WR', av:113, gs:190, decades:[1990,2000], stats:{careerRecYards:14580,careerReceptions:1102,careerRecTDs:128,careerYPR:13.23,seasonHighRecYards:1722,seasonHighReceptions:143,seasons:13,careerProBowls:8,careerAllPro:4,careerAV:113}},
+  {id:'smith_s',  name:'Steve Smith Sr.',   pos:'WR', av:131, gs:211, decades:[2000,2010], stats:{careerRecYards:14731,careerReceptions:1031,careerRecTDs:81,careerYPR:14.29,seasonHighRecYards:1563,seasonHighReceptions:103,seasons:16,careerProBowls:5,careerAllPro:2,careerAV:131}},
+  {id:'owens',    name:'Terrell Owens',     pos:'WR', av:133, gs:219, decades:[1990,2000,2010], stats:{careerRecYards:15934,careerReceptions:1078,careerRecTDs:153,careerYPR:14.78,seasonHighRecYards:1451,seasonHighReceptions:100,seasons:15,careerProBowls:6,careerAllPro:3,careerAV:133}},
+  {id:'carter_c', name:'Cris Carter',       pos:'WR', av:122, gs:218, decades:[1980,1990,2000], stats:{careerRecYards:13899,careerReceptions:1101,careerRecTDs:130,careerYPR:12.62,seasonHighRecYards:1371,seasonHighReceptions:122,seasons:16,careerProBowls:8,careerAllPro:2,careerAV:122}},
+  {id:'jeffery',  name:'Alshon Jeffery',    pos:'WR', av:67,  gs:92,  decades:[2010,2020], stats:{careerRecYards:6590,careerReceptions:512,careerRecTDs:54,careerYPR:12.87,seasonHighRecYards:1421,seasonHighReceptions:89,seasons:10,careerProBowls:1,careerAllPro:0,careerAV:67}},
+  {id:'hill_t',   name:'Tyreek Hill',       pos:'WR', av:95,  gs:123, decades:[2010,2020], stats:{careerRecYards:11567,careerReceptions:784,careerRecTDs:82,careerYPR:14.75,seasonHighRecYards:1799,seasonHighReceptions:119,seasons:9,careerProBowls:7,careerAllPro:4,careerAV:95}},
+  {id:'adams_d',  name:'Davante Adams',     pos:'WR', av:90,  gs:139, decades:[2010,2020], stats:{careerRecYards:10196,careerReceptions:841,careerRecTDs:87,careerYPR:12.12,seasonHighRecYards:1374,seasonHighReceptions:115,seasons:11,careerProBowls:6,careerAllPro:3,careerAV:90}},
+  {id:'diggs_s',  name:'Stefon Diggs',      pos:'WR', av:75,  gs:120, decades:[2010,2020], stats:{careerRecYards:9741,careerReceptions:714,careerRecTDs:56,careerYPR:13.64,seasonHighRecYards:1535,seasonHighReceptions:127,seasons:10,careerProBowls:2,careerAllPro:1,careerAV:75}},
+  {id:'walker_j', name:'Javon Walker',      pos:'WR', av:29,  gs:56,  decades:[2000], stats:{careerRecYards:3274,careerReceptions:249,careerRecTDs:22,careerYPR:13.15,seasonHighRecYards:1382,seasonHighReceptions:89,seasons:7,careerProBowls:1,careerAllPro:0,careerAV:29}},
+  {id:'johnson_a',name:'Andre Johnson',     pos:'WR', av:119, gs:193, decades:[2000,2010], stats:{careerRecYards:14185,careerReceptions:1062,careerRecTDs:70,careerYPR:13.36,seasonHighRecYards:1598,seasonHighReceptions:115,seasons:14,careerProBowls:7,careerAllPro:2,careerAV:119}},
+  {id:'white_r',  name:'Roddy White',       pos:'WR', av:88,  gs:169, decades:[2000,2010], stats:{careerRecYards:10863,careerReceptions:808,careerRecTDs:53,careerYPR:13.45,seasonHighRecYards:1389,seasonHighReceptions:115,seasons:11,careerProBowls:4,careerAllPro:1,careerAV:88}},
+  // ── TEs ──────────────────────────────────────────────────────────────
+  {id:'gonzalez', name:'Tony Gonzalez',     pos:'TE', av:181, gs:270, decades:[1990,2000,2010], stats:{careerRecYards:15127,careerReceptions:1325,careerRecTDs:111,careerYPR:11.42,seasonHighRecYards:1258,seasonHighReceptions:102,seasons:17,careerProBowls:14,careerAllPro:6,careerAV:181}},
+  {id:'gronkowski',name:'Rob Gronkowski',   pos:'TE', av:135, gs:143, decades:[2010,2020], stats:{careerRecYards:9286,careerReceptions:621,careerRecTDs:92,careerYPR:14.95,seasonHighRecYards:1327,seasonHighReceptions:90,seasons:11,careerProBowls:5,careerAllPro:4,careerAV:135}},
+  {id:'gates',    name:'Antonio Gates',     pos:'TE', av:126, gs:215, decades:[2000,2010,2020], stats:{careerRecYards:11841,careerReceptions:955,careerRecTDs:116,careerYPR:12.40,seasonHighRecYards:1101,seasonHighReceptions:89,seasons:16,careerProBowls:8,careerAllPro:2,careerAV:126}},
+  {id:'witten',   name:'Jason Witten',      pos:'TE', av:140, gs:268, decades:[2000,2010,2020], stats:{careerRecYards:13046,careerReceptions:1228,careerRecTDs:74,careerYPR:10.62,seasonHighRecYards:1215,seasonHighReceptions:110,seasons:17,careerProBowls:11,careerAllPro:1,careerAV:140}},
+  {id:'thomas_v', name:'Vernon Davis',      pos:'TE', av:80,  gs:192, decades:[2000,2010], stats:{careerRecYards:7672,careerReceptions:583,careerRecTDs:63,careerYPR:13.16,seasonHighRecYards:965,seasonHighReceptions:76,seasons:14,careerProBowls:2,careerAllPro:1,careerAV:80}},
+  {id:'clark_g',  name:'Dallas Clark',      pos:'TE', av:74,  gs:119, decades:[2000,2010], stats:{careerRecYards:5765,careerReceptions:503,careerRecTDs:53,careerYPR:11.46,seasonHighRecYards:1106,seasonHighReceptions:100,seasons:11,careerProBowls:1,careerAllPro:1,careerAV:74}},
+  {id:'kelce',    name:'Travis Kelce',      pos:'TE', av:144, gs:175, decades:[2010,2020], stats:{careerRecYards:12386,careerReceptions:1020,careerRecTDs:75,careerYPR:12.14,seasonHighRecYards:1416,seasonHighReceptions:110,seasons:12,careerProBowls:9,careerAllPro:5,careerAV:144}},
+  {id:'waller_d', name:'Darren Waller',     pos:'TE', av:55,  gs:68,  decades:[2010,2020], stats:{careerRecYards:3591,careerReceptions:324,careerRecTDs:16,careerYPR:11.08,seasonHighRecYards:1196,seasonHighReceptions:107,seasons:9,careerProBowls:1,careerAllPro:0,careerAV:55}},
+  {id:'thomas_j', name:'Julius Thomas',     pos:'TE', av:44,  gs:68,  decades:[2010,2020], stats:{careerRecYards:3064,careerReceptions:261,careerRecTDs:35,careerYPR:11.74,seasonHighRecYards:788,seasonHighReceptions:65,seasons:7,careerProBowls:2,careerAllPro:0,careerAV:44}},
+  {id:'olsen',    name:'Greg Olsen',        pos:'TE', av:91,  gs:192, decades:[2000,2010,2020], stats:{careerRecYards:8444,careerReceptions:742,careerRecTDs:60,careerYPR:11.38,seasonHighRecYards:1104,seasonHighReceptions:77,seasons:14,careerProBowls:3,careerAllPro:0,careerAV:91}}
+];
+
+// Compute seasons count and decades Set
+NFL_PLAYERS.forEach(function(p) {
+    p.decades = new Set(p.decades);
+    if (!p.stats.seasons) p.stats.seasons = p.seasons || 10;
+    else p.seasons = p.stats.seasons;
+    // Alias careerCompPct if stored as careerPassPct
+    if (p.stats.careerPassPct && !p.stats.careerCompPct) p.stats.careerCompPct = p.stats.careerPassPct;
+    // Default missing stats to 0
+    ['careerQBRushYards','careerRushYards','careerRushTDs','careerYPC','careerRushAttempts',
+     'careerRecYards','careerReceptions','careerRecTDs','careerYPR','seasonHighRecYards',
+     'seasonHighReceptions','careerFumbles','seasonHighRushYards','seasonHighRushTDs',
+     'careerPassYards','careerPassTDs','careerINTs','careerPasserRating','careerCompPct',
+     'careerQBWins','careerGamesStarted','seasonHighPassYards','seasonHighPassTDs',
+     'careerProBowls','careerAllPro','careerAV'].forEach(function(k) {
+        if (p.stats[k] === undefined) p.stats[k] = 0;
+    });
+    p.stats.seasons = p.stats.seasons || p.seasons || 10;
+});
+
+
+// ═══════════════════════════════════════
+// CATEGORY DEFINITIONS
+// ═══════════════════════════════════════
+var BASE_CATS = {
+    // QB
+    careerPassYards:    {label:'Career Pass Yards',    type:'QB',  dMin:5000, step:500, thresholds:[15000,20000,25000,30000,35000,40000,50000,60000], tolerance:0.20, minBuffer:5000},
+    careerPassTDs:      {label:'Career Pass TDs',      type:'QB',  dMin:25,   step:1,   thresholds:[100,150,200,250,300,350,400,500], tolerance:0.25, minBuffer:30},
+    careerINTs:         {label:'Career INTs',          type:'QB',  dMin:15,   step:1,   lowerBetter:true, thresholds:[300,250,200,150,100,75,50], tolerance:0.25, minBuffer:20},
+    careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:3.0,  step:0.1, thresholds:[70,75,80,85,90,95,100,105], tolerance:0.10, minBuffer:5.0},
+    careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.030,step:0.005,thresholds:[0.52,0.55,0.58,0.60,0.62,0.65,0.68], tolerance:0.08, minBuffer:0.04},
+    careerQBWins:       {label:'Career QB Wins',       type:'QB',  dMin:15,   step:1,   thresholds:[50,75,100,125,150,175,200], tolerance:0.25, minBuffer:20},
+    careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:20,   step:1,   thresholds:[64,80,100,120,150,200,230], tolerance:0.25, minBuffer:25},
+    careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:300,  step:100, thresholds:[500,1000,2000,3000,4000,5000,6000], tolerance:0.30, minBuffer:400},
+    seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:500,  step:100, thresholds:[3000,3500,4000,4500,5000,5500], tolerance:0.18, minBuffer:500},
+    seasonHighPassTDs:  {label:'High Season Pass TDs', type:'QB',  dMin:5,    step:1,   thresholds:[20,25,30,35,40,45,50], tolerance:0.20, minBuffer:6},
+    // RB
+    careerRushYards:    {label:'Career Rush Yards',    type:'RB',  dMin:1500, step:100, thresholds:[3000,5000,7000,9000,11000,13000,15000], tolerance:0.20, minBuffer:1500},
+    careerRushTDs:      {label:'Career Rush TDs',      type:'RB',  dMin:15,   step:1,   thresholds:[30,50,75,100,125,150,175], tolerance:0.25, minBuffer:15},
+    careerYPC:          {label:'Career Yards/Carry',   type:'RB',  dMin:0.30, step:0.05,thresholds:[3.5,3.8,4.0,4.2,4.5,4.8,5.0,5.5], tolerance:0.12, minBuffer:0.40},
+    careerRushAttempts: {label:'Career Rush Attempts', type:'RB',  dMin:300,  step:50,  thresholds:[750,1000,1500,2000,2500,3000,3500], tolerance:0.20, minBuffer:300},
+    seasonHighRushYards:{label:'High Season Rush Yds', type:'RB',  dMin:200,  step:50,  thresholds:[500,700,900,1000,1200,1400,1600,1800,2000], tolerance:0.20, minBuffer:200},
+    careerFumbles:      {label:'Career Fumbles',       type:'RB',  dMin:5,    step:1,   lowerBetter:true, thresholds:[100,80,60,40,25,15], tolerance:0.30, minBuffer:8},
+    // Skill (WR/TE)
+    careerRecYards:     {label:'Career Rec Yards',     type:'skill',dMin:1500, step:100, thresholds:[3000,5000,7000,9000,11000,13000,15000], tolerance:0.20, minBuffer:1500},
+    careerReceptions:   {label:'Career Receptions',    type:'skill',dMin:75,   step:10,  thresholds:[200,400,600,800,1000,1200,1500], tolerance:0.20, minBuffer:100},
+    careerRecTDs:       {label:'Career Rec TDs',       type:'skill',dMin:10,   step:1,   thresholds:[25,50,75,100,125,150,175,200], tolerance:0.25, minBuffer:15},
+    careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:1.0,  step:0.1, thresholds:[10,11,12,13,14,15,16,17,18], tolerance:0.12, minBuffer:1.5},
+    seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:200,  step:50,  thresholds:[500,700,900,1000,1200,1400,1600,1800], tolerance:0.20, minBuffer:200},
+    seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:10,   step:5,   thresholds:[40,60,80,100,120,140], tolerance:0.18, minBuffer:12},
+    // Universal
+    seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[5,7,9,12,15,18,20], tolerance:0.30, minBuffer:2},
+    careerProBowls:     {label:'Pro Bowl Selections',  type:'both', dMin:1,    step:1,   thresholds:[1,2,3,4,5,6,8,10,12], tolerance:0.50, minBuffer:1},
+    careerAllPro:       {label:'All-Pro Selections',   type:'both', dMin:1,    step:1,   thresholds:[1,2,3,4,5,6,8], tolerance:0.50, minBuffer:1},
+    careerAV:           {label:'Career Approx. Value', type:'both', dMin:15,   step:5,   thresholds:[30,50,70,90,110,130,150,175,200], tolerance:0.25, minBuffer:20},
+    careerRecYardsRB:   {label:'Career Rec Yards',     type:'RB',   dMin:500,  step:100, thresholds:[1000,2000,3000,4000,5000,6000], tolerance:0.25, minBuffer:500},
+};
+
+var BASE_BULL = {
+    careerPassYards:500, careerPassTDs:5, careerINTs:5, careerPasserRating:1.5,
+    careerCompPct:0.01, careerQBWins:5, careerGamesStarted:5, careerQBRushYards:100,
+    seasonHighPassYards:100, seasonHighPassTDs:2,
+    careerRushYards:300, careerRushTDs:5, careerYPC:0.1, careerRushAttempts:50,
+    seasonHighRushYards:50, careerFumbles:3, careerRecYardsRB:100,
+    careerRecYards:300, careerReceptions:20, careerRecTDs:5, careerYPR:0.3,
+    seasonHighRecYards:50, seasonHighReceptions:5,
+    seasons:1, careerProBowls:1, careerAllPro:1, careerAV:10
+};
+
+var SBS_CATS_QB = [
+    {key:'careerAV',           label:'Career AV'},
+    {key:'careerPassYards',    label:'Career Pass Yds'},
+    {key:'careerPassTDs',      label:'Career Pass TDs'},
+    {key:'careerINTs',         label:'Career INTs',      lowerBetter:true},
+    {key:'careerPasserRating', label:'Passer Rating'},
+    {key:'careerCompPct',      label:'Completion %'},
+    {key:'careerQBWins',       label:'Career Wins'},
+    {key:'careerGamesStarted', label:'Career Starts'},
+    {key:'seasonHighPassYards',label:'High Season Yds'},
+    {key:'seasonHighPassTDs',  label:'High Season TDs'},
+];
+var SBS_CATS_RB = [
+    {key:'careerAV',            label:'Career AV'},
+    {key:'careerRushYards',     label:'Career Rush Yds'},
+    {key:'careerRushTDs',       label:'Career Rush TDs'},
+    {key:'careerYPC',           label:'Yards per Carry'},
+    {key:'careerRushAttempts',  label:'Career Attempts'},
+    {key:'careerRecYards',      label:'Career Rec Yds'},
+    {key:'careerReceptions',    label:'Career Receptions'},
+    {key:'careerFumbles',       label:'Career Fumbles',   lowerBetter:true},
+    {key:'seasonHighRushYards', label:'High Season Yds'},
+    {key:'seasons',             label:'Seasons Played'},
+];
+var SBS_CATS_WR = [
+    {key:'careerAV',             label:'Career AV'},
+    {key:'careerRecYards',       label:'Career Rec Yds'},
+    {key:'careerReceptions',     label:'Career Receptions'},
+    {key:'careerRecTDs',         label:'Career Rec TDs'},
+    {key:'careerYPR',            label:'Yards per Rec'},
+    {key:'seasonHighRecYards',   label:'High Season Yds'},
+    {key:'seasonHighReceptions', label:'High Season Recs'},
+    {key:'careerProBowls',       label:'Pro Bowls'},
+    {key:'careerAllPro',         label:'All-Pros'},
+    {key:'seasons',              label:'Seasons Played'},
+];
+var SBS_CATS_TE = SBS_CATS_WR; // TEs share same categories
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+var useAnimations   = localStorage.getItem('useAnimations') !== 'false';
+var gameMode        = 'howMuch';
+var playerPool      = 'all';
+var eligibility     = 'standard';
+var eraMode         = 'modern';
+var score           = 0;
+var round           = 1;
+var roundResults    = [];
+var A = null, B = null;
+var catKey          = null;
+var trueDiff        = 0;
+var correctPick     = null;
+var hasUsedReroll   = false;
+var usedPlayerIDs   = new Set();
+var categoryHistory = {};
+var sbsPicks        = new Array(10).fill(null);
+var pickEmState     = {threshold:0, correctIDs:new Set(), picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, roundOver:false};
+var sliderState     = {min:0, max:0, rangeMax:100, step:1, minLimit:0};
+var sliderDragging  = null;
+var dom             = {};
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function passesGlobal(p) {
+    if (eligibility === 'standard') {
+        if (p.pos === 'QB') return p.gs >= 64;
+        if (p.pos === 'RB') return p.stats.careerRushAttempts >= 750;
+        if (p.pos === 'WR') return p.stats.careerReceptions >= 250;
+        if (p.pos === 'TE') return p.stats.careerReceptions >= 150;
+        return true;
+    }
+    if (eligibility === 'allStar') return p.av >= 80;
+    if (eligibility === 'hof') return p.av >= 130;
+    return true;
+}
+
+function posPass(p, catType) {
+    if (catType === 'QB')    return p.pos === 'QB';
+    if (catType === 'RB')    return p.pos === 'RB';
+    if (catType === 'skill') return p.pos === 'WR' || p.pos === 'TE';
+    if (catType === 'both')  return true;
+    return true;
+}
+
+function poolPass(p) {
+    if (playerPool === 'all')   return true;
+    if (playerPool === 'QB')    return p.pos === 'QB';
+    if (playerPool === 'RB')    return p.pos === 'RB';
+    if (playerPool === 'skill') return p.pos === 'WR' || p.pos === 'TE';
+    return true;
+}
+
+function eraPass(p) {
+    if (eraMode === 'allEras') return true;
+    if (eraMode === 'modern')  return p.decades.has(2000) || p.decades.has(2010) || p.decades.has(2020);
+    if (eraMode === 'classic') return p.decades.has(1960) || p.decades.has(1970) || p.decades.has(1980) || p.decades.has(1990);
+    return true;
+}
+
+function getStat(p, k) {
+    if (k === 'seasons') return p.stats.seasons || p.seasons || 0;
+    if (k === 'careerAV') return p.av || 0;
+    return p.stats[k] || 0;
+}
+
+function formatStat(v, k) {
+    if (k === 'careerCompPct')      return (v * 100).toFixed(1) + '%';
+    if (k === 'careerPasserRating' || k === 'careerYPC' || k === 'careerYPR') return v.toFixed(1);
+    return Math.round(v).toLocaleString();
+}
+
+function makeLink(p) {
+    var base = 'https://www.pro-football-reference.com/players/';
+    var parts = p.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ');
+    var last = parts[parts.length - 1], first = parts[0];
+    return base + last[0] + '/' + last.slice(0,4) + first.slice(0,2) + '00.htm';
+}
+
+function showAlert(msg, cls) {
+    var el = dom.alert;
+    el.textContent = msg;
+    el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-100 pointer-events-none transition-all duration-300 text-center max-w-[calc(100%-2.5rem)] text-white ' + (cls || 'bg-green-600');
+    clearTimeout(el._t);
+    el._t = setTimeout(function() { el.style.opacity = '0'; }, 2000);
+}
+
+function updateScoreColor() {
+    var el = dom.scoreDisp;
+    el.classList.remove('score-bronze','score-silver','score-gold','score-platinum');
+    if      (score >= 5000) el.classList.add('score-platinum');
+    else if (score >= 4000) el.classList.add('score-gold');
+    else if (score >= 3000) el.classList.add('score-silver');
+    else if (score >= 2000) el.classList.add('score-bronze');
+}
+
+// ═══════════════════════════════════════
+// SLIDER
+// ═══════════════════════════════════════
+function initSlider(rangeMax, minLimit, step) {
+    sliderState.rangeMax = rangeMax;
+    sliderState.minLimit = minLimit;
+    sliderState.step = step;
+    sliderState.min = minLimit;
+    sliderState.max = rangeMax;
+    updateSliderUI();
+    renderSliderTicks();
+}
+
+function updateSliderUI() {
+    var span = sliderState.rangeMax;
+    var minPct = (sliderState.min / span) * 100;
+    var maxPct = (sliderState.max / span) * 100;
+    dom.thumbMin.style.left = minPct + '%';
+    dom.thumbMax.style.left = maxPct + '%';
+    dom.fillBar.style.left  = minPct + '%';
+    dom.fillBar.style.width = (maxPct - minPct) + '%';
+    dom.fillBar.style.display = 'block';
+    dom.dispMin.textContent = formatStat(sliderState.min, catKey);
+    dom.dispMax.textContent = formatStat(sliderState.max, catKey);
+    // Bullseye zone
+    var bull = BASE_BULL[catKey] || (sliderState.rangeMax * 0.05);
+    var bMin = Math.max(0, trueDiff - bull), bMax = trueDiff + bull;
+    var bMinPct = Math.max(0, Math.min(100, (bMin / span) * 100));
+    var bMaxPct = Math.max(0, Math.min(100, (bMax / span) * 100));
+    dom.bullseye.style.left  = bMinPct + '%';
+    dom.bullseye.style.width = (bMaxPct - bMinPct) + '%';
+}
+
+function renderSliderTicks() {
+    var span = sliderState.rangeMax, step = sliderState.step;
+    var numTicks = 5;
+    dom.ticks.innerHTML = '';
+    for (var i = 0; i <= numTicks; i++) {
+        var val = (span / numTicks) * i;
+        var pct = (val / span) * 100;
+        var tick = document.createElement('div');
+        tick.style.cssText = 'position:absolute;left:' + pct + '%;transform:translateX(-50%);font-size:0.6rem;font-weight:600;color:#9ca3af;';
+        tick.textContent = formatStat(val, catKey);
+        dom.ticks.appendChild(tick);
+    }
+}
+
+function adjustSlider(which, dir) {
+    var cat = BASE_CATS[catKey];
+    var st = cat ? cat.step : 1;
+    if (which === 'min') {
+        var newMin = sliderState.min + dir * st;
+        newMin = Math.max(sliderState.minLimit, Math.min(newMin, sliderState.max - st));
+        sliderState.min = newMin;
+    } else {
+        var newMax = sliderState.max + dir * st;
+        newMax = Math.max(sliderState.min + st, Math.min(newMax, sliderState.rangeMax));
+        sliderState.max = newMax;
+    }
+    updateSliderUI();
+    dom.submitBtn.disabled = false;
+}
+
+function setupSliderDrag() {
+    var area = dom.sliderArea;
+    function getX(e) { return (e.touches ? e.touches[0].clientX : e.clientX); }
+    function onMove(e) {
+        if (!sliderDragging) return;
+        e.preventDefault();
+        var rect = area.getBoundingClientRect();
+        var pct = Math.max(0, Math.min(1, (getX(e) - rect.left) / rect.width));
+        var val = pct * sliderState.rangeMax;
+        var step = sliderState.step;
+        val = Math.round(val / step) * step;
+        if (sliderDragging === 'min') {
+            sliderState.min = Math.max(sliderState.minLimit, Math.min(val, sliderState.max - step));
+        } else {
+            sliderState.max = Math.max(sliderState.min + step, Math.min(val, sliderState.rangeMax));
+        }
+        updateSliderUI();
+        dom.submitBtn.disabled = false;
+    }
+    function onEnd() { if (sliderDragging) { dom.thumbMin.classList.remove('thumb-active'); dom.thumbMax.classList.remove('thumb-active'); sliderDragging = null; } }
+    function startDrag(thumb, which) {
+        thumb.addEventListener('mousedown', function(e) { e.preventDefault(); sliderDragging = which; thumb.classList.add('thumb-active'); });
+        thumb.addEventListener('touchstart', function(e) { e.preventDefault(); sliderDragging = which; thumb.classList.add('thumb-active'); }, {passive:false});
+    }
+    startDrag(dom.thumbMin, 'min');
+    startDrag(dom.thumbMax, 'max');
+    area.addEventListener('mousemove', onMove);
+    area.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+}
+
+// ═══════════════════════════════════════
+// MATCHUP GENERATION
+// ═══════════════════════════════════════
+function pickCatPool(catType) {
+    // All cats for this type + 'both'
+    return Object.keys(BASE_CATS).filter(function(k) {
+        var c = BASE_CATS[k];
+        if (catType === 'QB')    return c.type === 'QB' || c.type === 'both';
+        if (catType === 'RB')    return c.type === 'RB' || c.type === 'both' || c.type === 'skill';
+        if (catType === 'skill') return c.type === 'skill' || c.type === 'both';
+        return true;
+    });
+}
+
+function pickPositionType() {
+    var types = [];
+    if (playerPool === 'QB')    types = ['QB'];
+    else if (playerPool === 'RB')    types = ['RB'];
+    else if (playerPool === 'skill') types = ['skill'];
+    else types = ['QB','RB','skill'];
+    return types[Math.floor(Math.random() * types.length)];
+}
+
+function generateHowMuch() {
+    var posType = pickPositionType();
+    var cats = pickCatPool(posType);
+    var maxUsage = 2;
+    var validCats = cats.filter(function(k) { return (categoryHistory[k] || 0) < maxUsage; });
+    if (validCats.length === 0) validCats = cats;
+
+    for (var attempt = 0; attempt < 300; attempt++) {
+        var ck = validCats[Math.floor(Math.random() * validCats.length)];
+        var catDef = BASE_CATS[ck];
+        var pool = NFL_PLAYERS.filter(function(p) {
+            return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && posPass(p, catDef.type);
+        });
+        if (pool.length < 2) continue;
+        for (var j = 0; j < 50; j++) {
+            var a = pool[Math.floor(Math.random() * pool.length)];
+            var b = pool[Math.floor(Math.random() * pool.length)];
+            if (a === b) continue;
+            var d = Math.abs(getStat(a, ck) - getStat(b, ck));
+            if (d >= catDef.dMin && d <= catDef.dMin * 5) {
+                usedPlayerIDs.add(a.id); usedPlayerIDs.add(b.id);
+                categoryHistory[ck] = (categoryHistory[ck] || 0) + 1;
+                return {pA:a, pB:b, cat:ck};
+            }
+        }
+    }
+    // Fallback: relax constraints
+    var allPool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p); });
+    if (allPool.length >= 2) {
+        shuffle(allPool);
+        var ck2 = (playerPool === 'QB') ? 'careerPassYards' : (playerPool === 'RB') ? 'careerRushYards' : 'careerRecYards';
+        return {pA:allPool[0], pB:allPool[1], cat:ck2};
+    }
+    return null;
+}
+
+function generateShowdown() {
+    var posType = pickPositionType();
+    var realPos = posType === 'skill' ? (Math.random() < 0.5 ? 'WR' : 'TE') : posType;
+    var pool = NFL_PLAYERS.filter(function(p) {
+        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos;
+    });
+    if (pool.length < 2) {
+        // fallback: relax usedIDs
+        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos; });
+    }
+    if (pool.length < 2) return null;
+    var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
+    for (var attempt = 0; attempt < 50; attempt++) {
+        var idxA = Math.floor(Math.random() * pool.length);
+        var idxB = Math.floor(Math.random() * pool.length);
+        if (idxA === idxB) continue;
+        var pA = pool[idxA], pB = pool[idxB];
+        var wA = 0, wB = 0;
+        cats.forEach(function(c) {
+            var vA = getStat(pA, c.key), vB = getStat(pB, c.key);
+            if (vA === vB) return;
+            if (c.lowerBetter ? vA < vB : vA > vB) wA++; else wB++;
+        });
+        if (wA <= 9 && wB <= 9) {
+            usedPlayerIDs.add(pA.id); usedPlayerIDs.add(pB.id);
+            return {pA:pA, pB:pB, pos:realPos};
+        }
+    }
+    // Fallback
+    shuffle(pool);
+    usedPlayerIDs.add(pool[0].id); usedPlayerIDs.add(pool[1].id);
+    return {pA:pool[0], pB:pool[1], pos:pool[0].pos};
+}
+
+function generatePickEm() {
+    var posType = pickPositionType();
+    var validCats = Object.keys(BASE_CATS).filter(function(k) {
+        var c = BASE_CATS[k];
+        return c.thresholds && (c.type === posType || c.type === 'both' ||
+            (posType === 'RB' && c.type === 'skill') ||
+            (posType === 'skill' && c.type === 'skill'));
+    });
+    if (validCats.length === 0) validCats = Object.keys(BASE_CATS).filter(function(k) { return BASE_CATS[k].thresholds; });
+
+    for (var retry = 0; retry < 20; retry++) {
+        var ck = validCats[Math.floor(Math.random() * validCats.length)];
+        var cc = BASE_CATS[ck];
+        var availThresh = cc.thresholds.slice();
+        if (eligibility === 'allStar' || eligibility === 'hof') {
+            availThresh = availThresh.slice(-2);
+        } else {
+            availThresh = availThresh.slice(0, -1);
+        }
+        var threshVal = availThresh[Math.floor(Math.random() * availThresh.length)];
+        var numCorrect = round <= 3 ? 7 : (round <= 6 ? 6 : 5);
+        var numIncorrect = 10 - numCorrect;
+        var buffer = threshVal * cc.tolerance;
+        if (cc.minBuffer) buffer = Math.max(buffer, cc.minBuffer);
+
+        var goodMin, goodMax, badMin, badMax;
+        if (cc.lowerBetter) {
+            goodMax = threshVal; goodMin = Math.max(0, threshVal - buffer);
+            badMin = threshVal + 0.001; badMax = threshVal + buffer;
+        } else {
+            goodMin = threshVal; goodMax = threshVal + buffer;
+            badMax = threshVal - 0.001; badMin = Math.max(0, threshVal - buffer);
+        }
+
+        var eligPool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && eraPass(p) && poolPass(p) && posPass(p, cc.type); });
+        var correctPool = [], distractorPool = [];
+        eligPool.forEach(function(p) {
+            var val = getStat(p, ck);
+            if (cc.lowerBetter) {
+                if (val >= goodMin && val <= goodMax) correctPool.push({p:p, val:val});
+                else if (val >= badMin && val <= badMax) distractorPool.push({p:p, val:val});
+            } else {
+                if (val >= goodMin && val <= goodMax) correctPool.push({p:p, val:val});
+                else if (val >= badMin && val <= badMax) distractorPool.push({p:p, val:val});
+            }
+        });
+        if (correctPool.length < numCorrect || distractorPool.length < numIncorrect) continue;
+        shuffle(correctPool); shuffle(distractorPool);
+        var chosen = correctPool.slice(0, numCorrect).concat(distractorPool.slice(0, numIncorrect));
+        shuffle(chosen);
+        return {cards:chosen, cat:ck, threshold:threshVal, correctIDs: new Set(correctPool.slice(0,numCorrect).map(function(x){return x.p.id;}))};
+    }
+    return null;
+}
+
+function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+}
+
+// ═══════════════════════════════════════
+// SCORING
+// ═══════════════════════════════════════
+function calcHowMuchScore(diff, min, max) {
+    if (diff < min || diff > max) return 0;
+    var span = max - min;
+    if (span <= 0) return 500;
+    var bull = BASE_BULL[catKey] || (sliderState.rangeMax * 0.05);
+    if (span <= bull * 2) return 500;
+    var tightnessRatio = 1 - (span / sliderState.rangeMax);
+    return Math.round(100 + tightnessRatio * 300);
+}
+
+// ═══════════════════════════════════════
+// ROUND LOGIC
+// ═══════════════════════════════════════
+function startRound() {
+    if (round > 10) { endGame(); return; }
+    dom.roundDisp.textContent = 'Round ' + round + '/10';
+    dom.eraLabel.textContent = {modern:'Modern Era',classic:'Classic Era',allEras:'All Eras'}[eraMode] || '';
+
+    if (gameMode === 'howMuch') {
+        var match = generateHowMuch();
+        if (!match) { showAlert('Not enough players for these settings','bg-red-500'); return; }
+        A = match.pA; B = match.pB; catKey = match.cat;
+        var cat = BASE_CATS[catKey];
+        dom.catLabel.textContent = cat.label;
+        dom.nameA.textContent = A.name;
+        dom.nameB.textContent = B.name;
+        dom.statA.textContent = '--'; dom.statA.classList.add('hidden');
+        dom.statB.textContent = '--'; dom.statB.classList.add('hidden');
+        dom.cardA.className = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]';
+        dom.cardB.className = dom.cardA.className;
+        dom.prompt.textContent = 'Whose ' + cat.label + ' is Higher?';
+        if (cat.lowerBetter) dom.prompt.textContent = 'Whose ' + cat.label + ' is Lower?';
+        correctPick = null;
+        var sA = getStat(A, catKey), sB = getStat(B, catKey);
+        trueDiff = Math.abs(sA - sB);
+        var dMin = cat.dMin, dMax = cat.dMin * 5;
+        initSlider(dMax, dMin, cat.step);
+        dom.pin.style.display = 'none';
+        dom.resultText.textContent = ''; dom.resultText.style.opacity = '0';
+        dom.submitBtn.textContent = 'Lock In'; dom.submitBtn.disabled = true;
+        dom.submitBtn.onclick = lockInHowMuch;
+        showUI('howMuch');
+    } else if (gameMode === 'sideBySide') {
+        var match = generateShowdown();
+        if (!match) { showAlert('Not enough players for these settings','bg-red-500'); return; }
+        A = match.pA; B = match.pB;
+        var cats = match.pos === 'QB' ? SBS_CATS_QB : (match.pos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
+        dom.sbsNameA.textContent = A.name;
+        dom.sbsNameB.textContent = B.name;
+        dom.sbsWinsA.textContent = '0'; dom.sbsWinsB.textContent = '0';
+        sbsPicks = new Array(cats.length).fill(null);
+        renderShowdownGrid(cats);
+        dom.sbsSubmitBtn.disabled = true;
+        dom.sbsSubmitBtn.textContent = 'Lock In';
+        dom.sbsSubmitBtn.onclick = lockInShowdown;
+        dom.catLabel.textContent = 'Showdown';
+        showUI('sideBySide');
+    } else if (gameMode === 'pickEm') {
+        var match = generatePickEm();
+        if (!match) { showAlert('Not enough players for these settings','bg-red-500'); return; }
+        catKey = match.cat;
+        pickEmState = {threshold:match.threshold, correctIDs:match.correctIDs, picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, roundOver:false};
+        var cc = BASE_CATS[catKey];
+        var op = cc.lowerBetter ? '≤' : '≥';
+        dom.pickemThresh.textContent = op + ' ' + formatStat(match.threshold, catKey);
+        dom.pickemCatLabel.textContent = cc.label;
+        dom.catLabel.textContent = cc.label;
+        var grid = dom.pickemGrid;
+        grid.innerHTML = '';
+        match.cards.forEach(function(item) {
+            var card = document.createElement('div');
+            card.className = 'pickem-card';
+            card.dataset.id = item.p.id;
+            card.dataset.val = item.val;
+            card.innerHTML = '<div class="font-black text-xs leading-tight">' + item.p.name + '</div><div class="stat-val hidden"></div>';
+            card.addEventListener('click', function() { onPickEmCardClick(card, item.p, item.val); });
+            grid.appendChild(card);
+        });
+        dom.pickemSubmitBtn.disabled = false;
+        dom.pickemSubmitBtn.textContent = 'Done';
+        dom.pickemSubmitBtn.onclick = lockInPickEm;
+        showUI('pickEm');
+    }
+}
+
+function showUI(mode) {
+    dom.uiHowMuch.classList.add('hidden');
+    dom.uiShowdown.classList.add('hidden');
+    dom.uiPickem.classList.add('hidden');
+    dom.homeBtn.classList.add('hidden');
+    dom.rerollBtn.classList.remove('hidden');
+    dom.startScreen.classList.add('hidden');
+    dom.gameScreen.classList.remove('hidden');
+    dom.gameScreen.style.display = 'flex';
+    dom.endScreen.classList.add('hidden');
+    if (mode === 'howMuch')   dom.uiHowMuch.classList.remove('hidden');
+    if (mode === 'sideBySide')dom.uiShowdown.classList.remove('hidden');
+    if (mode === 'pickEm')    dom.uiPickem.classList.remove('hidden');
+}
+
+function onCardClick(which) {
+    if (correctPick !== null) return; // already picked
+    var sA = getStat(A, catKey), sB = getStat(B, catKey);
+    var cat = BASE_CATS[catKey];
+    if (cat.lowerBetter) {
+        correctPick = sA < sB ? 'A' : 'B';
+    } else {
+        correctPick = sA > sB ? 'A' : 'B';
+    }
+    var isCorrect = which === correctPick;
+    var winCard = which === 'A' ? dom.cardA : dom.cardB;
+    var loseCard = which === 'A' ? dom.cardB : dom.cardA;
+    winCard.className = winCard.className + (isCorrect ? ' border-green-500 bg-green-50 dark:bg-green-900/20' : ' border-red-500 bg-red-50 dark:bg-red-900/20');
+    if (!isCorrect) {
+        loseCard.className = loseCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
+        roundResults.push({round:round, pts:0, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:false});
+        finishRound(0);
+        return;
+    }
+    dom.submitBtn.disabled = false;
+    dom.prompt.textContent = 'By How Much?';
+}
+
+function lockInHowMuch() {
+    if (dom.submitBtn.textContent === 'Next Round' || dom.submitBtn.textContent === 'Finish') {
+        round++;
+        startRound();
+        return;
+    }
+    var diff = trueDiff;
+    var pts = 0;
+    if (correctPick !== null) {
+        pts = calcHowMuchScore(diff, sliderState.min, sliderState.max);
+    }
+    // Show answer pin
+    var pct = Math.min(100, (diff / sliderState.rangeMax) * 100);
+    dom.pin.style.left = pct + '%';
+    dom.pin.style.display = 'block';
+    // Show stats
+    dom.statA.textContent = formatStat(getStat(A, catKey), catKey);
+    dom.statA.classList.remove('hidden');
+    dom.statB.textContent = formatStat(getStat(B, catKey), catKey);
+    dom.statB.classList.remove('hidden');
+    dom.resultText.textContent = 'Difference: ' + formatStat(diff, catKey);
+    dom.resultText.style.opacity = '1';
+    // Make names clickable
+    dom.nameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
+    dom.nameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
+    roundResults.push({round:round, pts:pts, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:correctPick!==null, diff:diff, min:sliderState.min, max:sliderState.max});
+    finishRound(pts);
+}
+
+function finishRound(pts) {
+    score += pts;
+    dom.scoreDisp.textContent = score;
+    updateScoreColor();
+    if (useAnimations) dom.scoreDisp.classList.add('animate-score-pop');
+    setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
+    showAlert(pts > 0 ? '+' + pts + ' pts!' : 'No points', pts > 0 ? 'bg-green-600' : 'bg-red-500');
+    dom.submitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    dom.submitBtn.disabled = false;
+    dom.rerollBtn.disabled = true;
+}
+
+function renderShowdownGrid(cats) {
+    var container = dom.sbsGrid;
+    container.innerHTML = '';
+    cats.forEach(function(cat, i) {
+        var row = document.createElement('div');
+        row.className = 'sbs-grid';
+        var labelEl = document.createElement('div');
+        labelEl.className = 'sbs-row-label';
+        labelEl.textContent = cat.label;
+        var cellA = document.createElement('div');
+        cellA.className = 'sbs-cell';
+        cellA.textContent = getStat(A, cat.key) ? formatStat(getStat(A, cat.key), cat.key) : '?';
+        cellA.dataset.idx = i; cellA.dataset.which = 'A';
+        var cellB = document.createElement('div');
+        cellB.className = 'sbs-cell';
+        cellB.textContent = getStat(B, cat.key) ? formatStat(getStat(B, cat.key), cat.key) : '?';
+        cellB.dataset.idx = i; cellB.dataset.which = 'B';
+        cellA.addEventListener('click', function() { onSBSCellClick(i, 'A', cats); });
+        cellB.addEventListener('click', function() { onSBSCellClick(i, 'B', cats); });
+        row.appendChild(labelEl); row.appendChild(cellA); row.appendChild(cellB);
+        container.appendChild(row);
+    });
+}
+
+function onSBSCellClick(idx, which, cats) {
+    if (sbsPicks[idx] !== null) return;
+    sbsPicks[idx] = which;
+    var rows = dom.sbsGrid.children;
+    var cells = rows[idx].querySelectorAll('.sbs-cell');
+    var pickedCell = which === 'A' ? cells[0] : cells[1];
+    pickedCell.classList.add('selected');
+    // Update wins display
+    var wA = sbsPicks.filter(function(p) { return p === 'A'; }).length;
+    var wB = sbsPicks.filter(function(p) { return p === 'B'; }).length;
+    dom.sbsWinsA.textContent = wA; dom.sbsWinsB.textContent = wB;
+    var allPicked = sbsPicks.slice(0, cats.length).every(function(p) { return p !== null; });
+    if (allPicked) dom.sbsSubmitBtn.disabled = false;
+}
+
+function lockInShowdown() {
+    if (dom.sbsSubmitBtn.textContent === 'Next Round' || dom.sbsSubmitBtn.textContent === 'Finish') {
+        round++;
+        startRound();
+        return;
+    }
+    var match = A; // A and B already set
+    var realPos = A.pos;
+    var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
+    var correct = 0;
+    var rows = dom.sbsGrid.children;
+    cats.forEach(function(cat, i) {
+        var vA = getStat(A, cat.key), vB = getStat(B, cat.key);
+        var correctPick2 = (cat.lowerBetter ? vA < vB : vA > vB) ? 'A' : 'B';
+        if (vA === vB) { sbsPicks[i] = correctPick2; } // tie: any is correct
+        var cells = rows[i].querySelectorAll('.sbs-cell');
+        var cellA = cells[0], cellB = cells[1];
+        // Show values
+        cellA.textContent = formatStat(vA, cat.key);
+        cellB.textContent = formatStat(vB, cat.key);
+        if (sbsPicks[i] === correctPick2) {
+            correct++;
+            (sbsPicks[i] === 'A' ? cellA : cellB).classList.remove('selected');
+            (sbsPicks[i] === 'A' ? cellA : cellB).classList.add('correct');
+            (sbsPicks[i] === 'A' ? cellB : cellA).classList.add('sbs-cell');
+        } else {
+            (sbsPicks[i] === 'A' ? cellA : cellB).classList.remove('selected');
+            (sbsPicks[i] === 'A' ? cellA : cellB).classList.add('incorrect');
+            (correctPick2 === 'A' ? cellA : cellB).classList.add('correct');
+        }
+    });
+    var pts = Math.round((correct / cats.length) * 1000);
+    dom.sbsWinsA.textContent = sbsPicks.filter(function(p) { return p === 'A'; }).length;
+    dom.sbsWinsB.textContent = sbsPicks.filter(function(p) { return p === 'B'; }).length;
+    roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
+    score += pts;
+    dom.scoreDisp.textContent = score;
+    updateScoreColor();
+    showAlert('+' + pts + ' pts (' + correct + '/' + cats.length + ')','bg-green-600');
+    dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    dom.sbsSubmitBtn.disabled = false;
+    dom.rerollBtn.disabled = true;
+    // Make names clickable
+    dom.sbsNameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
+    dom.sbsNameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
+}
+
+function onPickEmCardClick(card, player, val) {
+    if (pickEmState.roundOver) return;
+    if (card.classList.contains('revealed')) return;
+    var isCorrect = pickEmState.correctIDs.has(player.id);
+    card.classList.add('revealed');
+    card.querySelector('.stat-val').textContent = formatStat(val, catKey);
+    card.querySelector('.stat-val').classList.remove('hidden');
+    if (isCorrect) {
+        card.classList.add('correct');
+        pickEmState.chainCount++;
+        var bonus = pickEmState.chainActive ? (pickEmState.chainCount - 1) * 50 : 0;
+        var pts = 100 + bonus;
+        pickEmState.totalRoundPts += pts;
+        showAlert('+' + pts + (bonus ? ' (chain!)' : ''),'bg-green-600');
+    } else {
+        card.classList.add('incorrect');
+        pickEmState.chainActive = false;
+        showAlert('Wrong! Round over','bg-red-500');
+        pickEmState.roundOver = true;
+        // Reveal all remaining
+        dom.pickemGrid.querySelectorAll('.pickem-card:not(.revealed)').forEach(function(c) {
+            var cid = c.dataset.id;
+            var cval = parseFloat(c.dataset.val);
+            c.classList.add('revealed');
+            c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
+            c.querySelector('.stat-val').classList.remove('hidden');
+            if (pickEmState.correctIDs.has(cid)) c.classList.add('missed');
+            else c.classList.add('incorrect');
+        });
+        roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:false});
+        score += pickEmState.totalRoundPts;
+        dom.scoreDisp.textContent = score;
+        updateScoreColor();
+        dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+        dom.pickemSubmitBtn.disabled = false;
+        dom.rerollBtn.disabled = true;
+    }
+}
+
+function lockInPickEm() {
+    if (dom.pickemSubmitBtn.textContent === 'Next Round' || dom.pickemSubmitBtn.textContent === 'Finish') {
+        round++;
+        startRound();
+        return;
+    }
+    // Reveal all remaining
+    dom.pickemGrid.querySelectorAll('.pickem-card:not(.revealed)').forEach(function(c) {
+        var cid = c.dataset.id;
+        var cval = parseFloat(c.dataset.val);
+        c.classList.add('revealed');
+        c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
+        c.querySelector('.stat-val').classList.remove('hidden');
+        if (pickEmState.correctIDs.has(cid)) c.classList.add('missed');
+        else c.classList.add('incorrect');
+    });
+    roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:true});
+    score += pickEmState.totalRoundPts;
+    dom.scoreDisp.textContent = score;
+    updateScoreColor();
+    showAlert('+' + pickEmState.totalRoundPts + ' pts','bg-green-600');
+    dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    dom.rerollBtn.disabled = true;
+}
+
+// ═══════════════════════════════════════
+// GAME START / END
+// ═══════════════════════════════════════
+function startGame() {
+    score = 0; round = 1; roundResults = [];
+    usedPlayerIDs = new Set(); categoryHistory = {};
+    hasUsedReroll = false;
+    dom.scoreDisp.textContent = '0';
+    dom.scoreDisp.className = 'text-lg font-black leading-none';
+    startRound();
+}
+
+function endGame() {
+    dom.gameScreen.classList.add('hidden');
+    dom.gameScreen.style.display = 'none';
+    dom.endScreen.classList.remove('hidden');
+    dom.endScreen.style.display = 'flex';
+    dom.finalScore.textContent = score;
+    dom.homeBtn.classList.remove('hidden');
+    dom.rerollBtn.classList.add('hidden');
+    // Check local high score
+    var prevHigh = parseInt(localStorage.getItem('nfl_highscore') || '0', 10);
+    if (score > prevHigh) {
+        localStorage.setItem('nfl_highscore', score);
+        dom.highscoreContainer.classList.remove('hidden');
+        var savedName = localStorage.getItem('nfl_screenName');
+        if (savedName) dom.playerNameInput.value = savedName;
+    } else {
+        dom.highscoreContainer.classList.add('hidden');
+    }
+    renderLeaderboard();
+}
+
+// ═══════════════════════════════════════
+// LEADERBOARD (localStorage only)
+// ═══════════════════════════════════════
+function saveScore() {
+    var name = dom.playerNameInput.value.trim().slice(0, 10) || 'Anonymous';
+    if (dom.rememberCheck.checked) localStorage.setItem('nfl_screenName', name);
+    var lb = JSON.parse(localStorage.getItem('nfl_leaderboard') || '[]');
+    lb.push({name:name, score:score, ts:Date.now()});
+    lb.sort(function(a,b){return b.score-a.score;});
+    lb = lb.slice(0, 50);
+    localStorage.setItem('nfl_leaderboard', JSON.stringify(lb));
+    dom.highscoreContainer.classList.add('hidden');
+    showAlert('Score saved!','bg-green-600');
+    renderLeaderboard();
+}
+
+function renderLeaderboard() {
+    var lb = JSON.parse(localStorage.getItem('nfl_leaderboard') || '[]');
+    var body = dom.lbBody;
+    var emptyMsg = dom.lbEmpty;
+    body.innerHTML = '';
+    if (lb.length === 0) { emptyMsg.classList.remove('hidden'); return; }
+    emptyMsg.classList.add('hidden');
+    lb.slice(0, 20).forEach(function(entry, i) {
+        var tr = document.createElement('tr');
+        tr.className = 'leaderboard-row';
+        tr.innerHTML = '<td class="px-4 py-2 text-center font-bold">' + (i+1) + '</td>' +
+            '<td class="px-4 py-2 font-black text-green-600 dark:text-green-400">' + entry.score + '</td>' +
+            '<td class="px-4 py-2">' + (entry.name || 'Anonymous') + '</td>';
+        body.appendChild(tr);
+    });
+}
+
+// ═══════════════════════════════════════
+// DOM INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+    dom.alert       = document.getElementById('custom-alert');
+    dom.startScreen = document.getElementById('start-screen');
+    dom.gameScreen  = document.getElementById('game-screen');
+    dom.endScreen   = document.getElementById('end-screen');
+    dom.homeBtn     = document.getElementById('home-btn');
+    dom.rulesBtn    = document.getElementById('rules-btn');
+    dom.lbBtn       = document.getElementById('leaderboard-btn');
+    dom.rerollBtn   = document.getElementById('reroll-btn');
+    dom.settingsBtn = document.getElementById('settings-btn');
+    dom.settingsPop = document.getElementById('settings-popover');
+    dom.themeRow    = document.getElementById('theme-toggle-row');
+    dom.iconSun     = document.getElementById('icon-sun');
+    dom.iconMoon    = document.getElementById('icon-moon');
+    dom.animRow     = document.getElementById('anim-toggle-row');
+    dom.animInd     = document.getElementById('anim-indicator');
+    dom.clearNameRow= document.getElementById('clear-screen-name-row');
+    dom.nameInd     = document.getElementById('screen-name-indicator');
+    dom.startBtn    = document.getElementById('start-game-btn');
+    dom.roundDisp   = document.getElementById('round-display');
+    dom.scoreDisp   = document.getElementById('score-display');
+    dom.eraLabel    = document.getElementById('game-era-label');
+    dom.catLabel    = document.getElementById('game-cat-label');
+    dom.uiHowMuch   = document.getElementById('ui-how-much');
+    dom.uiShowdown  = document.getElementById('ui-showdown');
+    dom.uiPickem    = document.getElementById('ui-pickem');
+    // How Much
+    dom.prompt      = document.getElementById('player-prompt');
+    dom.cardA       = document.getElementById('card-A');
+    dom.cardB       = document.getElementById('card-B');
+    dom.nameA       = document.getElementById('name-A');
+    dom.nameB       = document.getElementById('name-B');
+    dom.statA       = document.getElementById('stat-A');
+    dom.statB       = document.getElementById('stat-B');
+    dom.thumbMin    = document.getElementById('thumb-min');
+    dom.thumbMax    = document.getElementById('thumb-max');
+    dom.fillBar     = document.getElementById('slider-fill-bar');
+    dom.bullseye    = document.getElementById('slider-bullseye-zone');
+    dom.pin         = document.getElementById('slider-answer-pin');
+    dom.ticks       = document.getElementById('slider-ticks');
+    dom.dispMin     = document.getElementById('slider-display-min');
+    dom.dispMax     = document.getElementById('slider-display-max');
+    dom.sliderArea  = document.getElementById('slider-touch-area');
+    dom.resultText  = document.getElementById('slider-result-text');
+    dom.submitBtn   = document.getElementById('submit-btn');
+    // Showdown
+    dom.sbsNameA    = document.getElementById('sbs-name-a');
+    dom.sbsNameB    = document.getElementById('sbs-name-b');
+    dom.sbsWinsA    = document.getElementById('sbs-wins-a');
+    dom.sbsWinsB    = document.getElementById('sbs-wins-b');
+    dom.sbsGrid     = document.getElementById('sbs-grid-container');
+    dom.sbsSubmitBtn= document.getElementById('sbs-submit-btn');
+    // Pick Em
+    dom.pickemThresh= document.getElementById('pickem-thresh-val');
+    dom.pickemCatLabel=document.getElementById('pickem-cat-label');
+    dom.pickemGrid  = document.getElementById('pickem-grid');
+    dom.pickemSubmitBtn=document.getElementById('pickem-submit-btn');
+    // End
+    dom.finalScore  = document.getElementById('final-score');
+    dom.viewBreakdown=document.getElementById('view-breakdown-btn');
+    dom.highscoreContainer=document.getElementById('highscore-input-container');
+    dom.playerNameInput=document.getElementById('player-name-input');
+    dom.rememberCheck=document.getElementById('remember-name-check');
+    dom.saveScoreBtn=document.getElementById('save-score-btn');
+    dom.playAgainBtn=document.getElementById('play-again-btn');
+    // Leaderboard
+    dom.lbModal     = document.getElementById('leaderboard-modal');
+    dom.lbOverlay   = document.getElementById('leaderboard-overlay');
+    dom.closeLbBtn  = document.getElementById('close-leaderboard-btn');
+    dom.lbBody      = document.getElementById('leaderboard-body');
+    dom.lbEmpty     = document.getElementById('empty-leaderboard-msg');
+    // Breakdown
+    dom.breakdownModal=document.getElementById('breakdown-modal');
+    dom.breakdownOverlay=document.getElementById('breakdown-overlay');
+    dom.closeBreakdown=document.getElementById('close-breakdown');
+    dom.roundBreakdown=document.getElementById('round-breakdown');
+    // Modals
+    dom.rulesModal  = document.getElementById('rules-modal');
+    dom.rulesOverlay= document.getElementById('rules-overlay');
+    dom.closeRules  = document.getElementById('close-rules');
+    dom.gmHelpModal = document.getElementById('gamemode-help-modal');
+    dom.gmHelpOverlay=document.getElementById('gamemode-help-overlay');
+    dom.closeGmHelp = document.getElementById('close-gamemode-help');
+    dom.eligHelpModal=document.getElementById('elig-help-modal');
+    dom.eligHelpOverlay=document.getElementById('elig-help-overlay');
+    dom.closeEligHelp=document.getElementById('close-elig-help');
+
+    // Restore saved name
+    var savedName = localStorage.getItem('nfl_screenName');
+    if (savedName) {
+        dom.nameInd.textContent = savedName;
+        dom.clearNameRow.classList.remove('hidden');
+    }
+    updateThemeIcon();
+    updateAnimUI();
+
+    // Toggle buttons
+    document.querySelectorAll('.gamemode-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            gameMode = this.dataset.mode;
+            document.querySelectorAll('.gamemode-btn').forEach(function(b) {
+                b.className = 'flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn';
+            });
+            this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all gamemode-btn';
+        });
+    });
+    document.querySelectorAll('.pool-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            playerPool = this.dataset.pool;
+            document.querySelectorAll('.pool-btn').forEach(function(b) {
+                b.className = 'flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all pool-btn';
+            });
+            this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all pool-btn';
+        });
+    });
+    document.querySelectorAll('.elig-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            eligibility = this.dataset.elig;
+            document.querySelectorAll('.elig-btn').forEach(function(b) {
+                b.className = 'flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all elig-btn';
+            });
+            this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all elig-btn';
+        });
+    });
+    document.querySelectorAll('.era-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            eraMode = this.dataset.era;
+            document.querySelectorAll('.era-btn').forEach(function(b) {
+                b.className = 'flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn';
+            });
+            this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all era-btn';
+        });
+    });
+
+    dom.startBtn.addEventListener('click', startGame);
+    dom.homeBtn.addEventListener('click', function() {
+        dom.gameScreen.classList.add('hidden'); dom.gameScreen.style.display='none';
+        dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
+        dom.startScreen.classList.remove('hidden');
+        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden');
+    });
+    dom.cardA.addEventListener('click', function() { onCardClick('A'); });
+    dom.cardB.addEventListener('click', function() { onCardClick('B'); });
+    dom.rerollBtn.addEventListener('click', function() {
+        if (hasUsedReroll) { showAlert('No rerolls left','bg-red-500'); return; }
+        hasUsedReroll = true;
+        dom.rerollBtn.disabled = true;
+        startRound();
+    });
+    dom.playAgainBtn.addEventListener('click', function() {
+        dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
+        dom.startScreen.classList.remove('hidden');
+        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden');
+    });
+    dom.saveScoreBtn.addEventListener('click', saveScore);
+    dom.viewBreakdown.addEventListener('click', function() {
+        var html = '<div class="space-y-3">';
+        roundResults.forEach(function(r) {
+            html += '<div class="border-b border-gray-200 dark:border-gray-700 pb-2">';
+            html += '<div class="flex justify-between text-xs font-bold mb-0.5">';
+            html += '<span class="text-gray-600 dark:text-gray-400">Round ' + r.round + ' — ' + r.cat + '</span>';
+            html += '<span class="' + (r.pts > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">+' + r.pts + '</span></div>';
+            html += '<div class="text-xs text-gray-500 dark:text-gray-500">' + r.pA + ' vs ' + r.pB + '</div></div>';
+        });
+        html += '</div>';
+        dom.roundBreakdown.innerHTML = html;
+        dom.breakdownModal.classList.remove('hidden');
+    });
+    dom.closeBreakdown.addEventListener('click', function() { dom.breakdownModal.classList.add('hidden'); });
+    dom.breakdownOverlay.addEventListener('click', function() { dom.breakdownModal.classList.add('hidden'); });
+    dom.lbBtn.addEventListener('click', function() { renderLeaderboard(); dom.lbModal.classList.remove('hidden'); });
+    dom.closeLbBtn.addEventListener('click', function() { dom.lbModal.classList.add('hidden'); });
+    dom.lbOverlay.addEventListener('click', function() { dom.lbModal.classList.add('hidden'); });
+    dom.rulesBtn.addEventListener('click', function() { dom.rulesModal.classList.remove('hidden'); });
+    dom.closeRules.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
+    dom.rulesOverlay.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
+    document.getElementById('gamemode-help-btn').addEventListener('click', function() { dom.gmHelpModal.classList.remove('hidden'); });
+    dom.closeGmHelp.addEventListener('click', function() { dom.gmHelpModal.classList.add('hidden'); });
+    dom.gmHelpOverlay.addEventListener('click', function() { dom.gmHelpModal.classList.add('hidden'); });
+    document.getElementById('elig-help-btn').addEventListener('click', function() { dom.eligHelpModal.classList.remove('hidden'); });
+    dom.closeEligHelp.addEventListener('click', function() { dom.eligHelpModal.classList.add('hidden'); });
+    dom.eligHelpOverlay.addEventListener('click', function() { dom.eligHelpModal.classList.add('hidden'); });
+    dom.settingsBtn.addEventListener('click', function(e) { e.stopPropagation(); dom.settingsPop.classList.toggle('hidden'); });
+    document.addEventListener('click', function(e) { if (!dom.settingsPop.contains(e.target) && e.target !== dom.settingsBtn) dom.settingsPop.classList.add('hidden'); });
+    dom.themeRow.addEventListener('click', function() { toggleTheme(); });
+    dom.animRow.addEventListener('click', function() { toggleAnimations(); });
+    dom.clearNameRow.addEventListener('click', function() {
+        localStorage.removeItem('nfl_screenName');
+        dom.nameInd.textContent = '';
+        dom.clearNameRow.classList.add('hidden');
+    });
+    setupSliderDrag();
+});
+
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'enabled' : 'disabled');
+    updateThemeIcon();
+}
+function updateThemeIcon() {
+    var dark = document.documentElement.classList.contains('dark');
+    if (dom.iconSun) dom.iconSun.classList.toggle('hidden', dark);
+    if (dom.iconMoon) dom.iconMoon.classList.toggle('hidden', !dark);
+}
+function toggleAnimations() {
+    useAnimations = !useAnimations;
+    localStorage.setItem('useAnimations', useAnimations);
+    updateAnimUI();
+}
+function updateAnimUI() {
+    if (!dom.animInd) return;
+    dom.animInd.textContent = useAnimations ? 'ON' : 'OFF';
+    dom.animInd.className = useAnimations
+        ? 'text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded'
+        : 'text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded';
+}
+
+</script>
+</body>
+</html>
