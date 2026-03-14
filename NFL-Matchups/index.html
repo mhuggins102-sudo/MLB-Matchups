@@ -38,6 +38,12 @@
         .animate-score-pop { animation: score-pop 0.4s ease-out; }
         @keyframes text-pop { 0%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1.3);}100%{opacity:1;transform:scale(1);} }
         .animate-text-pop { animation: text-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
+        @keyframes pulse-bull { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .animate-bullseye { animation: pulse-bull 0.6s infinite ease-in-out; }
+        @keyframes score-pop-multi { 0% { transform: scale(1); } 25% { transform: scale(1.4); } 50% { transform: scale(1); } 75% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        .animate-score-levelup { animation: score-pop-multi 1.2s ease-in-out; }
+        @keyframes float-up { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, -4px); } }
+        .animate-float-result { animation: float-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .score-bronze { color: var(--color-bronze); }
         .score-silver { color: var(--color-silver); }
         .score-gold { color: var(--color-gold); }
@@ -91,6 +97,14 @@
         html.dark .leaderboard-row:nth-child(even) { background-color:rgba(255,255,255,0.02); }
         .player-card { border:2px solid #d1d5db; }
         html.dark .player-card { border-color:transparent; }
+        #slider-invalid-zone {
+            background: repeating-linear-gradient(45deg, #9ca3af, #9ca3af 2px, #d1d5db 2px, #d1d5db 8px);
+            opacity: 0.5;
+            transition: width 0.3s;
+        }
+        html.dark #slider-invalid-zone {
+            background: repeating-linear-gradient(45deg, #4b5563, #4b5563 2px, #1f2937 2px, #1f2937 8px);
+        }
     </style>
 </head>
 <body class="bg-gray-200 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 h-[100dvh] flex flex-col overflow-hidden">
@@ -183,10 +197,24 @@
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Era</label>
-                <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all era-btn" data-era="modern">Modern</button>
-                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn" data-era="classic">Classic</button>
-                    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn" data-era="allEras">All Eras</button>
+                <div class="relative" id="era-picker-container">
+                    <button id="era-trigger-btn" class="w-full py-2 text-xs sm:text-sm font-semibold rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 text-left flex justify-between items-center">
+                        <span id="era-display">Modern (2000+)</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div id="era-popover" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 p-2 animate-enter">
+                        <div class="grid grid-cols-3 gap-1">
+                            <button class="era-opt col-span-1 py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="allEras" data-label="All Eras">All Eras</button>
+                            <button class="era-opt col-span-2 py-1.5 text-xs font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white transition" data-era="modern" data-label="Modern (2000+)">Modern (2000+)</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="2020" data-label="2020s">2020s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="2010" data-label="2010s">2010s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="2000" data-label="2000s">2000s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="1990" data-label="1990s">1990s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="1980" data-label="1980s">1980s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="1970" data-label="1970s">1970s</button>
+                            <button class="era-opt py-1.5 text-xs font-semibold rounded-lg hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition" data-era="decade" data-decade="1960" data-label="1960s">1960s</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -221,7 +249,7 @@
                 </button>
             </div>
             <div class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">By How Much?</div>
-            <div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 select-none">
+            <div class="bg-white dark:bg-gray-900 px-2 pt-4 pb-8 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-800 mb-4 select-none relative">
                 <div class="flex justify-center items-end mb-2 gap-4 sm:gap-8">
                     <div class="flex flex-col items-center gap-1">
                         <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">MIN DIFF</span>
@@ -242,8 +270,7 @@
                 </div>
                 <div class="relative mx-2" style="height:3.5rem;" id="slider-touch-area">
                     <div class="absolute w-full rounded-full" style="height:12px;top:1rem;background:#e5e7eb;" id="slider-track">
-                        <html.dark style="display:none"></html.dark>
-                        <div class="absolute h-full rounded-full stripe-pattern" style="background:rgba(22,163,74,0.1);" id="slider-invalid-zone"></div>
+                        <div id="slider-invalid-zone" style="position:absolute;left:0;top:0;height:100%;width:0%;z-index:10;border-right:1px solid #6b7280;"></div>
                         <div class="absolute h-full rounded-full" style="background:rgba(22,163,74,0.45);display:none;" id="slider-fill-bar"></div>
                         <div class="absolute h-full rounded-full" style="background:#f59e0b;opacity:0.9;display:none;" id="slider-bullseye-zone"></div>
                         <div class="absolute" style="width:4px;height:28px;top:-8px;background:#10b981;border-radius:2px;transform:translateX(-50%);display:none;box-shadow:0 0 8px rgba(16,185,129,0.6);" id="slider-answer-pin"></div>
@@ -252,7 +279,7 @@
                     <div id="thumb-max" class="absolute rounded-full bg-white border-2 border-green-500 shadow-md cursor-grab" style="width:1.5rem;height:1.5rem;top:1.5rem;transform:translate(-50%,-50%);z-index:20;"></div>
                     <div id="slider-ticks" class="absolute w-full" style="top:2.75rem;"></div>
                 </div>
-                <div id="slider-result-text" class="text-center font-black text-2xl mt-1 opacity-0 text-green-600 dark:text-green-400 transition-all"></div>
+                <div id="slider-result-text" class="hidden absolute left-1/2 -translate-x-1/2 -top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 text-xs font-bold shadow-sm whitespace-nowrap z-50" style="opacity:0"></div>
             </div>
             <button id="submit-btn" class="primary-btn" disabled>Lock In</button>
         </div>
@@ -275,6 +302,7 @@
                 <div id="pickem-thresh-val" class="text-xl font-black text-gray-900 dark:text-white"></div>
                 <div id="pickem-cat-label" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"></div>
             </div>
+            <div id="pickem-chain-bar" class="hidden text-xs font-bold text-amber-600 dark:text-amber-400 text-center py-1 mb-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg"></div>
             <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4"></div>
             <button id="pickem-submit-btn" class="primary-btn" disabled>Reveal</button>
         </div>
@@ -282,6 +310,8 @@
 
     <!-- END SCREEN -->
     <div id="end-screen" class="hidden flex flex-col items-center justify-center h-full pt-8">
+        <div id="ribbon-emoji" class="text-7xl mb-2 text-center"></div>
+        <div id="ribbon-text" class="text-sm font-bold text-center mb-2"></div>
         <div class="text-center mb-6 space-y-2">
             <div class="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">Final Score</div>
             <div class="text-6xl font-black text-green-600 dark:text-green-400" id="final-score">0</div>
@@ -296,6 +326,7 @@
             </label>
             <button id="save-score-btn" class="primary-btn mb-2">Save to Leaderboard</button>
         </div>
+        <button id="share-btn" class="w-full max-w-xs py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-base shadow-lg transition mb-3">Share Result</button>
         <button id="play-again-btn" class="primary-btn max-w-xs">Play Again</button>
     </div>
 </main>
@@ -320,6 +351,22 @@
             <h3 class="text-sm font-black uppercase tracking-wide text-gray-600 dark:text-gray-400">Leaderboard</h3>
             <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
         </div>
+        <div class="px-4 pt-3">
+            <div class="flex gap-2 mb-3">
+                <select id="lb-filter-mode" class="flex-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
+                    <option value="all">All Modes</option>
+                    <option value="howMuch">How Much?</option>
+                    <option value="sideBySide">Showdown</option>
+                    <option value="pickEm">Pick 'Em</option>
+                </select>
+                <select id="lb-filter-elig" class="flex-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
+                    <option value="all">All Tiers</option>
+                    <option value="standard">Veteran</option>
+                    <option value="allStar">All-Pro</option>
+                    <option value="hof">HOF</option>
+                </select>
+            </div>
+        </div>
         <div class="p-0 overflow-y-auto">
             <table class="w-full text-sm text-left">
                 <thead class="text-xs text-gray-600 dark:text-gray-500 uppercase bg-gray-100 dark:bg-gray-800/50 sticky top-0">
@@ -340,19 +387,35 @@
             <h3 class="text-lg font-black text-gray-900 dark:text-white">How to Play</h3>
             <button id="close-rules" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500 text-xl">&times;</button>
         </div>
-        <div class="p-5 overflow-y-auto text-sm text-gray-600 dark:text-gray-400 space-y-4">
-            <div><div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div><p class="text-xs leading-relaxed">Pick which player has the higher stat, then estimate the difference with the range slider. Tighter range = more points.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs leading-relaxed">Two players, 10 categories head-to-head. Pick who wins each. Score = (correct/10) × 1000.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div><p class="text-xs leading-relaxed">A threshold is shown. From 10 players, pick those who meet it. Each correct pick earns 100 pts + chain bonuses. Wrong pick ends round.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Scoring — How Much?</div>
-                <ul class="text-xs space-y-1 list-disc ml-4">
-                    <li>Bullseye (range ≤ 10% of answer): <span class="font-bold text-green-600">+500 pts</span></li>
-                    <li>Answer inside your range: up to 400 pts based on tightness</li>
-                    <li>Wrong player selected: <span class="font-bold text-red-500">0 pts</span></li>
-                </ul>
-            </div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-4"><div class="font-black text-gray-800 dark:text-white mb-1">Player Pool</div>
-                <p class="text-xs"><strong>Veteran:</strong> Multi-year starters (QBs: 64+ starts, RBs: 750+ carries, WRs/TEs: 250+ receptions).<br><strong>All-Pro:</strong> Career AV ≥ 80.<br><strong>HOF:</strong> All-time legends, Career AV ≥ 130.</p>
+        <div class="p-5 overflow-y-auto">
+            <div class="space-y-4 text-sm">
+                <div>
+                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🏈 How Much?</h3>
+                    <p class="text-gray-700 dark:text-gray-300">Pick which player has the higher (or lower) stat, then set a range for the difference using the slider. A tighter range earns more points.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Correct player + inside range: <strong>200–1000 pts</strong>. Hit the bullseye zone: <strong>+100 bonus</strong>. Wrong player or outside range: <strong>0 pts</strong>.</p>
+                </div>
+                <div>
+                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">⚡ Showdown</h3>
+                    <p class="text-gray-700 dark:text-gray-300">Two players, 10 stat categories head-to-head. Pick who wins each category before locking in.</p>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-x-4">
+                        <span>6/10 correct → 100 pts</span><span>7/10 → 250 pts</span>
+                        <span>8/10 → 450 pts</span><span>9/10 → 700 pts</span>
+                        <span>10/10 → 1000 pts</span><span>&lt;6/10 → 0 pts</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🎯 Pick 'Em</h3>
+                    <p class="text-gray-700 dark:text-gray-300">A stat threshold is shown. From 10 players, pick those who meet it. Each correct pick earns 100 pts, plus chain bonuses for consecutive correct picks. One wrong pick ends the round.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Chain bonus: +50 × (chain length) per pick.</p>
+                </div>
+                <div>
+                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🏅 Tiers</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400"><strong>Veteran:</strong> Multi-year starters (QBs: 64+ starts, RBs: 750+ carries, WRs: 250+ rec, TEs: 150+ rec).<br><strong>All-Pro:</strong> Elite contributors — Career AV ≥ 80.<br><strong>HOF:</strong> Legends only — Career AV ≥ 130.</p>
+                </div>
+                <div>
+                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🎲 Reroll</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">One free skip per game. Use it on a tough matchup.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -585,6 +648,7 @@ var gameMode        = 'howMuch';
 var playerPool      = 'all';
 var eligibility     = 'standard';
 var eraMode         = 'modern';
+var selectedDecade  = 0;
 var score           = 0;
 var round           = 1;
 var roundResults    = [];
@@ -637,7 +701,7 @@ function poolPass(p) {
 function eraPass(p) {
     if (eraMode === 'allEras') return true;
     if (eraMode === 'modern')  return p.decades.has(2000) || p.decades.has(2010) || p.decades.has(2020);
-    if (eraMode === 'classic') return p.decades.has(1960) || p.decades.has(1970) || p.decades.has(1980) || p.decades.has(1990);
+    if (eraMode === 'decade')  return p.decades.has(selectedDecade);
     return true;
 }
 
@@ -648,8 +712,9 @@ function getStat(p, k) {
 }
 
 function formatStat(v, k) {
-    if (k === 'careerCompPct')      return (v * 100).toFixed(1) + '%';
-    if (k === 'careerPasserRating' || k === 'careerYPC' || k === 'careerYPR') return v.toFixed(1);
+    if (k === 'careerCompPct') return (v * 100).toFixed(useWholeNumbers ? 0 : 1) + '%';
+    if (k === 'careerPasserRating' || k === 'careerYPC' || k === 'careerYPR')
+        return useWholeNumbers ? Math.round(v).toLocaleString() : v.toFixed(1);
     return Math.round(v).toLocaleString();
 }
 
@@ -691,6 +756,7 @@ function initSlider(rangeMax, minLimit, step) {
 }
 
 function updateSliderUI() {
+    if (!dom.thumbMin) return;
     var span = sliderState.rangeMax;
     var minPct = (sliderState.min / span) * 100;
     var maxPct = (sliderState.max / span) * 100;
@@ -708,6 +774,19 @@ function updateSliderUI() {
     var bMaxPct = Math.max(0, Math.min(100, (bMax / span) * 100));
     dom.bullseye.style.left  = bMinPct + '%';
     dom.bullseye.style.width = (bMaxPct - bMinPct) + '%';
+    dom.bullseye.style.display = 'block';
+    if (useAnimations) dom.bullseye.classList.add('animate-bullseye');
+    // Dead zone
+    if (dom.sliderInvalid) {
+        if (deadZoneEnabled && sliderState.minLimit > 0) {
+            var dzPct = (sliderState.minLimit / sliderState.rangeMax) * 100;
+            dom.sliderInvalid.style.width = dzPct + '%';
+            dom.sliderInvalid.style.display = 'block';
+        } else {
+            dom.sliderInvalid.style.width = '0%';
+            dom.sliderInvalid.style.display = 'none';
+        }
+    }
 }
 
 function renderSliderTicks() {
@@ -949,7 +1028,8 @@ function calcHowMuchScore(diff, min, max) {
 function startRound() {
     if (round > 10) { endGame(); return; }
     dom.roundDisp.textContent = 'Round ' + round + '/10';
-    dom.eraLabel.textContent = {modern:'Modern Era',classic:'Classic Era',allEras:'All Eras'}[eraMode] || '';
+    var eraLabels = {allEras:'All Eras', modern:'Modern (2000+)', decade:selectedDecade + 's'};
+    dom.eraLabel.textContent = eraLabels[eraMode] || '';
     var eligLabel = {standard:'Veteran', allStar:'All-Pro', hof:'HOF'}[eligibility] || eligibility;
     var poolLabel = {all:'All', QB:'QBs', RB:'RBs', skill:'WR/TE'}[playerPool] || playerPool;
     dom.catLabel.textContent = eligLabel + ' · ' + poolLabel;
@@ -965,8 +1045,8 @@ function startRound() {
         dom.statB.textContent = '--'; dom.statB.classList.add('hidden');
         dom.cardA.className = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]';
         dom.cardB.className = dom.cardA.className;
-        dom.prompt.textContent = 'Whose ' + cat.label + ' is Higher?';
-        if (cat.lowerBetter) dom.prompt.textContent = 'Whose ' + cat.label + ' is Lower?';
+        var dir = cat.lowerBetter ? 'Lower' : 'Higher';
+        dom.prompt.innerHTML = 'Whose <button onclick="showAlert(\'' + cat.label.replace(/'/g, '') + '\', \'bg-gray-700\')" class="underline decoration-dotted font-black text-green-600 dark:text-green-400">' + cat.label + '</button> is ' + dir + '?';
         correctPick = null;
         userPickHowMuch = null;
         var sA = getStat(A, catKey), sB = getStat(B, catKey);
@@ -974,7 +1054,8 @@ function startRound() {
         var dMin = cat.dMin, dMax = cat.dMin * 5;
         initSlider(dMax, dMin, cat.step);
         dom.pin.style.display = 'none';
-        dom.resultText.textContent = ''; dom.resultText.style.opacity = '0';
+        dom.bullseye.classList.remove('animate-bullseye');
+        dom.resultText.classList.add('hidden'); dom.resultText.classList.remove('animate-float-result'); dom.resultText.style.opacity = '0';
         dom.submitBtn.textContent = 'Lock In'; dom.submitBtn.disabled = true;
         dom.submitBtn.onclick = lockInHowMuch;
         showUI('howMuch');
@@ -1007,12 +1088,16 @@ function startRound() {
             card.className = 'pickem-card';
             card.dataset.id = item.p.id;
             card.dataset.val = item.val;
-            card.innerHTML = '<div class="font-black text-xs leading-tight">' + item.p.name + '</div><div class="stat-val hidden"></div>';
+            card.innerHTML = '<div class="font-black text-xs leading-tight">' + item.p.name + '</div>'
+                + '<div class="stat-val hidden text-xs font-bold mt-0.5"></div>'
+                + '<div class="base-pts-tag hidden text-[10px] font-black text-green-600 dark:text-green-400">+100</div>'
+                + '<div class="bonus-tag hidden text-[10px] font-black text-amber-600 dark:text-amber-400"></div>';
             card.addEventListener('click', function() { onPickEmCardClick(card, item.p, item.val); });
             grid.appendChild(card);
         });
+        if (dom.pickemChainBar) dom.pickemChainBar.classList.add('hidden');
         dom.pickemSubmitBtn.disabled = false;
-        dom.pickemSubmitBtn.textContent = 'Done';
+        dom.pickemSubmitBtn.textContent = 'Lock In';
         dom.pickemSubmitBtn.onclick = lockInPickEm;
         showUI('pickEm');
     }
@@ -1077,7 +1162,9 @@ function lockInHowMuch() {
     dom.statB.textContent = formatStat(getStat(B, catKey), catKey);
     dom.statB.classList.remove('hidden');
     dom.resultText.textContent = 'Difference: ' + formatStat(diff, catKey);
+    dom.resultText.classList.remove('hidden');
     dom.resultText.style.opacity = '1';
+    if (useAnimations) dom.resultText.classList.add('animate-float-result');
     // Make names clickable
     dom.nameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
     dom.nameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
@@ -1086,11 +1173,21 @@ function lockInHowMuch() {
 }
 
 function finishRound(pts) {
+    var prevScore = score;
     score += pts;
     dom.scoreDisp.textContent = score;
     updateScoreColor();
-    if (useAnimations) dom.scoreDisp.classList.add('animate-score-pop');
-    setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
+    var medals = [2000, 3000, 4000, 5000];
+    var crossedMedal = medals.some(function(m) { return prevScore < m && score >= m; });
+    if (useAnimations) {
+        if (crossedMedal) {
+            dom.scoreDisp.classList.add('animate-score-levelup');
+            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-levelup'); }, 1200);
+        } else {
+            dom.scoreDisp.classList.add('animate-score-pop');
+            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
+        }
+    }
     showAlert(pts > 0 ? '+' + pts + ' pts!' : 'No points', pts > 0 ? 'bg-green-600' : 'bg-red-500');
     dom.submitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
     dom.submitBtn.disabled = false;
@@ -1166,9 +1263,21 @@ function lockInShowdown() {
     var sbsScoreTable = [0, 0, 0, 0, 0, 0, 100, 250, 450, 700, 1000];
     var pts = sbsScoreTable[Math.min(correct, 10)];
     roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
+    var prevScoreSbs = score;
     score += pts;
     dom.scoreDisp.textContent = score;
     updateScoreColor();
+    var medalsSbs = [2000, 3000, 4000, 5000];
+    var crossedMedalSbs = medalsSbs.some(function(m) { return prevScoreSbs < m && score >= m; });
+    if (useAnimations) {
+        if (crossedMedalSbs) {
+            dom.scoreDisp.classList.add('animate-score-levelup');
+            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-levelup'); }, 1200);
+        } else {
+            dom.scoreDisp.classList.add('animate-score-pop');
+            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
+        }
+    }
     showAlert('+' + pts + ' pts (' + correct + '/' + cats.length + ')','bg-green-600');
     dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
     dom.sbsSubmitBtn.disabled = false;
@@ -1182,18 +1291,29 @@ function onPickEmCardClick(card, player, val) {
     if (pickEmState.roundOver) return;
     if (card.classList.contains('revealed')) return;
     var isCorrect = pickEmState.correctIDs.has(player.id);
-    card.classList.add('revealed');
-    card.querySelector('.stat-val').textContent = formatStat(val, catKey);
-    card.querySelector('.stat-val').classList.remove('hidden');
     if (isCorrect) {
-        card.classList.add('correct');
+        card.classList.add('revealed', 'correct');
+        card.querySelector('.stat-val').textContent = formatStat(val, catKey);
+        card.querySelector('.stat-val').classList.remove('hidden');
+        card.querySelector('.base-pts-tag').classList.remove('hidden');
         pickEmState.chainCount++;
         var bonus = pickEmState.chainActive ? (pickEmState.chainCount - 1) * 50 : 0;
         var pts = 100 + bonus;
         pickEmState.totalRoundPts += pts;
+        if (bonus > 0) {
+            card.querySelector('.bonus-tag').textContent = '+' + bonus + ' chain!';
+            card.querySelector('.bonus-tag').classList.remove('hidden');
+        }
+        // Update chain bar
+        if (dom.pickemChainBar) {
+            dom.pickemChainBar.classList.remove('hidden');
+            dom.pickemChainBar.textContent = 'Chain active! Next correct pick: +' + (50 * pickEmState.chainCount) + ' bonus';
+        }
         showAlert('+' + pts + (bonus ? ' (chain!)' : ''),'bg-green-600');
     } else {
-        card.classList.add('incorrect');
+        card.classList.add('revealed', 'incorrect');
+        card.querySelector('.stat-val').textContent = formatStat(val, catKey);
+        card.querySelector('.stat-val').classList.remove('hidden');
         pickEmState.chainActive = false;
         showAlert('Wrong! Round over','bg-red-500');
         pickEmState.roundOver = true;
@@ -1254,6 +1374,7 @@ function startGame() {
     startRound();
 }
 
+var endGameTier = null;
 function endGame() {
     dom.gameScreen.classList.add('hidden');
     dom.gameScreen.style.display = 'none';
@@ -1262,6 +1383,20 @@ function endGame() {
     dom.finalScore.textContent = score;
     dom.homeBtn.classList.remove('hidden');
     dom.rerollBtn.classList.add('hidden');
+    // Ribbon tier
+    var tiers = [
+        {min:5000, emoji:'🏆', text:'Platinum — Legendary!', cls:'text-cyan-400'},
+        {min:4000, emoji:'🥇', text:'Gold — Outstanding!', cls:'text-yellow-500'},
+        {min:3000, emoji:'🥈', text:'Silver — Great game!', cls:'text-gray-400'},
+        {min:2000, emoji:'🥉', text:'Bronze — Not bad!', cls:'text-orange-600'},
+        {min:0,    emoji:'😬', text:'Keep practicing!', cls:'text-gray-500'},
+    ];
+    endGameTier = tiers.find(function(t) { return score >= t.min; });
+    if (dom.ribbonEmoji) dom.ribbonEmoji.textContent = endGameTier.emoji;
+    if (dom.ribbonText) {
+        dom.ribbonText.textContent = endGameTier.text;
+        dom.ribbonText.className = 'text-sm font-bold text-center mb-2 ' + endGameTier.cls;
+    }
     // Check local high score
     var prevHigh = parseInt(localStorage.getItem('nfl_highscore') || '0', 10);
     if (score > prevHigh) {
@@ -1282,7 +1417,7 @@ function saveScore() {
     var name = dom.playerNameInput.value.trim().slice(0, 10) || 'Anonymous';
     if (dom.rememberCheck.checked) localStorage.setItem('nfl_screenName', name);
     var lb = JSON.parse(localStorage.getItem('nfl_leaderboard') || '[]');
-    lb.push({name:name, score:score, ts:Date.now()});
+    lb.push({name:name, score:score, ts:Date.now(), mode:gameMode, elig:eligibility});
     lb.sort(function(a,b){return b.score-a.score;});
     lb = lb.slice(0, 50);
     localStorage.setItem('nfl_leaderboard', JSON.stringify(lb));
@@ -1293,17 +1428,23 @@ function saveScore() {
 
 function renderLeaderboard() {
     var lb = JSON.parse(localStorage.getItem('nfl_leaderboard') || '[]');
+    var filterMode = dom.lbFilterMode ? dom.lbFilterMode.value : 'all';
+    var filterElig = dom.lbFilterElig ? dom.lbFilterElig.value : 'all';
+    if (filterMode !== 'all') lb = lb.filter(function(e) { return e.mode === filterMode; });
+    if (filterElig !== 'all') lb = lb.filter(function(e) { return e.elig === filterElig; });
     var body = dom.lbBody;
     var emptyMsg = dom.lbEmpty;
     body.innerHTML = '';
     if (lb.length === 0) { emptyMsg.classList.remove('hidden'); return; }
     emptyMsg.classList.add('hidden');
+    var medals = ['🥇','🥈','🥉'];
     lb.slice(0, 20).forEach(function(entry, i) {
         var tr = document.createElement('tr');
         tr.className = 'leaderboard-row';
-        tr.innerHTML = '<td class="px-4 py-2 text-center font-bold">' + (i+1) + '</td>' +
-            '<td class="px-4 py-2 font-black text-green-600 dark:text-green-400">' + entry.score + '</td>' +
-            '<td class="px-4 py-2">' + (entry.name || 'Anonymous') + '</td>';
+        var rank = i < 3 ? medals[i] : (i + 1) + '.';
+        tr.innerHTML = '<td class="px-4 py-2 text-center font-bold">' + rank + '</td>'
+            + '<td class="px-4 py-2 font-black text-green-600 dark:text-green-400">' + entry.score + '</td>'
+            + '<td class="px-4 py-2">' + (entry.name || 'Anonymous') + '</td>';
         body.appendChild(tr);
     });
 }
@@ -1329,6 +1470,11 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.animInd     = document.getElementById('anim-indicator');
     dom.clearNameRow= document.getElementById('clear-screen-name-row');
     dom.nameInd     = document.getElementById('screen-name-indicator');
+    dom.formatRow    = document.getElementById('format-toggle-row');
+    dom.formatInd    = document.getElementById('format-indicator');
+    dom.deadZoneRow  = document.getElementById('dead-zone-toggle-row');
+    dom.deadZoneInd  = document.getElementById('dead-zone-indicator');
+    dom.sliderInvalid= document.getElementById('slider-invalid-zone');
     dom.startBtn    = document.getElementById('start-game-btn');
     dom.roundDisp   = document.getElementById('round-display');
     dom.scoreDisp   = document.getElementById('score-display');
@@ -1376,12 +1522,19 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.rememberCheck=document.getElementById('remember-name-check');
     dom.saveScoreBtn=document.getElementById('save-score-btn');
     dom.playAgainBtn=document.getElementById('play-again-btn');
+    dom.ribbonEmoji = document.getElementById('ribbon-emoji');
+    dom.ribbonText  = document.getElementById('ribbon-text');
+    dom.shareBtn    = document.getElementById('share-btn');
     // Leaderboard
     dom.lbModal     = document.getElementById('leaderboard-modal');
     dom.lbOverlay   = document.getElementById('leaderboard-overlay');
     dom.closeLbBtn  = document.getElementById('close-leaderboard-btn');
     dom.lbBody      = document.getElementById('leaderboard-body');
     dom.lbEmpty     = document.getElementById('empty-leaderboard-msg');
+    dom.lbFilterMode = document.getElementById('lb-filter-mode');
+    dom.lbFilterElig = document.getElementById('lb-filter-elig');
+    // Pick Em
+    dom.pickemChainBar = document.getElementById('pickem-chain-bar');
     // Breakdown
     dom.breakdownModal=document.getElementById('breakdown-modal');
     dom.breakdownOverlay=document.getElementById('breakdown-overlay');
@@ -1435,14 +1588,29 @@ document.addEventListener('DOMContentLoaded', function() {
             this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all elig-btn';
         });
     });
-    document.querySelectorAll('.era-btn').forEach(function(btn) {
+    dom.eraTrigger  = document.getElementById('era-trigger-btn');
+    dom.eraDisplay  = document.getElementById('era-display');
+    dom.eraPopover  = document.getElementById('era-popover');
+    dom.eraTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dom.eraPopover.classList.toggle('hidden');
+    });
+    document.querySelectorAll('.era-opt').forEach(function(btn) {
         btn.addEventListener('click', function() {
             eraMode = this.dataset.era;
-            document.querySelectorAll('.era-btn').forEach(function(b) {
-                b.className = 'flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all era-btn';
+            selectedDecade = parseInt(this.dataset.decade || '0', 10);
+            dom.eraDisplay.textContent = this.dataset.label;
+            document.querySelectorAll('.era-opt').forEach(function(b) {
+                b.className = b.className.replace('bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white', 'hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300');
             });
-            this.className = 'flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white shadow-sm transition-all era-btn';
+            this.className = this.className.replace('hover:bg-green-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300', 'bg-green-50 dark:bg-gray-700 text-green-600 dark:text-white');
+            dom.eraPopover.classList.add('hidden');
         });
+    });
+    document.addEventListener('click', function(e) {
+        if (dom.eraPopover && !dom.eraPopover.contains(e.target) && e.target !== dom.eraTrigger) {
+            dom.eraPopover.classList.add('hidden');
+        }
     });
 
     dom.startBtn.addEventListener('click', startGame);
@@ -1467,14 +1635,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     dom.saveScoreBtn.addEventListener('click', saveScore);
     dom.viewBreakdown.addEventListener('click', function() {
-        var html = '<div class="space-y-3">';
+        var html = '<div class="space-y-2">';
+        var total = 0;
         roundResults.forEach(function(r) {
-            html += '<div class="border-b border-gray-200 dark:border-gray-700 pb-2">';
-            html += '<div class="flex justify-between text-xs font-bold mb-0.5">';
-            html += '<span class="text-gray-600 dark:text-gray-400">Round ' + r.round + ' — ' + r.cat + '</span>';
+            total += r.pts;
+            var emoji = r.pts > 0 ? '✅' : '❌';
+            html += '<div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">';
+            html += '<span class="text-base">' + emoji + '</span>';
+            html += '<div class="flex-1">';
+            html += '<div class="flex justify-between text-xs font-bold">';
+            html += '<span class="text-gray-600 dark:text-gray-400">Rd ' + r.round + ' — ' + r.cat + '</span>';
             html += '<span class="' + (r.pts > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">+' + r.pts + '</span></div>';
-            html += '<div class="text-xs text-gray-500 dark:text-gray-500">' + r.pA + ' vs ' + r.pB + '</div></div>';
+            if (r.pA) html += '<div class="text-xs text-gray-500">' + r.pA + ' vs ' + r.pB + '</div>';
+            html += '</div></div>';
         });
+        html += '<div class="flex justify-between text-sm font-black pt-1"><span>Total</span><span class="text-green-600 dark:text-green-400">' + total + ' pts</span></div>';
         html += '</div>';
         dom.roundBreakdown.innerHTML = html;
         dom.breakdownModal.classList.remove('hidden');
@@ -1502,6 +1677,28 @@ document.addEventListener('DOMContentLoaded', function() {
         dom.nameInd.textContent = '';
         dom.clearNameRow.classList.add('hidden');
     });
+    dom.formatRow.addEventListener('click', toggleFormat);
+    dom.deadZoneRow.addEventListener('click', toggleDeadZone);
+    updateFormatUI();
+    updateDeadZoneUI();
+    if (dom.lbFilterMode) dom.lbFilterMode.addEventListener('change', renderLeaderboard);
+    if (dom.lbFilterElig) dom.lbFilterElig.addEventListener('change', renderLeaderboard);
+    if (dom.shareBtn) dom.shareBtn.addEventListener('click', function() {
+        var modeNames = {howMuch:'How Much?', sideBySide:'Showdown', pickEm:"Pick 'Em"};
+        var tier = endGameTier || {emoji:'', text:''};
+        var text = 'NFL Matchups — ' + modeNames[gameMode] + '\n'
+            + tier.emoji + ' Score: ' + score + '\n'
+            + 'Can you beat me? https://github.com/mhuggins102-sudo/NFL-Matchups';
+        if (navigator.share) {
+            navigator.share({title:'NFL Matchups', text:text}).catch(function(){});
+        } else {
+            navigator.clipboard.writeText(text).then(function() {
+                showAlert('Score copied!', 'bg-indigo-600');
+            }).catch(function(){
+                showAlert('Share: ' + score + ' pts', 'bg-indigo-600');
+            });
+        }
+    });
     setupSliderDrag();
 });
 
@@ -1524,6 +1721,28 @@ function updateAnimUI() {
     if (!dom.animInd) return;
     dom.animInd.textContent = useAnimations ? 'ON' : 'OFF';
     dom.animInd.className = useAnimations
+        ? 'text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded'
+        : 'text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded';
+}
+function toggleFormat() {
+    useWholeNumbers = !useWholeNumbers;
+    localStorage.setItem('useWholeNumbers', useWholeNumbers);
+    updateFormatUI();
+}
+function updateFormatUI() {
+    if (!dom.formatInd) return;
+    dom.formatInd.textContent = useWholeNumbers ? '123' : '.12';
+}
+function toggleDeadZone() {
+    deadZoneEnabled = !deadZoneEnabled;
+    localStorage.setItem('deadZoneEnabled', deadZoneEnabled);
+    updateDeadZoneUI();
+    updateSliderUI();
+}
+function updateDeadZoneUI() {
+    if (!dom.deadZoneInd) return;
+    dom.deadZoneInd.textContent = deadZoneEnabled ? 'ON' : 'OFF';
+    dom.deadZoneInd.className = deadZoneEnabled
         ? 'text-xs font-bold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded'
         : 'text-xs font-bold px-2 py-1 bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded';
 }
