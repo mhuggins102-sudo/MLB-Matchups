@@ -212,10 +212,16 @@
         .sbs-cell.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; font-weight: 800; }
         html.dark .sbs-cell.incorrect { background-color: rgba(127, 29, 29, 0.4) !important; border-color: #ef4444 !important; color: #fca5a5 !important; }
 
-        .sbs-cell.wrong { 
-            opacity: 1; 
-            font-weight: 800; 
+        .sbs-cell.wrong {
+            opacity: 1;
+            font-weight: 800;
         }
+        /* Bomb Feature */
+        .bomb-armed { box-shadow: 0 0 0 3px rgba(245,158,11,0.6); }
+        @keyframes poof { 0%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}100%{opacity:0;transform:scale(0);} }
+        .animate-poof { animation: poof 0.35s ease-out forwards; }
+        @keyframes poof-in { 0%{opacity:0;transform:scale(0);}50%{opacity:0.5;transform:scale(1.2);}100%{opacity:1;transform:scale(1);} }
+        .animate-poof-in { animation: poof-in 0.35s ease-out forwards; }
         /* --- NEW SLIDER STYLES --- */
 .slider-adj-btn {
     width: 28px; height: 28px;
@@ -324,6 +330,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         <div class="flex items-center gap-2 relative">
              <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" aria-label="Skip Question">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+            </button>
+
+            <button id="bomb-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 relative" aria-label="Replace Player">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="13" r="9"/><path d="M14.35 7.65 16.3 5.7a1 1 0 0 1 1.4 0l.6.6a1 1 0 0 1 0 1.4l-1.95 1.95"/><path d="M22 2 20 4"/><path d="m20 2 2 2"/></svg>
             </button>
 
             <!-- Daily Challenge Icon (right side) -->
@@ -1235,6 +1245,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var versusPick = null;
     var categoryHistory = {};
     var hasUsedReroll = false;
+    var hasUsedBomb = false;
+    var bombArmed = false;
+    var bombReplacesLeft = 0;
+    var bombPendingReplacements = [];
     var usedPlayerIDs = new Set();
 
     var playerPool     = 'all';
@@ -2981,11 +2995,23 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // ═══════════════════════════════════════
     function selectPlayer(who) {
         if (dom.submitBtn.textContent !== 'Lock In') return;
+        if (bombArmed) { bombReplaceHowMuch(who); return; }
         versusPick = who;
         [dom.cardA, dom.cardB].forEach(function(c) { c.classList.remove('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20'); });
         var sel = who === 'A' ? dom.cardA : dom.cardB;
         sel.classList.add('ring-4','ring-blue-500','bg-blue-50','dark:bg-blue-900/20');
         updateSliderUI();
+        // Dim die and bomb after first pick
+        if (!hasUsedReroll) {
+            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+            dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+            dom.rerollBtn.disabled = true;
+        }
+        if (!hasUsedBomb) {
+            dom.bombBtn.classList.remove('hover:bg-emerald-200');
+            dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+            dom.bombBtn.disabled = true;
+        }
     }
 
     function validateCustomPool() {
@@ -3030,7 +3056,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function startGame() {
         if (!validateCustomPool()) return;
-        score = 0; round = 1; hasUsedReroll = false; savedToMainLB = false;
+        score = 0; round = 1; hasUsedReroll = false; hasUsedBomb = false; bombArmed = false; bombReplacesLeft = 0; savedToMainLB = false;
         roundResults = []; roundScores = []; matchHistory = []; categoryHistory = {};
         usedPlayerIDs.clear();
         isPlayingChallenge = challengeQueue.length > 0;
@@ -3062,6 +3088,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
         }
 
+        // Reset bomb button – keep hidden for challenge games
+        if (isPlayingChallenge || currentChallengeId) {
+            dom.bombBtn.classList.add('hidden');
+            dom.bombBtn.disabled = true;
+        } else {
+            dom.bombBtn.disabled = false;
+            dom.bombBtn.classList.remove('hidden','text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','bomb-armed');
+            dom.bombBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        }
+
         // Header icon visibility during gameplay
         var dailyBtn = document.getElementById('daily-btn');
         var challengeCodeBtn = document.getElementById('challenge-code-btn');
@@ -3082,6 +3118,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     function startRound() {
+        disarmBomb(); // reset armed state each round
         dom.submitBtn.disabled = true;
         dom.submitBtn.textContent = 'Lock In';
         dom.submitBtn.className = 'primary-btn';
@@ -3111,6 +3148,23 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             }
         }
 
+        // Bomb button state – always hidden in challenge mode
+        if (isPlayingChallenge || currentChallengeId) {
+            dom.bombBtn.classList.add('hidden');
+            dom.bombBtn.disabled = true;
+        } else {
+            dom.bombBtn.classList.remove('hidden');
+            if (hasUsedBomb) {
+                dom.bombBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+                dom.bombBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+                dom.bombBtn.disabled = true;
+            } else {
+                dom.bombBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','bomb-armed');
+                dom.bombBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+                dom.bombBtn.disabled = false;
+            }
+        }
+
         // Mode-specific visibility
         if (gameMode === 'howMuch') {
             dom.uiHowMuch.classList.remove('hidden');
@@ -3134,12 +3188,257 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
     }
 
+    // ═══════════════════════════════════════
+    // BOMB FEATURE
+    // ═══════════════════════════════════════
+    function armBomb() {
+        // If already armed, toggle off (cancel) — but not if Pick Em selections already started
+        if (bombArmed) {
+            if (gameMode === 'pickEm' && bombPendingReplacements.length > 0) return;
+            disarmBomb(); return;
+        }
+        if (hasUsedBomb) return;
+        // Only allow before any interaction
+        if (gameMode === 'howMuch' && dom.submitBtn.textContent !== 'Lock In') return;
+        if (gameMode === 'howMuch' && versusPick !== null) return;
+        if (gameMode === 'sideBySide' && dom.submitBtn.textContent !== 'Lock In') return;
+        if (gameMode === 'sideBySide' && sbsPicks.some(function(p) { return p !== null; })) return;
+        if (gameMode === 'pickEm' && pickEmState.roundOver) return;
+        if (gameMode === 'pickEm' && pickEmState.picksMade > 0) return;
+
+        bombArmed = true;
+        bombReplacesLeft = gameMode === 'pickEm' ? 3 : 1;
+        dom.bombBtn.classList.add('bomb-armed');
+        // Disable reroll die while bomb is armed
+        dom.rerollBtn.disabled = true;
+        dom.rerollBtn.classList.add('opacity-60','cursor-not-allowed');
+        // Highlight targetable names in Showdown
+        if (gameMode === 'sideBySide') {
+            dom.sbsNameA.style.cursor = 'pointer';
+            dom.sbsNameB.style.cursor = 'pointer';
+        }
+        var msg = bombReplacesLeft > 1 ? 'Pick ' + bombReplacesLeft + ' players to replace' : 'Pick a player to replace';
+        showAlert(msg, 'bg-amber-600');
+    }
+
+    function disarmBomb() {
+        bombArmed = false;
+        bombReplacesLeft = 0;
+        bombPendingReplacements = [];
+        dom.bombBtn.classList.remove('bomb-armed');
+        // Re-enable reroll die (unless it was already used)
+        if (!hasUsedReroll && !isPlayingChallenge && !currentChallengeId) {
+            dom.rerollBtn.disabled = false;
+            dom.rerollBtn.classList.remove('opacity-60','cursor-not-allowed');
+        }
+        if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
+        if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
+    }
+
+    function finalizeBomb() {
+        hasUsedBomb = true;
+        disarmBomb();
+        // Turn red/used
+        dom.bombBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        dom.bombBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+        dom.bombBtn.disabled = true;
+    }
+
+    function findReplacementPlayer(excludeIDs, type, catKeyFilter) {
+        var pool = [];
+        players.forEach(function(p) {
+            if (excludeIDs.has(p.id)) return;
+            if (!passesGlobal(p)) return;
+            if (!rolePass(p)) return;
+            if (!eraPass(p)) return;
+            if (type && p.type !== type) return;
+            if (!p.stats) return;
+            if (catKeyFilter) {
+                var val;
+                if (catKeyFilter === 'teams') val = p.teams ? p.teams.size : undefined;
+                else if (catKeyFilter === 'seasons') val = p.years ? p.years.size : undefined;
+                else val = p.stats[catKeyFilter];
+                if (val === undefined || isNaN(val)) return;
+                if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKeyFilter) && p.stats.PA <= 0) return;
+                if (['careerERA','careerIP'].includes(catKeyFilter) && p.stats.IP <= 0) return;
+                if (['peakSeasonOPS','bestSeasonERA'].includes(catKeyFilter) && (!p.stats[catKeyFilter] || p.stats[catKeyFilter] <= 0)) return;
+            }
+            if (gameMode === 'sideBySide') {
+                if (p.type === 'pitcher' && p.GS < 150) return;
+            }
+            pool.push(p);
+        });
+        if (pool.length === 0) return null;
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function bombReplaceHowMuch(which) {
+        if (!bombArmed || bombReplacesLeft <= 0) return;
+        var oldPlayer = which === 'A' ? A : B;
+        var exclude = new Set(usedPlayerIDs);
+        exclude.add(A.id); exclude.add(B.id);
+        var replacement = findReplacementPlayer(exclude, BASE_CATS[catKey].type, catKey);
+        if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+        usedPlayerIDs.add(replacement.id);
+        var nameEl = which === 'A' ? dom.nameA : dom.nameB;
+        nameEl.classList.add('animate-poof');
+        setTimeout(function() {
+            if (which === 'A') A = replacement; else B = replacement;
+            nameEl.textContent = replacement.name;
+            nameEl.classList.remove('animate-poof');
+            nameEl.classList.add('animate-poof-in');
+            setTimeout(function() { nameEl.classList.remove('animate-poof-in'); }, 350);
+            // Recalculate trueDiff and correctPick
+            var sAf = A.stats[catKey], sBf = B.stats[catKey];
+            if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { sAf = Math.round(sAf * 1000); sBf = Math.round(sBf * 1000); }
+            trueDiff = Math.abs(sAf - sBf);
+            var isLowerBetter = !!BASE_CATS[catKey].lowerBetter;
+            correctPick = isLowerBetter ? (sAf < sBf ? 'A' : 'B') : (sAf > sBf ? 'A' : 'B');
+            bombReplacesLeft--;
+            if (bombReplacesLeft <= 0) finalizeBomb();
+        }, 350);
+    }
+
+    function bombReplaceShowdown(which) {
+        if (!bombArmed || bombReplacesLeft <= 0) return;
+        var exclude = new Set(usedPlayerIDs);
+        exclude.add(A.id); exclude.add(B.id);
+        var replacement = findReplacementPlayer(exclude, A.type, null);
+        if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+        usedPlayerIDs.add(replacement.id);
+        var nameEl = which === 'A' ? dom.sbsNameA : dom.sbsNameB;
+        nameEl.classList.add('animate-poof');
+        setTimeout(function() {
+            if (which === 'A') A = replacement; else B = replacement;
+            nameEl.textContent = replacement.name;
+            nameEl.classList.remove('animate-poof');
+            nameEl.classList.add('animate-poof-in');
+            setTimeout(function() { nameEl.classList.remove('animate-poof-in'); }, 350);
+            // Re-render grid with new player
+            sbsPicks = new Array(10).fill(null);
+            renderSideBySideTable(A.type);
+            dom.submitBtn.disabled = true;
+            bombReplacesLeft--;
+            if (bombReplacesLeft <= 0) finalizeBomb();
+        }, 350);
+    }
+
+    function bombReplacePickEm(card, player) {
+        if (!bombArmed || bombReplacesLeft <= 0) return;
+        if (card.classList.contains('revealed')) return;
+        if (card.dataset.bombPending) return; // already selected for replacement
+        var cc = BASE_CATS[catKey];
+        var exclude = new Set(usedPlayerIDs);
+        // Exclude all current card IDs plus already-queued replacements
+        var grid = document.getElementById('pickem-grid');
+        Array.from(grid.querySelectorAll('div[data-id]')).forEach(function(c) { exclude.add(c.dataset.id); });
+        bombPendingReplacements.forEach(function(pr) { exclude.add(pr.replacement.id); });
+
+        // Build a filtered pool similar to startRoundPickEm
+        var catConfig = cc;
+        var threshVal = pickEmState.threshold;
+        var buffer = threshVal * (catConfig.tolerance || 0.3);
+        if (catConfig.minBuffer) buffer = Math.max(buffer, catConfig.minBuffer);
+        var goodMin, goodMax, badMin, badMax;
+        if (catConfig.lowerBetter) {
+            goodMax = threshVal; goodMin = Math.max(0, threshVal - buffer);
+            badMin = threshVal + 0.0001; badMax = threshVal + buffer;
+        } else {
+            goodMin = threshVal; goodMax = threshVal + buffer;
+            badMax = threshVal - (catConfig.step || 0.01); badMin = threshVal - buffer;
+        }
+
+        var pool = [];
+        players.forEach(function(p) {
+            if (exclude.has(p.id)) return;
+            if (!passesGlobal(p) || !eraPass(p) || !p.stats) return;
+            if (!rolePass(p)) return;
+            if (catConfig.type === 'hitter' && p.type !== 'hitter') return;
+            if (catConfig.type === 'pitcher' && p.type !== 'pitcher') return;
+            var val;
+            if (catKey === 'careerSO') val = p.stats.careerSO;
+            else if (catKey === 'careerRBI') val = p.stats.careerRBI;
+            else if (catKey === 'teams') val = p.teams.size;
+            else if (catKey === 'seasons') val = p.years.size;
+            else val = p.stats[catKey];
+            if (val === undefined || isNaN(val)) return;
+            // Must be in the valid range (correct or distractor)
+            if ((val >= goodMin && val <= goodMax) || (val >= badMin && val <= badMax)) pool.push({ p: p, val: val });
+        });
+        if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); return; }
+        var chosen = pool[Math.floor(Math.random() * pool.length)];
+        var replacement = chosen.p;
+        var newVal = chosen.val;
+        var oldID = card.dataset.id;
+
+        // Mark card as pending and poof out
+        card.dataset.bombPending = '1';
+        bombPendingReplacements.push({ card: card, replacement: replacement, newVal: newVal, oldID: oldID });
+
+        var nameEl = card.querySelector('.pickem-name');
+        card.classList.add('animate-poof');
+        setTimeout(function() {
+            nameEl.textContent = '?';
+            card.classList.remove('animate-poof');
+            card.style.opacity = '0.5';
+        }, 350);
+
+        bombReplacesLeft--;
+        if (bombReplacesLeft > 0) {
+            showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-amber-600');
+        } else {
+            // All 3 selected — reveal new players after a brief pause
+            setTimeout(function() {
+                revealBombReplacements();
+            }, 500);
+        }
+    }
+
+    function revealBombReplacements() {
+        var cc = BASE_CATS[catKey];
+        var totalReplacements = bombPendingReplacements.length;
+        bombPendingReplacements.forEach(function(pr, i) {
+            setTimeout(function() {
+                var card = pr.card;
+                var replacement = pr.replacement;
+                var newVal = pr.newVal;
+                // Update correctIDs
+                var wasCorrect = pickEmState.correctIDs.has(pr.oldID);
+                if (wasCorrect) pickEmState.correctIDs.delete(pr.oldID);
+                var isNewCorrect = cc.lowerBetter ? (newVal <= pickEmState.threshold) : (newVal >= pickEmState.threshold);
+                if (isNewCorrect) pickEmState.correctIDs.add(replacement.id);
+                card.dataset.id = replacement.id;
+                card.dataset.val = newVal;
+                delete card.dataset.bombPending;
+                card.style.opacity = '';
+                var nameEl = card.querySelector('.pickem-name');
+                nameEl.textContent = replacement.name;
+                card.classList.add('animate-poof-in');
+                setTimeout(function() { card.classList.remove('animate-poof-in'); }, 350);
+                usedPlayerIDs.add(replacement.id);
+                // Clone and replace to clear old click handlers, then add new one
+                var clone = card.cloneNode(true);
+                card.parentNode.replaceChild(clone, card);
+                clone.addEventListener('click', function() {
+                    var p = players.get(clone.dataset.id);
+                    if (p) handlePickEm(p, clone);
+                });
+            }, i * 350);
+        });
+        setTimeout(function() {
+            bombPendingReplacements = [];
+            finalizeBomb();
+        }, totalReplacements * 350);
+    }
+
     function skipQuestion() {
         if (hasUsedReroll) return;
         if (isPlayingChallenge) return;
         if (dom.submitBtn.textContent !== 'Lock In') return;
         hasUsedReroll = true;
         if (matchHistory.length > 0) matchHistory.pop();
+
+        disarmBomb(); // cancel bomb if armed
 
         dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
         dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
@@ -3182,6 +3481,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             else if (score >= 2000) { emoji.textContent = '\uD83E\uDD49'; txt.textContent = 'Bronze Medal! Solid Season.'; txt.className = 'text-lg score-bronze font-bold'; }
             else { emoji.textContent = '\uD83E\uDDE2'; txt.textContent = 'Back to the minors...'; txt.className = 'text-lg text-gray-600 dark:text-gray-500 font-bold'; }
             dom.rerollBtn.classList.add('hidden');
+            dom.bombBtn.classList.add('hidden');
             checkHighScoreTrigger();
             // Show challenge leaderboard for any challenge game
             if (isPlayingChallenge && currentChallengeId) {
@@ -3267,6 +3567,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.startScreen.classList.remove('hidden');
         dom.homeBtn.classList.add('hidden');
         dom.rerollBtn.classList.add('hidden');
+        dom.bombBtn.classList.add('hidden');
 
         // Restore all header icons
         document.getElementById('daily-btn').classList.remove('hidden');
@@ -3390,6 +3691,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     function submitGuess() {
         dom.submitBtn.disabled = true;
         dom.rerollBtn.disabled = true;
+        dom.bombBtn.disabled = true;
         dom.thumbMin.style.display = 'none';
         dom.thumbMax.style.display = 'none';
         dom.submitBtn.textContent = (round === 10) ? 'Finish Game' : 'Next Round';
@@ -3670,6 +3972,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         matchHistory.push({ pA: A.id, pB: B.id, type: targetType });
         dom.sbsNameA.textContent = A.name;
         dom.sbsNameB.textContent = B.name;
+        dom.sbsNameA.onclick = function() { if (bombArmed) bombReplaceShowdown('A'); };
+        dom.sbsNameB.onclick = function() { if (bombArmed) bombReplaceShowdown('B'); };
         renderSideBySideTable(targetType);
     }
 
@@ -3706,6 +4010,17 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     sbsPicks[rowIdx] = pick;
                 }
                 checkSbsLock();
+                // Dim die and bomb after first Showdown pick
+                if (!hasUsedReroll) {
+                    dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+                    dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+                    dom.rerollBtn.disabled = true;
+                }
+                if (!hasUsedBomb) {
+                    dom.bombBtn.classList.remove('hover:bg-emerald-200');
+                    dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+                    dom.bombBtn.disabled = true;
+                }
             });
         });
         checkSbsLock();
@@ -3718,6 +4033,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     function submitSideBySide() {
         dom.submitBtn.disabled = true;
         dom.rerollBtn.disabled = true;
+        dom.bombBtn.disabled = true;
         dom.submitBtn.textContent = 'Revealing...';
 
         var correctCount = 0;
@@ -3802,6 +4118,10 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (!hasUsedReroll && !isPlayingChallenge && !currentChallengeId) {
             dom.rerollBtn.className = 'p-2 rounded-full transition text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400';
             dom.rerollBtn.disabled = false;
+        }
+        if (!hasUsedBomb && !isPlayingChallenge && !currentChallengeId) {
+            dom.bombBtn.classList.remove('opacity-50','cursor-not-allowed');
+            dom.bombBtn.disabled = false;
         }
 
         var gridPlayers = [];
@@ -3978,6 +4298,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function handlePickEm(p, card) {
         if (pickEmState.roundOver || card.classList.contains('revealed') || !dom.nextBtn.disabled) return;
+        if (bombArmed) { bombReplacePickEm(card, p); return; }
 
         var val = parseFloat(card.dataset.val);
         var isCorrect = pickEmState.correctIDs.has(p.id);
@@ -3987,6 +4308,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.rerollBtn.classList.remove('hover:bg-emerald-200');
             dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
             dom.rerollBtn.disabled = true;
+            if (!hasUsedBomb) {
+                dom.bombBtn.classList.remove('hover:bg-emerald-200');
+                dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+                dom.bombBtn.disabled = true;
+            }
         }
 
         card.classList.add('revealed','border-2');
@@ -4060,6 +4386,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
     function endPickEmRound(won) {
         pickEmState.roundOver = true;
+        dom.bombBtn.disabled = true;
         var grid = document.getElementById('pickem-grid');
         grid.classList.add('pointer-events-none');
         var allCards = Array.from(grid.querySelectorAll('div[data-id]'));
@@ -4885,6 +5212,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             rulesBtn:       document.getElementById('rules-btn'),
             leaderboardBtn: document.getElementById('leaderboard-btn'),
             rerollBtn:      document.getElementById('reroll-btn'),
+            bombBtn:        document.getElementById('bomb-btn'),
             homeBtn:        document.getElementById('home-btn'),
             settingsBtn:    document.getElementById('settings-btn'),
             settingsPopover:document.getElementById('settings-popover'),
@@ -4954,6 +5282,24 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.homeBtn.addEventListener('click', goHome);
         dom.playAgainBtn.addEventListener('click', goHome);
         dom.rerollBtn.addEventListener('click', skipQuestion);
+        dom.bombBtn.addEventListener('click', function(e) { e.stopPropagation(); armBomb(); });
+        // Cancel bomb when clicking anywhere that isn't a valid bomb target
+        document.addEventListener('click', function(e) {
+            if (!bombArmed) return;
+            // Once Pick Em bomb selections have started, don't allow cancel
+            if (gameMode === 'pickEm' && bombPendingReplacements.length > 0) return;
+            // Don't cancel if clicking on bomb button itself (handled above with stopPropagation)
+            var t = e.target;
+            if (t === dom.bombBtn || dom.bombBtn.contains(t)) return;
+            // Don't cancel if clicking on valid targets
+            if (gameMode === 'howMuch' && (dom.cardA.contains(t) || dom.cardB.contains(t))) return;
+            if (gameMode === 'sideBySide' && (dom.sbsNameA.contains(t) || dom.sbsNameB.contains(t))) return;
+            if (gameMode === 'pickEm') {
+                var pickemGrid = document.getElementById('pickem-grid');
+                if (pickemGrid && pickemGrid.contains(t)) return;
+            }
+            disarmBomb();
+        });
 
         // Rules modal
         dom.rulesBtn.addEventListener('click', function() { dom.rulesModal.classList.remove('hidden'); });
