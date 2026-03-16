@@ -3335,6 +3335,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { sAf = Math.round(sAf * 1000); sBf = Math.round(sBf * 1000); }
             trueDiff = Math.abs(sAf - sBf);
             correctPick = isLowerBetter ? (sAf < sBf ? 'A' : 'B') : (sAf > sBf ? 'A' : 'B');
+            // Update matchHistory so challenges use the replacement player
+            var lastMatch = matchHistory[matchHistory.length - 1];
+            if (lastMatch) {
+                if (which === 'A') lastMatch.pA = replacement.id;
+                else lastMatch.pB = replacement.id;
+            }
             bombReplacesLeft--;
             if (bombReplacesLeft <= 0) finalizeBomb();
         }, 350);
@@ -3360,6 +3366,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             sbsPicks = new Array(10).fill(null);
             renderSideBySideTable(A.type);
             dom.submitBtn.disabled = true;
+            // Update matchHistory so challenges use the replacement player
+            var lastMatch = matchHistory[matchHistory.length - 1];
+            if (lastMatch) {
+                if (which === 'A') lastMatch.pA = replacement.id;
+                else lastMatch.pB = replacement.id;
+            }
             bombReplacesLeft--;
             if (bombReplacesLeft <= 0) finalizeBomb();
         }, 350);
@@ -3485,6 +3497,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 });
             }, i * 350);
         });
+        // Update matchHistory so challenges use the replacement players
+        var lastMatch = matchHistory[matchHistory.length - 1];
+        if (lastMatch && lastMatch.ids) {
+            bombPendingReplacements.forEach(function(pr) {
+                var idx = lastMatch.ids.indexOf(pr.oldID);
+                if (idx !== -1) lastMatch.ids[idx] = pr.replacement.id;
+            });
+        }
         setTimeout(function() {
             bombPendingReplacements = [];
             finalizeBomb();
