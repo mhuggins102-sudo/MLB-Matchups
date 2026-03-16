@@ -1249,6 +1249,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var bombArmed = false;
     var bombReplacesLeft = 0;
     var bombPendingReplacements = [];
+    var currentSubRole = 'all'; // tracks starter/reliever sub-role for Pick Em rounds
     var usedPlayerIDs = new Set();
 
     var playerPool     = 'all';
@@ -3398,8 +3399,16 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (exclude.has(p.id)) return;
             if (!passesGlobal(p) || !eraPass(p) || !p.stats) return;
             if (!rolePass(p)) return;
-            if (catConfig.type === 'hitter' && p.type !== 'hitter') return;
-            if (catConfig.type === 'pitcher' && p.type !== 'pitcher') return;
+            // Must match the replaced player's type (hitter/pitcher)
+            if (p.type !== player.type) return;
+            // Apply starter/reliever sub-role filter to match the round's pool
+            if (currentSubRole === 'starter' && p.type === 'pitcher' && p.GS < 150) return;
+            if (currentSubRole === 'reliever' && p.type === 'pitcher' && (p.G < 500 || p.GS >= 150)) return;
+            // Eligibility minimums (match startRoundPickEm pool)
+            if (eligibility !== 'custom') {
+                if (p.type === 'hitter' && p.stats.PA < 3000) return;
+                if (p.type === 'pitcher' && p.GS < 150 && p.G < 500) return;
+            }
             if (['peakSeasonOPS','bestSeasonERA'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
             var val = getPlayerStat(p, catKey);
             if (val === undefined || isNaN(val)) return;
@@ -4295,6 +4304,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
             matchHistory.push({ cat: catKey, thresh: threshVal, subRole: targetSubRole, ids: gridPlayers.map(function(p) { return p.id; }) });
         }
+
+        // Store sub-role for bomb replacement filtering
+        currentSubRole = targetSubRole;
 
         // Render UI
         var catConfigR = BASE_CATS[catKey];
