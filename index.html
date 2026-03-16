@@ -217,7 +217,7 @@
             font-weight: 800;
         }
         /* Bomb Feature */
-        .bomb-armed { box-shadow: 0 0 0 3px rgba(245,158,11,0.6); }
+        .bomb-armed { box-shadow: 0 0 0 3px rgba(37,99,235,0.6); }
         @keyframes poof { 0%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}100%{opacity:0;transform:scale(0);} }
         .animate-poof { animation: poof 0.35s ease-out forwards; }
         @keyframes poof-in { 0%{opacity:0;transform:scale(0);}50%{opacity:0.5;transform:scale(1.2);}100%{opacity:1;transform:scale(1);} }
@@ -3218,7 +3218,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             dom.sbsNameB.style.cursor = 'pointer';
         }
         var msg = bombReplacesLeft > 1 ? 'Pick ' + bombReplacesLeft + ' players to replace' : 'Pick a player to replace';
-        showAlert(msg, 'bg-amber-600');
+        showAlert(msg, 'bg-blue-600');
     }
 
     function disarmBomb() {
@@ -3226,10 +3226,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         bombReplacesLeft = 0;
         bombPendingReplacements = [];
         dom.bombBtn.classList.remove('bomb-armed');
-        // Re-enable reroll die (unless it was already used)
+        // Fully restore reroll die (unless it was already used or in challenge)
         if (!hasUsedReroll && !isPlayingChallenge && !currentChallengeId) {
             dom.rerollBtn.disabled = false;
-            dom.rerollBtn.classList.remove('opacity-60','cursor-not-allowed');
+            dom.rerollBtn.classList.remove('opacity-50','opacity-60','cursor-not-allowed');
+            dom.rerollBtn.classList.add('hover:bg-emerald-200');
         }
         if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
         if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
@@ -3244,6 +3245,12 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         dom.bombBtn.disabled = true;
     }
 
+    function getPlayerStat(p, key) {
+        if (key === 'teams') return p.teams ? p.teams.size : undefined;
+        if (key === 'seasons') return p.years ? p.years.size : undefined;
+        return p.stats ? p.stats[key] : undefined;
+    }
+
     function findReplacementPlayer(excludeIDs, type, catKeyFilter) {
         var pool = [];
         players.forEach(function(p) {
@@ -3254,10 +3261,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (type && p.type !== type) return;
             if (!p.stats) return;
             if (catKeyFilter) {
-                var val;
-                if (catKeyFilter === 'teams') val = p.teams ? p.teams.size : undefined;
-                else if (catKeyFilter === 'seasons') val = p.years ? p.years.size : undefined;
-                else val = p.stats[catKeyFilter];
+                var val = getPlayerStat(p, catKeyFilter);
                 if (val === undefined || isNaN(val)) return;
                 if (['careerBA','careerOPS','peakSeasonOPS','careerXBHRate'].includes(catKeyFilter) && p.stats.PA <= 0) return;
                 if (['careerERA','careerIP'].includes(catKeyFilter) && p.stats.IP <= 0) return;
@@ -3269,16 +3273,53 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             pool.push(p);
         });
         if (pool.length === 0) return null;
-        return pool[Math.floor(Math.random() * pool.length)];
+        // Shuffle pool for randomness
+        for (var i = pool.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        }
+        return pool;
     }
 
     function bombReplaceHowMuch(which) {
         if (!bombArmed || bombReplacesLeft <= 0) return;
-        var oldPlayer = which === 'A' ? A : B;
         var exclude = new Set(usedPlayerIDs);
         exclude.add(A.id); exclude.add(B.id);
-        var replacement = findReplacementPlayer(exclude, BASE_CATS[catKey].type, catKey);
+        var pool = findReplacementPlayer(exclude, BASE_CATS[catKey].type, catKey);
+        if (!pool) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+
+        // Find a replacement that keeps the difference in guessable range
+        // and preserves which player is the correct answer
+        var cat = getCurrentCat(catKey);
+        var dMin = cat.dMin;
+        var dMax = dMin * 5;
+        var isLowerBetter = !!BASE_CATS[catKey].lowerBetter;
+        var otherPlayer = which === 'A' ? B : A;
+        var otherStat = getPlayerStat(otherPlayer, catKey);
+        if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+            otherStat = Math.round(otherStat * 1000);
+        }
+
+        var replacement = null;
+        for (var i = 0; i < pool.length; i++) {
+            var p = pool[i];
+            var pStat = getPlayerStat(p, catKey);
+            if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) {
+                pStat = Math.round(pStat * 1000);
+            }
+            var diff = Math.abs(pStat - otherStat);
+            if (diff < dMin || diff > dMax) continue;
+            // Ensure the correct answer stays the same
+            var oldCorrect = correctPick;
+            var newSA = which === 'A' ? pStat : (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey) ? Math.round(A.stats[catKey] * 1000) : getPlayerStat(A, catKey));
+            var newSB = which === 'B' ? pStat : (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey) ? Math.round(B.stats[catKey] * 1000) : getPlayerStat(B, catKey));
+            var newCorrect = isLowerBetter ? (newSA < newSB ? 'A' : 'B') : (newSA > newSB ? 'A' : 'B');
+            if (newCorrect !== oldCorrect) continue;
+            replacement = p;
+            break;
+        }
         if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+
         usedPlayerIDs.add(replacement.id);
         var nameEl = which === 'A' ? dom.nameA : dom.nameB;
         nameEl.classList.add('animate-poof');
@@ -3289,10 +3330,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             nameEl.classList.add('animate-poof-in');
             setTimeout(function() { nameEl.classList.remove('animate-poof-in'); }, 350);
             // Recalculate trueDiff and correctPick
-            var sAf = A.stats[catKey], sBf = B.stats[catKey];
+            var sAf = getPlayerStat(A, catKey), sBf = getPlayerStat(B, catKey);
             if (useWholeNumbers && ['careerBA','careerOPS','peakSeasonOPS'].includes(catKey)) { sAf = Math.round(sAf * 1000); sBf = Math.round(sBf * 1000); }
             trueDiff = Math.abs(sAf - sBf);
-            var isLowerBetter = !!BASE_CATS[catKey].lowerBetter;
             correctPick = isLowerBetter ? (sAf < sBf ? 'A' : 'B') : (sAf > sBf ? 'A' : 'B');
             bombReplacesLeft--;
             if (bombReplacesLeft <= 0) finalizeBomb();
@@ -3303,8 +3343,9 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (!bombArmed || bombReplacesLeft <= 0) return;
         var exclude = new Set(usedPlayerIDs);
         exclude.add(A.id); exclude.add(B.id);
-        var replacement = findReplacementPlayer(exclude, A.type, null);
-        if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+        var pool = findReplacementPlayer(exclude, A.type, null);
+        if (!pool || pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+        var replacement = pool[0];
         usedPlayerIDs.add(replacement.id);
         var nameEl = which === 'A' ? dom.sbsNameA : dom.sbsNameB;
         nameEl.classList.add('animate-poof');
@@ -3355,12 +3396,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (!rolePass(p)) return;
             if (catConfig.type === 'hitter' && p.type !== 'hitter') return;
             if (catConfig.type === 'pitcher' && p.type !== 'pitcher') return;
-            var val;
-            if (catKey === 'careerSO') val = p.stats.careerSO;
-            else if (catKey === 'careerRBI') val = p.stats.careerRBI;
-            else if (catKey === 'teams') val = p.teams.size;
-            else if (catKey === 'seasons') val = p.years.size;
-            else val = p.stats[catKey];
+            if (['peakSeasonOPS','bestSeasonERA'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
+            var val = getPlayerStat(p, catKey);
             if (val === undefined || isNaN(val)) return;
             // Must be in the valid range (correct or distractor)
             if ((val >= goodMin && val <= goodMax) || (val >= badMin && val <= badMax)) pool.push({ p: p, val: val });
@@ -3385,7 +3422,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         bombReplacesLeft--;
         if (bombReplacesLeft > 0) {
-            showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-amber-600');
+            showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-blue-600');
         } else {
             // All 3 selected — reveal new players after a brief pause
             setTimeout(function() {
@@ -4010,16 +4047,32 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     sbsPicks[rowIdx] = pick;
                 }
                 checkSbsLock();
-                // Dim die and bomb after first Showdown pick
-                if (!hasUsedReroll) {
-                    dom.rerollBtn.classList.remove('hover:bg-emerald-200');
-                    dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
-                    dom.rerollBtn.disabled = true;
-                }
-                if (!hasUsedBomb) {
-                    dom.bombBtn.classList.remove('hover:bg-emerald-200');
-                    dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
-                    dom.bombBtn.disabled = true;
+                // Check if any picks have been made
+                var anyPicks = sbsPicks.some(function(p) { return p !== null; });
+                if (anyPicks) {
+                    // Dim die and bomb while picks are active
+                    if (!hasUsedReroll) {
+                        dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+                        dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+                        dom.rerollBtn.disabled = true;
+                    }
+                    if (!hasUsedBomb) {
+                        dom.bombBtn.classList.remove('hover:bg-emerald-200');
+                        dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+                        dom.bombBtn.disabled = true;
+                    }
+                } else {
+                    // All picks cleared — re-enable die and bomb
+                    if (!hasUsedReroll && !isPlayingChallenge && !currentChallengeId) {
+                        dom.rerollBtn.disabled = false;
+                        dom.rerollBtn.classList.remove('opacity-50','cursor-not-allowed');
+                        dom.rerollBtn.classList.add('hover:bg-emerald-200');
+                    }
+                    if (!hasUsedBomb && !isPlayingChallenge && !currentChallengeId) {
+                        dom.bombBtn.disabled = false;
+                        dom.bombBtn.classList.remove('opacity-50','cursor-not-allowed');
+                        dom.bombBtn.classList.add('hover:bg-emerald-200');
+                    }
                 }
             });
         });
