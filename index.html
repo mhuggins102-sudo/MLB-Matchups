@@ -3375,7 +3375,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         Array.from(grid.querySelectorAll('div[data-id]')).forEach(function(c) { exclude.add(c.dataset.id); });
         bombPendingReplacements.forEach(function(pr) { exclude.add(pr.replacement.id); });
 
-        // Build a filtered pool similar to startRoundPickEm
+        // Determine whether the original player was correct or incorrect
+        var oldID = card.dataset.id;
+        var wasCorrect = pickEmState.correctIDs.has(oldID);
+
+        // Build a filtered pool — only from the SAME correctness bucket
         var catConfig = cc;
         var threshVal = pickEmState.threshold;
         var buffer = threshVal * (catConfig.tolerance || 0.3);
@@ -3399,18 +3403,26 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             if (['peakSeasonOPS','bestSeasonERA'].includes(catKey) && (!p.stats[catKey] || p.stats[catKey] <= 0)) return;
             var val = getPlayerStat(p, catKey);
             if (val === undefined || isNaN(val)) return;
-            // Must be in the valid range (correct or distractor)
-            if ((val >= goodMin && val <= goodMax) || (val >= badMin && val <= badMax)) pool.push({ p: p, val: val });
+            // Check if this player would be correct or incorrect
+            var wouldBeCorrect = catConfig.lowerBetter ? (val <= threshVal) : (val >= threshVal);
+            // Only allow replacements that match the original player's correctness
+            if (wouldBeCorrect !== wasCorrect) return;
+            // Must be in the valid threshold/buffer range
+            if (wasCorrect) {
+                if (!(val >= goodMin && val <= goodMax)) return;
+            } else {
+                if (!(val >= badMin && val <= badMax)) return;
+            }
+            pool.push({ p: p, val: val });
         });
         if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); return; }
         var chosen = pool[Math.floor(Math.random() * pool.length)];
         var replacement = chosen.p;
         var newVal = chosen.val;
-        var oldID = card.dataset.id;
 
         // Mark card as pending and poof out
         card.dataset.bombPending = '1';
-        bombPendingReplacements.push({ card: card, replacement: replacement, newVal: newVal, oldID: oldID });
+        bombPendingReplacements.push({ card: card, replacement: replacement, newVal: newVal, oldID: oldID, wasCorrect: wasCorrect });
 
         var nameEl = card.querySelector('.pickem-name');
         card.classList.add('animate-poof');
@@ -3439,11 +3451,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 var card = pr.card;
                 var replacement = pr.replacement;
                 var newVal = pr.newVal;
-                // Update correctIDs
-                var wasCorrect = pickEmState.correctIDs.has(pr.oldID);
-                if (wasCorrect) pickEmState.correctIDs.delete(pr.oldID);
-                var isNewCorrect = cc.lowerBetter ? (newVal <= pickEmState.threshold) : (newVal >= pickEmState.threshold);
-                if (isNewCorrect) pickEmState.correctIDs.add(replacement.id);
+                // Transfer correctness from old player to new player
+                // Use stored wasCorrect flag (not live correctIDs lookup)
+                // to avoid stale reads during staggered batch reveals
+                if (pr.wasCorrect) {
+                    pickEmState.correctIDs.delete(pr.oldID);
+                    pickEmState.correctIDs.add(replacement.id);
+                }
                 card.dataset.id = replacement.id;
                 card.dataset.val = newVal;
                 delete card.dataset.bombPending;
