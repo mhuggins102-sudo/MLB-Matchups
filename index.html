@@ -2333,6 +2333,11 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             var m;
             if (mode === 'howMuch') m = pregenHowMuch(rng, usedIDs, catHist);
             else if (mode === 'sideBySide') m = pregenShowdown(rng, usedIDs);
+            else if (mode === 'top10') {
+                var pregen = pregenTop10(rng);
+                if (pregen) m = { mode: 'top10', question: pregen.question, answer: pregen.answer.map(function(a) { return a.id; }) };
+                else m = null;
+            }
             else m = pregenPickEm(rng, catHist, r + 1);
             if (m) matchups.push(m);
         }
@@ -5563,20 +5568,40 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.guessedPlayerIDs = new Set();
         top10State.allRanked = null;
 
-        // Generate question
-        var pregen = pregenTop10(Math.random);
-        if (!pregen) {
-            showAlert('Could not generate a Top 10 question. Try different settings.', 'bg-red-500');
-            goHome();
-            return;
+        // Load from challenge queue or generate fresh question
+        if (challengeQueue.length > 0) {
+            var data = challengeQueue.shift();
+            var result = computeTop10Answer(data.question);
+            if (result.top10.length >= 10) {
+                top10State.question = data.question;
+                top10State.answer = result.top10;
+                top10State.allRanked = result.allRanked;
+            } else {
+                // Fallback: generate fresh if saved question can't be reproduced
+                var pregen = pregenTop10(Math.random);
+                if (!pregen) {
+                    showAlert('Could not generate a Top 10 question. Try different settings.', 'bg-red-500');
+                    goHome();
+                    return;
+                }
+                top10State.question = pregen.question;
+                top10State.answer = pregen.answer;
+                top10State.allRanked = pregen.allRanked;
+            }
+        } else {
+            var pregen = pregenTop10(Math.random);
+            if (!pregen) {
+                showAlert('Could not generate a Top 10 question. Try different settings.', 'bg-red-500');
+                goHome();
+                return;
+            }
+            top10State.question = pregen.question;
+            top10State.answer = pregen.answer;
+            top10State.allRanked = pregen.allRanked;
         }
 
-        top10State.question = pregen.question;
-        top10State.answer = pregen.answer;
-        top10State.allRanked = pregen.allRanked;
-
         // Render question with same styling as How Much mode
-        dom.top10Question.innerHTML = buildTop10QuestionHTML(pregen.question);
+        dom.top10Question.innerHTML = buildTop10QuestionHTML(top10State.question);
         dom.top10Question.className = 'text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-3 mt-2';
         var catSpan = dom.top10Question.querySelector('[data-cat-key]');
         if (catSpan) catSpan.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
