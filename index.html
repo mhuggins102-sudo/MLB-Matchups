@@ -749,7 +749,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 </div>
 
 <div id="ui-top10" class="w-full hidden">
-    <div id="top10-question" class="text-center text-sm font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-3 mt-4"></div>
+    <div id="top10-question" class="text-center text-sm font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-3 mt-2"></div>
 
     <!-- Search Input (above the board) -->
     <div class="relative mb-3">
@@ -3401,7 +3401,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
                 dom.rerollBtn.disabled = true;
             } else {
-                dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+                dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','opacity-25');
                 dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
                 dom.rerollBtn.disabled = false;
             }
@@ -4827,13 +4827,29 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
     // §16b  TOP 10 MODE
     // ═══════════════════════════════════════
 
+    // Parse player name into first/last, skipping initials like "R." or "J."
+    function parsePlayerName(name) {
+        var parts = name.split(' ').filter(function(p) { return p.length > 0; });
+        // First name = first token
+        var first = parts[0] || '';
+        // Last name = last token that isn't a single-letter initial (e.g., "R." or "A.")
+        // Walk from the end to find the real last name
+        var lastParts = [];
+        for (var i = parts.length - 1; i >= 1; i--) {
+            if (/^[A-Za-z]\.$/.test(parts[i])) break; // stop at initials
+            lastParts.unshift(parts[i]);
+        }
+        var last = lastParts.join(' ') || (parts.length > 1 ? parts[parts.length - 1] : '');
+        return { first: first, last: last };
+    }
+
     function buildPlayerNameIndex() {
         playerNameIndex = [];
         players.forEach(function(p) {
             if (!p.stats || !p.name || p.name === p.id) return;
-            var parts = p.name.split(' ');
-            var first = parts[0] || '';
-            var last = parts.slice(1).join(' ') || '';
+            var parsed = parsePlayerName(p.name);
+            var first = parsed.first;
+            var last = parsed.last;
             var yrs = Array.from(p.years);
             var minY = yrs.length ? Math.min.apply(null, yrs) : 0;
             var maxY = yrs.length ? Math.max.apply(null, yrs) : 0;
@@ -4975,14 +4991,15 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         players.forEach(function(p) {
             if (!p.stats) return;
             if (p.type !== q.pType) return;
-            // Top 10 does NOT filter by eligibility — only pool and era
-            if (!eraPass(p)) return;
+            // Top 10: era filter only applies to decade-based questions
+            // Career questions are always "all time"
+            if (isDecade && !eraPass(p)) return;
 
             // Letter filter
             if (q.letter) {
-                var parts = p.name.split(' ');
-                var first = (parts[0] || '').toUpperCase();
-                var last = (parts.slice(1).join(' ') || '').toUpperCase();
+                var parsed = parsePlayerName(p.name);
+                var first = parsed.first.toUpperCase();
+                var last = parsed.last.toUpperCase();
                 if (q.letterType === 'first' && !first.startsWith(q.letter)) return;
                 if (q.letterType === 'last' && !last.startsWith(q.letter)) return;
             }
@@ -5140,18 +5157,30 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         }
     }
 
-    function top10SearchFilter(query) {
-        if (!query || query.length < 2) return [];
-        var q = query.toLowerCase();
+    function top10SearchFilter(query, showAll) {
+        var q = (query || '').toLowerCase().trim();
+        if (!showAll && q.length < 2) return [];
         var isDecade = top10State.question && (top10State.question.qType === 'decade' || top10State.question.qType === 'combined');
         var decade = top10State.question ? top10State.question.decade : null;
         var pType = top10State.question ? top10State.question.pType : null;
         var letter = top10State.question ? top10State.question.letter : null;
         var letterType = top10State.question ? top10State.question.letterType : null;
 
+        // Build set of ranked player IDs so we only show eligible players
+        var rankedIDs = null;
+        if (top10State.allRanked) {
+            rankedIDs = new Set();
+            for (var r = 0; r < top10State.allRanked.length; r++) {
+                rankedIDs.add(top10State.allRanked[r].id);
+            }
+        }
+
         var results = [];
         for (var i = 0; i < playerNameIndex.length; i++) {
             var p = playerNameIndex[i];
+
+            // Must be in the ranked pool (has a value for this stat)
+            if (rankedIDs && !rankedIDs.has(p.id)) continue;
 
             // Must match player type
             if (pType && p.type !== pType) continue;
@@ -5171,12 +5200,17 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             // Skip already guessed
             if (top10State.guessedPlayerIDs.has(p.id)) continue;
 
-            // Prefix match on first or last name
-            var firstLower = p.nameFirst.toLowerCase();
-            var lastLower = p.nameLast.toLowerCase();
-            if (firstLower.startsWith(q) || lastLower.startsWith(q) || p.name.toLowerCase().startsWith(q)) {
+            // Prefix match on first or last name (or show all if no query)
+            if (q.length === 0) {
                 results.push(p);
-                if (results.length >= 8) break;
+                if (results.length >= 50) break;
+            } else {
+                var firstLower = p.nameFirst.toLowerCase();
+                var lastLower = p.nameLast.toLowerCase();
+                if (firstLower.startsWith(q) || lastLower.startsWith(q) || p.name.toLowerCase().startsWith(q)) {
+                    results.push(p);
+                    if (results.length >= 8) break;
+                }
             }
         }
         return results;
@@ -5215,7 +5249,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
     function handleTop10SearchInput() {
         var val = dom.top10Search.value.trim();
-        var results = top10SearchFilter(val);
+        var results = top10SearchFilter(val, true);
         top10HighlightIdx = 0;
         renderTop10Dropdown(results);
     }
@@ -5248,10 +5282,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.guessedPlayerIDs.add(playerId);
         top10State.guessesLeft--;
 
-        // Disable reroll after first guess
+        // Disable reroll after first guess (same styling as spent reroll in other modes)
         if (top10State.guessedPlayerIDs.size === 1 && !hasUsedReroll) {
-            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
-            dom.rerollBtn.classList.add('opacity-25','cursor-not-allowed');
+            dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+            dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
             dom.rerollBtn.disabled = true;
         }
 
@@ -5456,7 +5490,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
         // Render question with same styling as How Much mode
         dom.top10Question.innerHTML = buildTop10QuestionHTML(pregen.question);
-        dom.top10Question.className = 'text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-3 mt-4';
+        dom.top10Question.className = 'text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-3 mt-2';
         var catSpan = dom.top10Question.querySelector('[data-cat-key]');
         if (catSpan) catSpan.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
         renderTop10Board();
@@ -5831,7 +5865,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 name: name, score: score, date: new Date().toLocaleDateString(),
                 game_mode: gameMode, player_pool: playerPool
             };
-            if (eligibility) row.eligibility = eligibility;
+            if (eligibility && gameMode !== 'top10') row.eligibility = eligibility;
             var res = await sb.from('leaderboard').insert([row]);
             if (res.error) {
                 if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
@@ -5862,7 +5896,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 name: name, score: score, date: new Date().toLocaleDateString(),
                 game_mode: gameMode, player_pool: playerPool
             };
-            if (eligibility) row.eligibility = eligibility;
+            if (eligibility && gameMode !== 'top10') row.eligibility = eligibility;
             if (!savedToMainLB) {
                 var res = await sb.from('leaderboard').insert([row]);
                 if (res.error) {
@@ -5877,7 +5911,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             }
             // Set filters to match the game just played
             dom.lbFilterMode.value = gameMode;
-            dom.lbFilterElig.value = eligibility || 'all_elig';
+            dom.lbFilterElig.value = (gameMode === 'top10') ? 'all_elig' : (eligibility || 'all_elig');
             dom.lbFilterDate.value = 'today';
             await fetchLeaderboard();
             renderLeaderboard(true, name, score);
@@ -5909,7 +5943,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                             name: saved, score: score, date: new Date().toLocaleDateString(),
                             game_mode: gameMode, player_pool: playerPool
                         };
-                        if (eligibility) row.eligibility = eligibility;
+                        if (eligibility && gameMode !== 'top10') row.eligibility = eligibility;
                         var res = await sb.from('leaderboard').insert([row]);
                         if (res.error) {
                             if (res.error.message && res.error.message.indexOf('eligibility') !== -1) {
@@ -6110,7 +6144,12 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             var poolText = poolTextMap[playerPool] || 'All Players';
             var eligText = eligTextMap[eligibility] || 'Veteran';
             var eraText = eraMode === 'allEras' ? 'All Eras' : (eraMode === 'modern' ? 'Modern Era' : selectedDecade + 's');
-            var subtitleText = modeText + ' \u2022 ' + eligText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
+            var subtitleText;
+            if (gameMode === 'top10') {
+                subtitleText = modeText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
+            } else {
+                subtitleText = modeText + ' \u2022 ' + eligText + ' \u2022 ' + poolText + ' \u2022 ' + eraText;
+            }
             var challengeWon = isPlayingChallenge && challengerScore !== null && score >= challengerScore;
             var challengeLost = isPlayingChallenge && challengerScore !== null && score < challengerScore;
             var shareTitle = isPlayingChallenge ? ('Challenge ' + currentChallengeId) : (currentChallengeId ? ('Challenge ' + currentChallengeId) : 'MLB Matchups');
@@ -6165,6 +6204,21 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                     ctx.font = '40px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillStyle = '#ffffff'; ctx.fillText(res, x + boxSize / 2, y + boxSize / 2 + 2);
                     ctx.textBaseline = 'alphabetic';
+                } else if (gameMode === 'top10') {
+                    // Top 10 mode: color by round score
+                    var rScore = roundScores[i] || 0;
+                    var fill = '#ef4444'; // red < 200
+                    if (rScore >= 400) fill = '#22c55e'; // green 400+
+                    else if (rScore >= 200) fill = '#f97316'; // orange 200-399
+                    ctx.fillStyle = fill;
+                    ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize, 12); ctx.fill();
+                    // Gold trophy if got #1
+                    var gotNumber1 = matchHistory[i] && matchHistory[i].hits && matchHistory[i].hits.indexOf(0) !== -1;
+                    if (gotNumber1) {
+                        ctx.font = '32px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#ffffff'; ctx.fillText('\uD83C\uDFC6', x + boxSize / 2, y + boxSize / 2 + 2);
+                        ctx.textBaseline = 'alphabetic';
+                    }
                 } else {
                     var fill = '#374151';
                     if (typeof res === 'number') {
@@ -6453,7 +6507,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             // Pre-filter to current game settings if a game is active
             if (dom.startScreen.classList.contains('hidden')) {
                 dom.lbFilterMode.value = gameMode || 'all';
-                dom.lbFilterElig.value = eligibility || 'all_elig';
+                dom.lbFilterElig.value = (gameMode === 'top10') ? 'all_elig' : (eligibility || 'all_elig');
                 dom.lbFilterDate.value = 'today';
             }
             renderLeaderboard();
@@ -6600,6 +6654,13 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         // Top 10 search events
         dom.top10Search.addEventListener('input', handleTop10SearchInput);
         dom.top10Search.addEventListener('keydown', handleTop10SearchKeydown);
+        dom.top10Search.addEventListener('focus', function() {
+            if (top10State.roundOver) return;
+            var val = dom.top10Search.value.trim();
+            var results = top10SearchFilter(val, true);
+            top10HighlightIdx = 0;
+            renderTop10Dropdown(results);
+        });
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!dom.top10Search.contains(e.target) && !dom.top10Dropdown.contains(e.target)) {
