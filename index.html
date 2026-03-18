@@ -305,6 +305,169 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
 /* Hide the old number line elements if they still exist */
 #number-line-container { display: none !important; }
+
+/* ═══ TOP 10 MODE ═══ */
+.top10-cell {
+    display: grid;
+    grid-template-columns: 2rem 1fr 4rem;
+    align-items: center;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background-color: #374151;
+    border: 2px solid #4b5563;
+    overflow: hidden;
+    transition: all 0.3s;
+    perspective: 600px;
+}
+html:not(.dark) .top10-cell {
+    background-color: #e5e7eb;
+    border-color: #d1d5db;
+}
+.top10-rank {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-align: center;
+    color: #9ca3af;
+}
+html:not(.dark) .top10-rank { color: #6b7280; }
+.top10-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6b7280;
+    padding: 0 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html:not(.dark) .top10-name { color: #9ca3af; }
+.top10-value {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-align: center;
+    color: #6b7280;
+}
+html:not(.dark) .top10-value { color: #9ca3af; }
+
+.top10-cell.revealed {
+    background-color: rgba(20, 83, 45, 0.4);
+    border-color: #22c55e;
+}
+html:not(.dark) .top10-cell.revealed {
+    background-color: #dcfce7;
+    border-color: #16a34a;
+}
+.top10-cell.revealed .top10-rank { color: #86efac; }
+html:not(.dark) .top10-cell.revealed .top10-rank { color: #166534; }
+.top10-cell.revealed .top10-name { color: #86efac; font-weight: 800; }
+html:not(.dark) .top10-cell.revealed .top10-name { color: #166534; }
+.top10-cell.revealed .top10-value { color: #86efac; }
+html:not(.dark) .top10-cell.revealed .top10-value { color: #166534; }
+
+.top10-cell.cascade-revealed {
+    background-color: rgba(55, 65, 81, 0.6);
+    border-color: #6b7280;
+}
+html:not(.dark) .top10-cell.cascade-revealed {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+.top10-cell.cascade-revealed .top10-name { color: #9ca3af; }
+html:not(.dark) .top10-cell.cascade-revealed .top10-name { color: #6b7280; }
+.top10-cell.cascade-revealed .top10-value { color: #9ca3af; }
+html:not(.dark) .top10-cell.cascade-revealed .top10-value { color: #6b7280; }
+
+/* Flip animation */
+@keyframes top10-flip-in {
+    0% { transform: rotateX(90deg); opacity: 0; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+}
+.top10-flip { animation: top10-flip-in 0.4s ease-out forwards; }
+
+/* Miss X animation */
+@keyframes top10-miss-in {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes top10-miss-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.top10-miss-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    pointer-events: none;
+}
+.top10-miss-x {
+    font-size: 6rem;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    animation: top10-miss-in 0.3s ease-out forwards;
+}
+.top10-miss-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fca5a5;
+    margin-top: 0.25rem;
+    animation: top10-miss-in 0.3s ease-out 0.1s forwards;
+    opacity: 0;
+}
+html:not(.dark) .top10-miss-text { color: #b91c1c; }
+.top10-miss-fadeout {
+    animation: top10-miss-out 0.5s ease-out forwards;
+}
+
+/* Search dropdown */
+.top10-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.75rem;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+html:not(.dark) .top10-search-dropdown {
+    background: white;
+    border-color: #d1d5db;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.top10-search-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.1s;
+}
+.top10-search-item:hover, .top10-search-item.highlighted {
+    background-color: #374151;
+}
+html:not(.dark) .top10-search-item:hover, html:not(.dark) .top10-search-item.highlighted {
+    background-color: #eff6ff;
+}
+.top10-search-item-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e5e7eb;
+}
+html:not(.dark) .top10-search-item-name { color: #1f2937; }
+.top10-search-item-years {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+    margin-left: 0.5rem;
+}
     </style>
 </head>
 <body class="bg-gray-200 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 h-[100dvh] flex flex-col overflow-hidden">
@@ -407,6 +570,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all gamemode-btn" data-mode="howMuch">How Much?</button>
     <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="sideBySide">Showdown</button>
     <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="pickEm">Pick 'Em</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all gamemode-btn" data-mode="top10">Top 10</button>
 </div>
                 </div>
                 <div>
@@ -568,6 +732,26 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         </div>
     <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4">
         </div>
+</div>
+
+<div id="ui-top10" class="w-full hidden">
+    <div id="top10-question" class="text-center text-sm font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-3 mt-4"></div>
+
+    <!-- Search Input -->
+    <div class="relative mb-3">
+        <input type="text" id="top10-search" placeholder="Type a player name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            class="w-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition">
+        <div id="top10-dropdown" class="top10-search-dropdown hidden"></div>
+    </div>
+
+    <!-- Guess Counter -->
+    <div class="flex justify-between items-center mb-2 px-1">
+        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Guesses: <span id="top10-guess-count" class="text-gray-700 dark:text-gray-200">0</span>/10</div>
+        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Hits: <span id="top10-hit-count" class="text-green-600 dark:text-green-400">0</span>/10</div>
+    </div>
+
+    <!-- The 10 Cells -->
+    <div id="top10-board" class="flex flex-col gap-1 mb-4"></div>
 </div>
 
             <div class="mt-2">
@@ -764,6 +948,14 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                     <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                         <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Career HR &ge; 300</div>
                         <div class="text-[10px]">Pick the players who qualify from a 10-player grid</div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
+                    <div class="font-black text-gray-800 dark:text-white mb-1">Top 10</div>
+                    <div class="text-xs leading-relaxed mb-2">Guess which players rank in the top 10 for a given stat category. Type player names to guess &mdash; correct answers flip to reveal their rank and value. Wrong guesses show the player's actual ranking. You get 10 guesses per round.</div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-center text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                        <div class="font-bold text-gray-700 dark:text-gray-300 mb-1">Top 10 HR hitters in the 1990s</div>
+                        <div class="text-[10px]">#1 ??? &bull; #2 Mark McGwire 405 &bull; #3 ??? &bull; ...</div>
                     </div>
                 </div>
             </div>
@@ -1035,6 +1227,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                         <option value="howMuch">How Much?</option>
                         <option value="sideBySide">Showdown</option>
                         <option value="pickEm">Pick 'Em</option>
+                        <option value="top10">Top 10</option>
                     </select>
 
                     <select id="lb-filter-elig" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg px-2 py-2 focus:outline-none focus:border-blue-500">
@@ -1304,6 +1497,19 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     var isDailyChallenge   = false;
     var savedToMainLB      = false;
 
+    var top10State = {
+        answer: [],           // Array of 10 {id, name, value, rank} sorted by rank
+        guessesLeft: 10,
+        revealedPositions: new Set(), // indices 0-9 that have been revealed by guessing
+        hitCount: 0,
+        question: null,       // {stat, statKey, decade, letter, letterType, playerType, displayText, lowerBetter}
+        roundOver: false,
+        guessedPlayerIDs: new Set()
+    };
+
+    var decadeStatsCache = new Map();
+    var playerNameIndex = [];  // [{id, name, nameFirst, nameLast, minYear, maxYear, type}]
+
     var pickEmState = {
         threshold: 0, correctIDs: new Set(), picksMade: 0,
         totalRoundPts: 0, lastVal: null, chainActive: true, chainCount: 0, roundOver: false
@@ -1431,6 +1637,44 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
        {key:'seasonHighK',  label:'High Season K'},
        {key:'seasonHighHRPit',label:'High Season HR', lowerBetter:true}
     ];
+
+    // Top 10 category definitions
+    var TOP10_CATS_BAT_DECADE = [
+        { key: 'HR',  label: 'HR',  field: 'HR',  lowerBetter: false },
+        { key: 'H',   label: 'Hits', field: 'H',  lowerBetter: false },
+        { key: 'RBI', label: 'RBI', field: 'RBI', lowerBetter: false },
+        { key: 'SB',  label: 'SB',  field: 'SB',  lowerBetter: false },
+        { key: 'BB',  label: 'BB',  field: 'BB',  lowerBetter: false },
+        { key: 'BA',  label: 'Batting Average', field: 'BA', lowerBetter: false, isRate: true, minPA: 1500 },
+        { key: 'OPS', label: 'OPS', field: 'OPS', lowerBetter: false, isRate: true, minPA: 1500 },
+        { key: 'XBH%', label: 'Extra-Base Hit Rate', field: 'XBHRate', lowerBetter: false, isRate: true, minPA: 1500 }
+    ];
+    var TOP10_CATS_PIT_DECADE = [
+        { key: 'W',   label: 'Wins',       field: 'W',   lowerBetter: false },
+        { key: 'K',   label: 'Strikeouts', field: 'SO',  lowerBetter: false },
+        { key: 'ERA', label: 'ERA',        field: 'ERA', lowerBetter: true, isRate: true, minIP: 500 },
+        { key: 'IP',  label: 'Innings Pitched', field: 'IP', lowerBetter: false }
+    ];
+    var TOP10_CATS_BAT_CAREER = [
+        { key: 'careerHR',      label: 'Career HR',     statKey: 'careerHR',     lowerBetter: false },
+        { key: 'careerH',       label: 'Career Hits',   statKey: 'careerH',      lowerBetter: false },
+        { key: 'careerRBI',     label: 'Career RBI',    statKey: 'careerRBI',    lowerBetter: false },
+        { key: 'careerSB',      label: 'Career SB',     statKey: 'careerSB',     lowerBetter: false },
+        { key: 'careerBB',      label: 'Career BB',     statKey: 'careerBB',     lowerBetter: false },
+        { key: 'careerBA',      label: 'Career BA',     statKey: 'careerBA',     lowerBetter: false, isRate: true },
+        { key: 'careerOPS',     label: 'Career OPS',    statKey: 'careerOPS',    lowerBetter: false, isRate: true },
+        { key: 'careerXBHRate', label: 'Career XBH%',   statKey: 'careerXBHRate',lowerBetter: false, isRate: true },
+        { key: 'careerWARBat',  label: 'Career WAR',    statKey: 'careerWARBat', lowerBetter: false }
+    ];
+    var TOP10_CATS_PIT_CAREER = [
+        { key: 'careerW',      label: 'Career Wins',   statKey: 'careerW',      lowerBetter: false },
+        { key: 'careerSO',     label: 'Career K',      statKey: 'careerSO',     lowerBetter: false },
+        { key: 'careerERA',    label: 'Career ERA',    statKey: 'careerERA',    lowerBetter: true, isRate: true },
+        { key: 'careerIP',     label: 'Career IP',     statKey: 'careerIP',     lowerBetter: false },
+        { key: 'careerWARPit', label: 'Career WAR',    statKey: 'careerWARPit', lowerBetter: false }
+    ];
+
+    var TOP10_POINTS = [200, 160, 130, 110, 90, 80, 70, 60, 50, 50];
 
     // ═══════════════════════════════════════
     // §6  HELPER FUNCTIONS
@@ -1758,7 +2002,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     function generateDailySettings(rng) {
-        var modes = ['howMuch', 'sideBySide', 'pickEm'];
+        var modes = ['howMuch', 'sideBySide', 'pickEm', 'top10'];
         var mode = modes[Math.floor(rng() * modes.length)];
 
         // Pool: All 50%, Batters 25%, Pitchers 25%
@@ -1804,7 +2048,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     function getDailySettingsLabel(settings) {
-        var modeText = { howMuch: 'How Much?', sideBySide: 'Showdown', pickEm: "Pick 'Em" };
+        var modeText = { howMuch: 'How Much?', sideBySide: 'Showdown', pickEm: "Pick 'Em", top10: 'Top 10' };
         var eligText = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame' };
         var poolText = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
         var eraText = settings.era === 'allEras' ? 'All Eras' : (settings.era === 'modern' ? 'Modern Era' : settings.decade + 's');
@@ -3149,8 +3393,8 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             }
         }
 
-        // Bomb button state – always hidden in challenge mode
-        if (isPlayingChallenge || currentChallengeId) {
+        // Bomb button state – always hidden in challenge mode or Top 10
+        if (isPlayingChallenge || currentChallengeId || gameMode === 'top10') {
             dom.bombBtn.classList.add('hidden');
             dom.bombBtn.disabled = true;
         } else {
@@ -3167,23 +3411,26 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         }
 
         // Mode-specific visibility
+        dom.uiHowMuch.classList.add('hidden');
+        dom.uiSideBySide.classList.add('hidden');
+        dom.uiPickEm.classList.add('hidden');
+        dom.uiTop10.classList.add('hidden');
+
         if (gameMode === 'howMuch') {
             dom.uiHowMuch.classList.remove('hidden');
-            dom.uiSideBySide.classList.add('hidden');
-            dom.uiPickEm.classList.add('hidden');
             dom.nextBtn.classList.add('hidden');
             dom.submitBtn.classList.remove('hidden');
             startRoundHowMuch();
         } else if (gameMode === 'sideBySide') {
-            dom.uiHowMuch.classList.add('hidden');
             dom.uiSideBySide.classList.remove('hidden');
-            dom.uiPickEm.classList.add('hidden');
             dom.nextBtn.classList.add('hidden');
             dom.submitBtn.classList.remove('hidden');
             startRoundSideBySide();
+        } else if (gameMode === 'top10') {
+            dom.uiTop10.classList.remove('hidden');
+            dom.nextBtn.classList.add('hidden');
+            startRoundTop10();
         } else {
-            dom.uiHowMuch.classList.add('hidden');
-            dom.uiSideBySide.classList.add('hidden');
             dom.uiPickEm.classList.remove('hidden');
             startRoundPickEm();
         }
@@ -3193,6 +3440,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     // BOMB FEATURE
     // ═══════════════════════════════════════
     function armBomb() {
+        if (gameMode === 'top10') return; // bomb not used in Top 10
         // If already armed, toggle off (cancel) — but not if Pick Em selections already started
         if (bombArmed) {
             if (gameMode === 'pickEm' && bombPendingReplacements.length > 0) return;
@@ -3514,7 +3762,11 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     function skipQuestion() {
         if (hasUsedReroll) return;
         if (isPlayingChallenge) return;
-        if (dom.submitBtn.textContent !== 'Lock In') return;
+        if (gameMode === 'top10') {
+            if (top10State.roundOver || top10State.guessesLeft < 10) return; // can only reroll before any guesses
+        } else {
+            if (dom.submitBtn.textContent !== 'Lock In') return;
+        }
         hasUsedReroll = true;
         if (matchHistory.length > 0) matchHistory.pop();
 
@@ -4554,6 +4806,592 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
     }
 
     // ═══════════════════════════════════════
+    // §16b  TOP 10 MODE
+    // ═══════════════════════════════════════
+
+    function buildPlayerNameIndex() {
+        playerNameIndex = [];
+        players.forEach(function(p) {
+            if (!p.stats || !p.name || p.name === p.id) return;
+            var parts = p.name.split(' ');
+            var first = parts[0] || '';
+            var last = parts.slice(1).join(' ') || '';
+            var yrs = Array.from(p.years);
+            var minY = yrs.length ? Math.min.apply(null, yrs) : 0;
+            var maxY = yrs.length ? Math.max.apply(null, yrs) : 0;
+            playerNameIndex.push({
+                id: p.id, name: p.name, nameFirst: first, nameLast: last,
+                minYear: minY, maxYear: maxY, type: p.type
+            });
+        });
+        playerNameIndex.sort(function(a, b) { return a.nameLast.localeCompare(b.nameLast) || a.nameFirst.localeCompare(b.nameFirst); });
+    }
+
+    function computeDecadeStats(decade) {
+        if (decadeStatsCache.has(decade)) return decadeStatsCache.get(decade);
+        var startYear = decade, endYear = decade + 9;
+        var result = new Map(); // playerID → { HR, H, RBI, SB, BB, AB, _2B, _3B, HBP, SF, PA, BA, OPS, XBHRate, W, SO, ER, IPouts, IP, ERA, pitBB, pitH }
+
+        // Batting
+        if (batSeasons) {
+            batSeasons.forEach(function(seasons, pid) {
+                var agg = { AB:0, H:0, BB:0, HBP:0, SF:0, HR:0, _2B:0, _3B:0, SB:0, RBI:0 };
+                var hasData = false;
+                seasons.forEach(function(s) {
+                    if (s.yearID >= startYear && s.yearID <= endYear) {
+                        hasData = true;
+                        agg.AB  += s.AB  || 0; agg.H   += s.H   || 0; agg.BB  += s.BB  || 0;
+                        agg.HBP += s.HBP || 0; agg.SF  += s.SF  || 0; agg.HR  += s.HR  || 0;
+                        agg._2B += s['2B'] || 0; agg._3B += s['3B'] || 0; agg.SB += s.SB || 0;
+                        agg.RBI += s.RBI || 0;
+                    }
+                });
+                if (!hasData) return;
+                var PA = agg.AB + agg.BB + agg.HBP + agg.SF;
+                var BA = agg.AB > 0 ? agg.H / agg.AB : 0;
+                var OBP = PA > 0 ? (agg.H + agg.BB + agg.HBP) / PA : 0;
+                var SLG = agg.AB > 0 ? ((agg.H - agg._2B - agg._3B - agg.HR) + 2*agg._2B + 3*agg._3B + 4*agg.HR) / agg.AB : 0;
+                var XBHRate = agg.H > 0 ? (agg._2B + agg._3B + agg.HR) / agg.H : 0;
+                if (!result.has(pid)) result.set(pid, {});
+                var r = result.get(pid);
+                r.HR = agg.HR; r.H = agg.H; r.RBI = agg.RBI; r.SB = agg.SB; r.BB = agg.BB;
+                r.BA = BA; r.OPS = OBP + SLG; r.XBHRate = XBHRate; r.PA = PA; r.AB = agg.AB;
+            });
+        }
+
+        // Pitching
+        if (pitSeasons) {
+            pitSeasons.forEach(function(seasons, pid) {
+                var agg = { W:0, SO:0, ER:0, IPouts:0, HR:0, BB:0, H:0 };
+                var hasData = false;
+                seasons.forEach(function(s) {
+                    if (s.yearID >= startYear && s.yearID <= endYear) {
+                        hasData = true;
+                        agg.W  += s.W  || 0; agg.SO += s.SO || 0; agg.ER += s.ER || 0;
+                        agg.IPouts += s.IPouts || 0; agg.HR += s.HR || 0;
+                        agg.BB += s.BB || 0; agg.H += s.H || 0;
+                    }
+                });
+                if (!hasData) return;
+                var IP = agg.IPouts / 3;
+                var ERA = IP > 0 ? (agg.ER * 9) / IP : 99;
+                if (!result.has(pid)) result.set(pid, {});
+                var r = result.get(pid);
+                r.W = agg.W; r.SO = agg.SO; r.IP = IP; r.ERA = ERA;
+                r.pitIPouts = agg.IPouts; r.pitER = agg.ER;
+            });
+        }
+
+        decadeStatsCache.set(decade, result);
+        return result;
+    }
+
+    function formatTop10Value(value, cat) {
+        var k = cat.key || cat.statKey || '';
+        if (k === 'BA' || k === 'careerBA') return value.toFixed(3);
+        if (k === 'OPS' || k === 'careerOPS') return value.toFixed(3);
+        if (k === 'ERA' || k === 'careerERA') return value.toFixed(2);
+        if (k === 'XBH%' || k === 'careerXBHRate') return (value * 100).toFixed(1) + '%';
+        if (k === 'careerWARBat' || k === 'careerWARPit') return value.toFixed(1);
+        if (k === 'IP' || k === 'careerIP') return Math.round(value).toLocaleString();
+        return Math.round(value).toLocaleString();
+    }
+
+    function generateTop10Question(rng) {
+        rng = rng || Math.random;
+        var qTypeRoll = rng();
+        var qType; // 'decade', 'letter', 'combined'
+        if (qTypeRoll < 0.50) qType = 'decade';
+        else if (qTypeRoll < 0.75) qType = 'letter';
+        else qType = 'combined';
+
+        // Determine player type based on pool setting
+        var pType;
+        if (playerPool === 'batters') pType = 'hitter';
+        else if (playerPool === 'pitchers') pType = 'pitcher';
+        else pType = rng() < 0.55 ? 'hitter' : 'pitcher';
+
+        var usesDecade = (qType === 'decade' || qType === 'combined');
+        var usesLetter = (qType === 'letter' || qType === 'combined');
+
+        // Pick decade
+        var decade = null;
+        if (usesDecade) {
+            if (eraMode === 'select' && selectedDecade) {
+                decade = selectedDecade;
+            } else {
+                var decades = [1930,1940,1950,1960,1970,1980,1990,2000,2010,2020];
+                if (eraMode === 'modern') decades = [1970,1980,1990,2000,2010,2020];
+                decade = decades[Math.floor(rng() * decades.length)];
+            }
+        }
+
+        // Pick stat category
+        var catPool;
+        if (usesDecade) {
+            catPool = pType === 'hitter' ? TOP10_CATS_BAT_DECADE : TOP10_CATS_PIT_DECADE;
+        } else {
+            catPool = pType === 'hitter' ? TOP10_CATS_BAT_CAREER : TOP10_CATS_PIT_CAREER;
+        }
+        var cat = catPool[Math.floor(rng() * catPool.length)];
+
+        // Pick letter
+        var letter = null, letterType = null;
+        if (usesLetter) {
+            letterType = rng() < 0.5 ? 'first' : 'last';
+            var alphabet = 'ABCDEFGHIJKLMNOPRSTW'.split(''); // common starting letters
+            letter = alphabet[Math.floor(rng() * alphabet.length)];
+        }
+
+        return {
+            qType: qType, pType: pType, decade: decade,
+            cat: cat, letter: letter, letterType: letterType
+        };
+    }
+
+    function computeTop10Answer(q) {
+        var isDecade = (q.qType === 'decade' || q.qType === 'combined');
+        var decadeStats = isDecade ? computeDecadeStats(q.decade) : null;
+
+        var candidates = [];
+        players.forEach(function(p) {
+            if (!p.stats) return;
+            if (p.type !== q.pType) return;
+            if (!passesGlobal(p)) return;
+
+            // Letter filter
+            if (q.letter) {
+                var parts = p.name.split(' ');
+                var first = (parts[0] || '').toUpperCase();
+                var last = (parts.slice(1).join(' ') || '').toUpperCase();
+                if (q.letterType === 'first' && !first.startsWith(q.letter)) return;
+                if (q.letterType === 'last' && !last.startsWith(q.letter)) return;
+            }
+
+            var value;
+            if (isDecade) {
+                var ds = decadeStats.get(p.id);
+                if (!ds) return;
+                var field = q.cat.field;
+                value = ds[field];
+                if (value === undefined || value === null) return;
+                // Rate stat minimums
+                if (q.cat.isRate) {
+                    if (q.pType === 'hitter' && ds.PA < (q.cat.minPA || 0)) return;
+                    if (q.pType === 'pitcher' && q.cat.minIP && ds.IP < q.cat.minIP) return;
+                }
+                // Skip zero values for counting stats
+                if (!q.cat.isRate && value === 0) return;
+            } else {
+                value = p.stats[q.cat.statKey];
+                if (value === undefined || value === null) return;
+                if (!q.cat.isRate && value === 0) return;
+                // Rate stat minimums for career
+                if (q.cat.isRate && q.pType === 'hitter' && p.stats.PA < 3000) return;
+                if (q.cat.isRate && q.pType === 'pitcher' && p.stats.IP < 1000) return;
+            }
+
+            candidates.push({ id: p.id, name: p.name, value: value });
+        });
+
+        // Sort: lower is better → ascending, else descending
+        candidates.sort(function(a, b) {
+            return q.cat.lowerBetter ? (a.value - b.value) : (b.value - a.value);
+        });
+
+        // Return top 10
+        var top10 = candidates.slice(0, 10).map(function(c, i) {
+            return { id: c.id, name: c.name, value: c.value, rank: i + 1 };
+        });
+
+        return { top10: top10, allRanked: candidates };
+    }
+
+    function buildTop10QuestionText(q) {
+        var catLabel = q.cat.label;
+        var typeLabel = q.pType === 'hitter' ? 'batters' : 'pitchers';
+        var isDecade = (q.qType === 'decade' || q.qType === 'combined');
+        var isLetter = (q.qType === 'letter' || q.qType === 'combined');
+
+        var text = 'Top 10 ' + typeLabel;
+
+        if (isLetter) {
+            var nameType = q.letterType === 'first' ? 'first' : 'last';
+            text += ' with ' + nameType + ' name starting "' + q.letter + '"';
+        }
+
+        text += ' in ' + catLabel;
+
+        if (isDecade) {
+            text += ' (' + q.decade + 's)';
+        }
+
+        return text;
+    }
+
+    function pregenTop10(rng) {
+        for (var attempts = 0; attempts < 100; attempts++) {
+            var q = generateTop10Question(rng);
+            var result = computeTop10Answer(q);
+            if (result.top10.length >= 10) {
+                var displayText = buildTop10QuestionText(q);
+                return {
+                    question: {
+                        qType: q.qType, pType: q.pType, decade: q.decade,
+                        cat: q.cat, letter: q.letter, letterType: q.letterType,
+                        displayText: displayText, lowerBetter: q.cat.lowerBetter || false
+                    },
+                    answer: result.top10,
+                    allRanked: result.allRanked
+                };
+            }
+        }
+        return null;
+    }
+
+    function renderTop10Board() {
+        var board = dom.top10Board;
+        board.innerHTML = '';
+        for (var i = 0; i < 10; i++) {
+            var cell = document.createElement('div');
+            cell.className = 'top10-cell';
+            cell.dataset.rank = i;
+
+            var rankDiv = document.createElement('div');
+            rankDiv.className = 'top10-rank';
+            rankDiv.textContent = '#' + (i + 1);
+
+            var nameDiv = document.createElement('div');
+            nameDiv.className = 'top10-name';
+            nameDiv.textContent = '???';
+
+            var valueDiv = document.createElement('div');
+            valueDiv.className = 'top10-value';
+            valueDiv.textContent = '';
+
+            cell.appendChild(rankDiv);
+            cell.appendChild(nameDiv);
+            cell.appendChild(valueDiv);
+            board.appendChild(cell);
+        }
+    }
+
+    function top10SearchFilter(query) {
+        if (!query || query.length < 2) return [];
+        var q = query.toLowerCase();
+        var isDecade = top10State.question && (top10State.question.qType === 'decade' || top10State.question.qType === 'combined');
+        var decade = top10State.question ? top10State.question.decade : null;
+        var pType = top10State.question ? top10State.question.pType : null;
+        var letter = top10State.question ? top10State.question.letter : null;
+        var letterType = top10State.question ? top10State.question.letterType : null;
+
+        var results = [];
+        for (var i = 0; i < playerNameIndex.length; i++) {
+            var p = playerNameIndex[i];
+
+            // Must match player type
+            if (pType && p.type !== pType) continue;
+
+            // Must have been active in the decade (for decade questions)
+            if (isDecade && decade) {
+                var pl = players.get(p.id);
+                if (!pl || !pl.decades.has(decade)) continue;
+            }
+
+            // Must match letter constraint
+            if (letter && letterType) {
+                if (letterType === 'first' && !p.nameFirst.toUpperCase().startsWith(letter)) continue;
+                if (letterType === 'last' && !p.nameLast.toUpperCase().startsWith(letter)) continue;
+            }
+
+            // Skip already guessed
+            if (top10State.guessedPlayerIDs.has(p.id)) continue;
+
+            // Prefix match on first or last name
+            var firstLower = p.nameFirst.toLowerCase();
+            var lastLower = p.nameLast.toLowerCase();
+            if (firstLower.startsWith(q) || lastLower.startsWith(q) || p.name.toLowerCase().startsWith(q)) {
+                results.push(p);
+                if (results.length >= 8) break;
+            }
+        }
+        return results;
+    }
+
+    function renderTop10Dropdown(results) {
+        var dd = dom.top10Dropdown;
+        if (results.length === 0) { dd.classList.add('hidden'); dd.innerHTML = ''; return; }
+        dd.innerHTML = '';
+        dd.classList.remove('hidden');
+        results.forEach(function(p, idx) {
+            var item = document.createElement('div');
+            item.className = 'top10-search-item';
+            if (idx === 0) item.classList.add('highlighted');
+            item.dataset.playerId = p.id;
+
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'top10-search-item-name';
+            nameSpan.textContent = p.name;
+
+            var yearsSpan = document.createElement('span');
+            yearsSpan.className = 'top10-search-item-years';
+            yearsSpan.textContent = p.minYear && p.maxYear ? '(' + p.minYear + '–' + p.maxYear + ')' : '';
+
+            item.appendChild(nameSpan);
+            item.appendChild(yearsSpan);
+
+            item.addEventListener('click', function() {
+                selectTop10Guess(p.id);
+            });
+            dd.appendChild(item);
+        });
+    }
+
+    var top10HighlightIdx = 0;
+
+    function handleTop10SearchInput() {
+        var val = dom.top10Search.value.trim();
+        var results = top10SearchFilter(val);
+        top10HighlightIdx = 0;
+        renderTop10Dropdown(results);
+    }
+
+    function handleTop10SearchKeydown(e) {
+        var dd = dom.top10Dropdown;
+        var items = dd.querySelectorAll('.top10-search-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            top10HighlightIdx = Math.min(top10HighlightIdx + 1, items.length - 1);
+            items.forEach(function(it, i) { it.classList.toggle('highlighted', i === top10HighlightIdx); });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            top10HighlightIdx = Math.max(top10HighlightIdx - 1, 0);
+            items.forEach(function(it, i) { it.classList.toggle('highlighted', i === top10HighlightIdx); });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            var highlighted = items[top10HighlightIdx];
+            if (highlighted) selectTop10Guess(highlighted.dataset.playerId);
+        }
+    }
+
+    function selectTop10Guess(playerId) {
+        if (top10State.roundOver || top10State.guessesLeft <= 0) return;
+
+        // Already guessed this player
+        if (top10State.guessedPlayerIDs.has(playerId)) return;
+        top10State.guessedPlayerIDs.add(playerId);
+        top10State.guessesLeft--;
+
+        // Clear search
+        dom.top10Search.value = '';
+        dom.top10Dropdown.classList.add('hidden');
+        dom.top10Dropdown.innerHTML = '';
+
+        // Check if in top 10
+        var foundIdx = -1;
+        for (var i = 0; i < top10State.answer.length; i++) {
+            if (top10State.answer[i].id === playerId) { foundIdx = i; break; }
+        }
+
+        if (foundIdx >= 0) {
+            // HIT!
+            top10State.hitCount++;
+            top10State.revealedPositions.add(foundIdx);
+            revealTop10Cell(foundIdx, true);
+        } else {
+            // MISS — find the player's actual rank
+            showTop10Miss(playerId);
+        }
+
+        // Update counters
+        dom.top10GuessCount.textContent = 10 - top10State.guessesLeft;
+        dom.top10HitCount.textContent = top10State.hitCount;
+
+        // Check if round is over
+        if (top10State.guessesLeft <= 0 || top10State.hitCount >= 10) {
+            finishTop10Round();
+        } else {
+            // Refocus search
+            setTimeout(function() { dom.top10Search.focus(); }, 100);
+        }
+    }
+
+    function revealTop10Cell(idx, isPlayerGuess) {
+        var cells = dom.top10Board.querySelectorAll('.top10-cell');
+        if (idx >= cells.length) return;
+        var cell = cells[idx];
+        var entry = top10State.answer[idx];
+
+        if (useAnimations) {
+            cell.style.transform = 'rotateX(90deg)';
+            cell.style.transition = 'transform 0.2s ease-in';
+            setTimeout(function() {
+                cell.querySelector('.top10-name').textContent = entry.name;
+                cell.querySelector('.top10-value').textContent = formatTop10Value(entry.value, top10State.question.cat);
+                cell.classList.add(isPlayerGuess ? 'revealed' : 'cascade-revealed');
+                cell.style.transition = 'transform 0.2s ease-out';
+                cell.style.transform = 'rotateX(0deg)';
+            }, 200);
+        } else {
+            cell.querySelector('.top10-name').textContent = entry.name;
+            cell.querySelector('.top10-value').textContent = formatTop10Value(entry.value, top10State.question.cat);
+            cell.classList.add(isPlayerGuess ? 'revealed' : 'cascade-revealed');
+        }
+    }
+
+    function showTop10Miss(playerId) {
+        var p = players.get(playerId);
+        if (!p) return;
+
+        // Find their actual rank in allRanked
+        var actualRank = -1;
+        if (top10State.allRanked) {
+            for (var i = 0; i < top10State.allRanked.length; i++) {
+                if (top10State.allRanked[i].id === playerId) { actualRank = i + 1; break; }
+            }
+        }
+
+        // Check if player was active in the decade
+        var isDecade = top10State.question && (top10State.question.qType === 'decade' || top10State.question.qType === 'combined');
+        var wasActive = true;
+        if (isDecade && top10State.question.decade) {
+            wasActive = p.decades && p.decades.has(top10State.question.decade);
+        }
+
+        var missText;
+        if (!wasActive) {
+            missText = p.name + ' was not active in the ' + top10State.question.decade + 's';
+        } else if (actualRank > 0) {
+            missText = p.name + ' was #' + actualRank;
+        } else {
+            missText = p.name + ' — not ranked';
+        }
+
+        // Show overlay
+        var overlay = document.createElement('div');
+        overlay.className = 'top10-miss-overlay';
+        overlay.innerHTML = '<div class="top10-miss-x">✕</div><div class="top10-miss-text">' + missText + '</div>';
+        document.body.appendChild(overlay);
+
+        var fadeDelay = useAnimations ? 1500 : 400;
+        setTimeout(function() {
+            overlay.classList.add('top10-miss-fadeout');
+            setTimeout(function() {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 500);
+        }, fadeDelay);
+    }
+
+    function finishTop10Round() {
+        if (top10State.roundOver) return;
+        top10State.roundOver = true;
+        dom.top10Search.disabled = true;
+        dom.top10Dropdown.classList.add('hidden');
+
+        // Cascade reveal unrevealed cells
+        var stepDelay = useAnimations ? 300 : 0;
+        var revealCount = 0;
+        for (var i = 0; i < 10; i++) {
+            if (!top10State.revealedPositions.has(i)) {
+                (function(idx, delay) {
+                    setTimeout(function() { revealTop10Cell(idx, false); }, delay);
+                })(i, revealCount * stepDelay);
+                revealCount++;
+            }
+        }
+
+        var totalRevealTime = revealCount * stepDelay + (useAnimations ? 400 : 0);
+        setTimeout(function() {
+            // Calculate score
+            var roundScore = 0;
+            top10State.revealedPositions.forEach(function(idx) {
+                roundScore += TOP10_POINTS[idx] || 0;
+            });
+
+            // Emoji
+            var hits = top10State.hitCount;
+            var emoji;
+            if      (hits === 10) emoji = '\uD83D\uDC8E';
+            else if (hits >= 8)   emoji = '\uD83D\uDFE9';
+            else if (hits >= 6)   emoji = '\uD83D\uDFE7';
+            else if (hits >= 4)   emoji = '\uD83D\uDFE8';
+            else                  emoji = '\uD83D\uDFE5';
+            roundResults.push(emoji);
+            roundScores.push(roundScore);
+
+            var oldScore = score;
+            score += roundScore;
+            var crossedThreshold = Math.floor(score / 1000) > Math.floor(oldScore / 1000);
+            animateValue(dom.scoreDisp, oldScore, score, 600, crossedThreshold);
+
+            // Feedback
+            dom.feedback.innerHTML = '<div class="text-center"><span class="text-2xl">' + emoji + '</span><div class="text-sm font-bold mt-1">+' + roundScore + ' pts (' + hits + '/10 correct)</div></div>';
+
+            // Show next/finish button
+            dom.submitBtn.classList.add('hidden');
+            dom.nextBtn.classList.remove('hidden');
+            dom.nextBtn.disabled = false;
+            dom.nextBtn.textContent = (round >= 10) ? 'Finish Game' : 'Next Round';
+
+            // Match history for challenges
+            matchHistory.push({
+                mode: 'top10',
+                question: top10State.question,
+                answer: top10State.answer.map(function(a) { return a.id; }),
+                hits: Array.from(top10State.revealedPositions)
+            });
+        }, totalRevealTime);
+    }
+
+    function startRoundTop10() {
+        // Reset state
+        top10State.answer = [];
+        top10State.guessesLeft = 10;
+        top10State.revealedPositions = new Set();
+        top10State.hitCount = 0;
+        top10State.question = null;
+        top10State.roundOver = false;
+        top10State.guessedPlayerIDs = new Set();
+        top10State.allRanked = null;
+
+        // Generate question
+        var pregen = pregenTop10(Math.random);
+        if (!pregen) {
+            showAlert('Could not generate a Top 10 question. Try different settings.', 'bg-red-500');
+            goHome();
+            return;
+        }
+
+        top10State.question = pregen.question;
+        top10State.answer = pregen.answer;
+        top10State.allRanked = pregen.allRanked;
+
+        // Render
+        dom.top10Question.textContent = pregen.question.displayText;
+        renderTop10Board();
+
+        dom.top10Search.disabled = false;
+        dom.top10Search.value = '';
+        dom.top10GuessCount.textContent = '0';
+        dom.top10HitCount.textContent = '0';
+
+        // Category label
+        var poolLabel = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
+        var eligLabel = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
+        setCatLabel((poolLabel[playerPool] || 'All') + ' \u2022 ' + (eligLabel[eligibility] || ''));
+
+        // Hide submit, show in Top 10 mode
+        dom.submitBtn.textContent = 'Give Up';
+        dom.submitBtn.disabled = false;
+        dom.submitBtn.classList.remove('hidden');
+        dom.nextBtn.classList.add('hidden');
+
+        setTimeout(function() { dom.top10Search.focus(); }, 200);
+    }
+
+    // ═══════════════════════════════════════
     // §17  DATA LOADING & AGGREGATION
     // ═══════════════════════════════════════
     function P(id) {
@@ -4674,7 +5512,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 p4._2B += r4['2B'] || 0; p4._3B += r4['3B'] || 0; p4.SB += r4.SB || 0;
                 p4.years.add(2025); p4.decades.add(2020);
                 if (r4.Team) p4.teams.add(r4.Team);
-                var sObj = { yearID: 2025, AB: r4.AB, H: r4.H, BB: r4.BB, HBP: r4.HBP, SF: r4.SF, HR: r4.HR, '2B': r4['2B'], '3B': r4['3B'], SB: r4.SB, SO: r4.SO };
+                var sObj = { yearID: 2025, AB: r4.AB, H: r4.H, BB: r4.BB, HBP: r4.HBP, SF: r4.SF, HR: r4.HR, '2B': r4['2B'], '3B': r4['3B'], SB: r4.SB, SO: r4.SO, RBI: r4.RBI || 0 };
                 if (!batSeasons.has(id4)) batSeasons.set(id4, []);
                 batSeasons.get(id4).push(sObj);
             }
@@ -4694,7 +5532,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
                 p5.pitchSO += r5.SO || 0; p5.pitchBB += r5.BB || 0; p5.pitchH += r5.H || 0;
                 p5.years.add(2025); p5.decades.add(2020);
                 if (r5.Team) p5.teams.add(r5.Team);
-                var sObj5 = { yearID: 2025, SO: r5.SO, ER: r5.ER, IPouts: ipOuts, W: r5.W, HR: r5.HR };
+                var sObj5 = { yearID: 2025, SO: r5.SO, ER: r5.ER, IPouts: ipOuts, W: r5.W, HR: r5.HR, BB: r5.BB || 0, H: r5.H || 0 };
                 if (!pitSeasons.has(id5)) pitSeasons.set(id5, []);
                 pitSeasons.get(id5).push(sObj5);
             }
@@ -4880,7 +5718,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
         if (!sb || s === 0) return false;
         try {
             var todayStr = new Date().toLocaleDateString();
-            var modes = ['howMuch', 'sideBySide', 'pickEm'];
+            var modes = ['howMuch', 'sideBySide', 'pickEm', 'top10'];
             var pools = ['all', 'batters', 'pitchers'];
             for (var m = 0; m < modes.length; m++) {
                 for (var p = 0; p < pools.length; p++) {
@@ -5179,6 +6017,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             var modeText = 'How Much?';
             if (gameMode === 'sideBySide') modeText = 'Showdown';
             if (gameMode === 'pickEm') modeText = "Pick 'Em";
+            if (gameMode === 'top10') modeText = 'Top 10';
             var poolTextMap = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
             var eligTextMap = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame', custom: 'Custom' };
             var poolText = poolTextMap[playerPool] || 'All Players';
@@ -5331,6 +6170,13 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             uiHowMuch:    document.getElementById('ui-how-much'),
             uiSideBySide: document.getElementById('ui-side-by-side'),
             uiPickEm:     document.getElementById('ui-pick-em'),
+            uiTop10:      document.getElementById('ui-top10'),
+            top10Question:document.getElementById('top10-question'),
+            top10Search:  document.getElementById('top10-search'),
+            top10Dropdown:document.getElementById('top10-dropdown'),
+            top10Board:   document.getElementById('top10-board'),
+            top10GuessCount: document.getElementById('top10-guess-count'),
+            top10HitCount:   document.getElementById('top10-hit-count'),
             cardA:        document.getElementById('card-A'),
             cardB:        document.getElementById('card-B'),
             nameA:        document.getElementById('name-A'),
@@ -5648,10 +6494,24 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 
         // Submit / Next
         dom.submitBtn.addEventListener('click', function() {
+            if (gameMode === 'top10' && dom.submitBtn.textContent === 'Give Up') {
+                finishTop10Round();
+                return;
+            }
             if (dom.submitBtn.textContent === 'Lock In') {
                 if (gameMode === 'howMuch') submitGuess();
                 else submitSideBySide();
             } else { nextRound(); }
+        });
+
+        // Top 10 search events
+        dom.top10Search.addEventListener('input', handleTop10SearchInput);
+        dom.top10Search.addEventListener('keydown', handleTop10SearchKeydown);
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dom.top10Search.contains(e.target) && !dom.top10Dropdown.contains(e.target)) {
+                dom.top10Dropdown.classList.add('hidden');
+            }
         });
 
         // Accordion
@@ -5702,7 +6562,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
             initPreferences();
                 populateDateDropdown();
             loadAll(function() {
-                try { buildAgg(); renderDecadeGrid(); }
+                try { buildAgg(); buildPlayerNameIndex(); renderDecadeGrid(); }
                 catch (e) {
                     console.error('Init error:', e);
                     dom.loadingScreen.classList.add('hidden');
