@@ -518,8 +518,8 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </button>
 
-            <button id="challenge-code-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400" aria-label="Enter Challenge Code">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <button id="challenge-code-btn" class="p-2 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition text-indigo-600 dark:text-indigo-400" aria-label="Enter Challenge Code">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
             </button>
 
             <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
@@ -581,10 +581,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 <div>
                         <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Game Mode<button id="gamemode-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
 <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-    <button class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all whitespace-nowrap gamemode-btn" data-mode="howMuch">How Much?</button>
-    <button class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="sideBySide">Showdown</button>
-    <button class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="pickEm">Pick 'Em</button>
-    <button class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="top10">Top 10</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all whitespace-nowrap gamemode-btn" data-mode="howMuch">How Much</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="sideBySide">Showdown</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="pickEm">Pick 'Em</button>
+    <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap gamemode-btn" data-mode="top10">Top 10</button>
 </div>
                 </div>
                 <div>
@@ -598,10 +598,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 <div>
                     <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Eligibility Tier<button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:border-blue-400 transition leading-none">?</button></label>
                     <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
-                        <button class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all whitespace-nowrap elig-btn" data-elig="standard">Veteran</button>
-                        <button class="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="allStar">All Star</button>
-                        <button class="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="hof">Hall of Fame</button>
-                        <button class="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="custom">Custom</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all whitespace-nowrap elig-btn" data-elig="standard">Veteran</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="allStar">All Star</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="hof">Hall of Fame</button>
+                        <button class="flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 transition-all whitespace-nowrap elig-btn" data-elig="custom">Custom</button>
                     </div>
                 </div>
                <div class="relative w-fit">
@@ -6478,6 +6478,17 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         dom.rulesBtn.addEventListener('click', function() { dom.rulesModal.classList.remove('hidden'); });
         dom.closeRulesBtn.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
         document.getElementById('rules-overlay').addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
+
+        // Scroll opened section to top in Game Overview modal
+        dom.rulesModal.querySelectorAll('details').forEach(function(det) {
+            det.addEventListener('toggle', function() {
+                if (det.open) {
+                    setTimeout(function() {
+                        det.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 50);
+                }
+            });
+        });
 
         // Challenge code entry
         document.getElementById('challenge-code-btn').addEventListener('click', openChallengeCodeModal);
