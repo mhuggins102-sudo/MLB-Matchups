@@ -448,7 +448,7 @@ html:not(.dark) .top10-miss-text { color: #b91c1c; }
     margin-top: 0.25rem;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    max-height: 16rem;
+    max-height: 40vh;
     overflow-y: auto;
 }
 html:not(.dark) .top10-search-dropdown {
@@ -5203,13 +5203,11 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             // Prefix match on first or last name (or show all if no query)
             if (q.length === 0) {
                 results.push(p);
-                if (results.length >= 50) break;
             } else {
                 var firstLower = p.nameFirst.toLowerCase();
                 var lastLower = p.nameLast.toLowerCase();
                 if (firstLower.startsWith(q) || lastLower.startsWith(q) || p.name.toLowerCase().startsWith(q)) {
                     results.push(p);
-                    if (results.length >= 8) break;
                 }
             }
         }
@@ -5282,10 +5280,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.guessedPlayerIDs.add(playerId);
         top10State.guessesLeft--;
 
-        // Disable reroll after first guess (same styling as spent reroll in other modes)
+        // Disable reroll after first guess (stays green, just dimmed — same as other modes mid-round)
         if (top10State.guessedPlayerIDs.size === 1 && !hasUsedReroll) {
-            dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
-            dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+            dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
             dom.rerollBtn.disabled = true;
         }
 
@@ -5314,13 +5312,13 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         dom.top10GuessCount.textContent = 10 - top10State.guessesLeft;
         dom.top10HitCount.textContent = top10State.hitCount;
 
+        // Blur search so dropdown stays closed — player clicks back in when ready
+        dom.top10Search.blur();
+
         // Check if round is over
         if (top10State.guessesLeft <= 0 || top10State.hitCount >= 10) {
             var lastWasMiss = (foundIdx < 0);
             finishTop10Round(lastWasMiss);
-        } else {
-            // Refocus search
-            setTimeout(function() { dom.top10Search.focus(); }, 100);
         }
     }
 
