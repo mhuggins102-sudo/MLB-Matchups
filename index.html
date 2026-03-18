@@ -1654,20 +1654,20 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
     // Top 10 category definitions
     var TOP10_CATS_BAT_DECADE = [
-        { key: 'HR',  label: 'HR',  field: 'HR',  lowerBetter: false },
-        { key: 'H',   label: 'Hits', field: 'H',  lowerBetter: false },
-        { key: 'RBI', label: 'RBI', field: 'RBI', lowerBetter: false },
-        { key: 'SB',  label: 'SB',  field: 'SB',  lowerBetter: false },
-        { key: 'BB',  label: 'BB',  field: 'BB',  lowerBetter: false },
-        { key: 'BA',  label: 'Batting Average', field: 'BA', lowerBetter: false, isRate: true, minPA: 1500 },
-        { key: 'OPS', label: 'OPS', field: 'OPS', lowerBetter: false, isRate: true, minPA: 1500 },
-        { key: 'XBH%', label: 'Extra-Base Hit Rate', field: 'XBHRate', lowerBetter: false, isRate: true, minPA: 1500 }
+        { key: 'HR',  label: 'HR',    baseCat: 'careerHR',      field: 'HR',  lowerBetter: false },
+        { key: 'H',   label: 'Hits',  baseCat: 'careerH',       field: 'H',  lowerBetter: false },
+        { key: 'RBI', label: 'RBI',   baseCat: 'careerRBI',     field: 'RBI', lowerBetter: false },
+        { key: 'SB',  label: 'SB',    baseCat: 'careerSB',      field: 'SB',  lowerBetter: false },
+        { key: 'BB',  label: 'BB',    baseCat: 'careerBB',      field: 'BB',  lowerBetter: false },
+        { key: 'BA',  label: 'BA',    baseCat: 'careerBA',      field: 'BA', lowerBetter: false, isRate: true, minPA: 1500 },
+        { key: 'OPS', label: 'OPS',   baseCat: 'careerOPS',     field: 'OPS', lowerBetter: false, isRate: true, minPA: 1500 },
+        { key: 'XBH%', label: 'XBH%', baseCat: 'careerXBHRate', field: 'XBHRate', lowerBetter: false, isRate: true, minPA: 1500 }
     ];
     var TOP10_CATS_PIT_DECADE = [
-        { key: 'W',   label: 'Wins',       field: 'W',   lowerBetter: false },
-        { key: 'K',   label: 'Strikeouts', field: 'SO',  lowerBetter: false },
-        { key: 'ERA', label: 'ERA',        field: 'ERA', lowerBetter: true, isRate: true, minIP: 500 },
-        { key: 'IP',  label: 'Innings Pitched', field: 'IP', lowerBetter: false }
+        { key: 'W',   label: 'W',   baseCat: 'careerW',   field: 'W',   lowerBetter: false },
+        { key: 'K',   label: 'K',   baseCat: 'careerSO',  field: 'SO',  lowerBetter: false },
+        { key: 'ERA', label: 'ERA', baseCat: 'careerERA',  field: 'ERA', lowerBetter: true, isRate: true, minIP: 500 },
+        { key: 'IP',  label: 'IP',  baseCat: 'careerIP',   field: 'IP', lowerBetter: false }
     ];
     var TOP10_CATS_BAT_CAREER = [
         { key: 'careerHR',      label: 'Career HR',     statKey: 'careerHR',     lowerBetter: false },
@@ -5035,30 +5035,29 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         return false;
     }
 
-    // Map Top 10 cat keys to BASE_CATS keys for tooltip
+    // Map Top 10 cat to BASE_CATS key for tooltip
     function top10CatToBaseCatKey(cat) {
         if (cat.statKey) return cat.statKey; // career cats map directly
-        // decade cats → closest career equivalent
-        var decadeMap = {
-            'HR': 'careerHR', 'H': 'careerH', 'RBI': 'careerRBI', 'SB': 'careerSB',
-            'BB': 'careerBB', 'BA': 'careerBA', 'OPS': 'careerOPS', 'XBH%': 'careerXBHRate',
-            'W': 'careerW', 'K': 'careerSO', 'ERA': 'careerERA', 'IP': 'careerIP'
-        };
-        return decadeMap[cat.key] || null;
+        return cat.baseCat || null;          // decade cats use baseCat field
     }
 
     function buildTop10QuestionHTML(q) {
         var isDecade = (q.qType === 'decade' || q.qType === 'combined');
         var isLetter = (q.qType === 'letter' || q.qType === 'combined');
 
-        // Category name (clickable for tooltip)
-        var catLabel = q.cat.label;
-        // For decade stats, use simpler label
+        // Use BASE_CATS label for consistency with other modes
+        var baseCatKey = top10CatToBaseCatKey(q.cat);
+        var catLabel;
+        if (baseCatKey && BASE_CATS[baseCatKey]) {
+            catLabel = BASE_CATS[baseCatKey].label;
+        } else {
+            catLabel = q.cat.label;
+        }
+        // For decade questions, drop the "Career " prefix since it's decade-specific
         if (isDecade) {
-            // Replace "Career" prefix if present
             catLabel = catLabel.replace(/^Career\s+/, '');
         }
-        var baseCatKey = top10CatToBaseCatKey(q.cat);
+
         var catSpanHTML;
         if (baseCatKey) {
             catSpanHTML = '<span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + baseCatKey + '">' + catLabel + '</span>';
@@ -5066,28 +5065,28 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             catSpanHTML = '<span class="font-black">' + catLabel + '</span>';
         }
 
-        var html = 'Top 10 ';
-
-        if (isLetter) {
-            var nameType = q.letterType === 'first' ? 'first' : 'last';
-            html += nameType + ' name "' + q.letter + '" in ';
+        // Line 1: "Top 10 in <Category>" with optional type disambiguation
+        var line1 = 'Top 10 in ' + catSpanHTML;
+        if (top10CatIsAmbiguous(q.cat)) {
+            line1 += ' (' + (q.pType === 'hitter' ? 'batters' : 'pitchers') + ')';
         }
 
-        html += catSpanHTML;
-
-        // Suffix: type (if ambiguous) and/or decade
-        var suffixParts = [];
-        if (top10CatIsAmbiguous(q.cat)) {
-            suffixParts.push(q.pType === 'hitter' ? 'batters' : 'pitchers');
+        // Line 2: criteria (letter, decade, or both)
+        var criteriaParts = [];
+        if (isLetter) {
+            var nameType = q.letterType === 'first' ? 'First' : 'Last';
+            criteriaParts.push(nameType + ' Name "' + q.letter + '"');
         }
         if (isDecade) {
-            suffixParts.push(q.decade + 's');
-        }
-        if (suffixParts.length > 0) {
-            html += ' (' + suffixParts.join('; ') + ')';
+            criteriaParts.push(q.decade + 's');
         }
 
-        return html;
+        if (criteriaParts.length > 0) {
+            var line2 = '<div class="text-xs text-gray-500 dark:text-gray-500 font-semibold mt-0.5">' + criteriaParts.join(' \u2022 ') + '</div>';
+            return line1 + line2;
+        }
+
+        return line1;
     }
 
     function pregenTop10(rng) {
@@ -5390,7 +5389,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         var totalPreDelay = missWait + pauseDelay;
         setTimeout(function() {
             // Cascade reveal unrevealed cells with BBREF links
-            var stepDelay = useAnimations ? 300 : 0;
+            var stepDelay = useAnimations ? 600 : 0;
             var revealCount = 0;
             for (var i = 0; i < 10; i++) {
                 if (!top10State.revealedPositions.has(i)) {
@@ -5419,6 +5418,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
                 // Enable next button
                 dom.nextBtn.disabled = false;
+                dom.nextBtn.onclick = nextRound;
 
                 // Match history for challenges
                 matchHistory.push({
@@ -5476,8 +5476,6 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         dom.nextBtn.classList.remove('hidden');
         dom.nextBtn.disabled = true;
         dom.nextBtn.textContent = (round >= 10) ? 'Finish Game' : 'Next Round';
-
-        setTimeout(function() { dom.top10Search.focus(); }, 200);
     }
 
     // ═══════════════════════════════════════
