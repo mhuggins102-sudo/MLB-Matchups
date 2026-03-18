@@ -2066,6 +2066,9 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         var eligText = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame' };
         var poolText = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
         var eraText = settings.era === 'allEras' ? 'All Eras' : (settings.era === 'modern' ? 'Modern Era' : settings.decade + 's');
+        if (settings.mode === 'top10') {
+            return modeText[settings.mode] + ' \u2022 ' + poolText[settings.pool] + ' \u2022 ' + eraText;
+        }
         return modeText[settings.mode] + ' \u2022 ' + eligText[settings.elig] + ' \u2022 ' + poolText[settings.pool] + ' \u2022 ' + eraText;
     }
 
@@ -2244,6 +2247,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             var m;
             if (mode === 'howMuch') m = pregenHowMuch(rng, usedIDs, catHist);
             else if (mode === 'sideBySide') m = pregenShowdown(rng, usedIDs);
+            else if (mode === 'top10') {
+                m = pregenTop10(rng);
+                if (m) m = { question: m.question }; // strip answer/allRanked for storage
+            }
             else m = pregenPickEm(rng, catHist, r + 1);
             if (m) matchups.push(m);
         }
@@ -5389,7 +5396,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         overlay.innerHTML = '<div class="top10-miss-x">✕</div><div class="top10-miss-text">' + missText + '</div>';
         document.body.appendChild(overlay);
 
-        var fadeDelay = useAnimations ? 2250 : 600;
+        var fadeDelay = 2250; // same duration regardless of animation setting
         setTimeout(function() {
             overlay.classList.add('top10-miss-fadeout');
             setTimeout(function() {
@@ -5416,12 +5423,12 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         });
 
         // Wait for miss overlay to finish if last guess was a miss, then pause 0.5s
-        var missWait = (lastWasMiss && useAnimations) ? 2750 : 0; // 2250ms linger + 500ms fade
-        var pauseDelay = useAnimations ? 500 : 0;
+        var missWait = lastWasMiss ? 2750 : 0; // 2250ms linger + 500ms fade
+        var pauseDelay = 500; // always pause before cascade
         var totalPreDelay = missWait + pauseDelay;
         setTimeout(function() {
             // Cascade reveal unrevealed cells with BBREF links
-            var stepDelay = useAnimations ? 600 : 0;
+            var stepDelay = useAnimations ? 600 : 100;
             var revealCount = 0;
             for (var i = 0; i < 10; i++) {
                 if (!top10State.revealedPositions.has(i)) {
@@ -5448,8 +5455,9 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 var crossedThreshold = Math.floor(score / 1000) > Math.floor(oldScore / 1000);
                 animateValue(dom.scoreDisp, oldScore, score, 600, crossedThreshold);
 
-                // Enable next button
+                // Restore next button to full brightness and wire to advance
                 dom.nextBtn.disabled = false;
+                dom.nextBtn.style.opacity = '1';
                 dom.nextBtn.onclick = nextRound;
 
                 // Match history for challenges
@@ -5474,9 +5482,20 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.guessedPlayerIDs = new Set();
         top10State.allRanked = null;
 
-        // Generate question
-        var pregen = pregenTop10(Math.random);
+        // Generate or load question from challenge queue
+        var pregen;
+        if (challengeQueue.length > 0) {
+            var cData = challengeQueue.shift();
+            if (cData && cData.question) {
+                // Recompute answer from the stored question for deterministic results
+                var result = computeTop10Answer(cData.question);
+                pregen = { question: cData.question, answer: result.top10, allRanked: result.allRanked };
+            }
+        }
         if (!pregen) {
+            pregen = pregenTop10(Math.random);
+        }
+        if (!pregen || pregen.answer.length < 10) {
             showAlert('Could not generate a Top 10 question. Try different settings.', 'bg-red-500');
             goHome();
             return;
@@ -5503,11 +5522,19 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         setCatLabel(poolLabel[playerPool] || 'All Players');
         dom.catLabel.className = 'text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wide mt-1';
 
-        // Show disabled Next Round button (no Give Up in Top 10)
+        // Show Next Round button — enabled as "End Round" with dimmed styling
         dom.submitBtn.classList.add('hidden');
         dom.nextBtn.classList.remove('hidden');
-        dom.nextBtn.disabled = true;
+        dom.nextBtn.disabled = false;
         dom.nextBtn.textContent = (round >= 10) ? 'Finish Game' : 'Next Round';
+        dom.nextBtn.style.opacity = '0.35';
+        dom.nextBtn.onclick = function() {
+            if (top10State.roundOver) {
+                nextRound();
+            } else {
+                finishTop10Round(false);
+            }
+        };
     }
 
     // ═══════════════════════════════════════
