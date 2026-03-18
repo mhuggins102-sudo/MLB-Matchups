@@ -1018,7 +1018,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="rules-overlay"></div>
         <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-                <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Rules &amp; Scoring</h3>
+                <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Game Overview</h3>
                 <button id="close-rules-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
             </div>
             <div class="p-0 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -1238,7 +1238,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                             <div class="space-y-2">
                                 <div>
                                     <h5 class="font-bold text-gray-900 dark:text-white mb-1">Career Questions</h5>
-                                    <p>All players with a recorded value for the stat are eligible. Rate stats (BA, OPS, XBH%, ERA) require minimums of 3,000 PA (hitters) or 1,000 IP (pitchers).</p>
+                                    <p>All players with a recorded value for the stat are eligible (from any era, regardless of era filter selected). Rate stats (BA, OPS, XBH%, ERA) require minimums of 3,000 PA (hitters) or 1,000 IP (pitchers).</p>
                                 </div>
                                 <div>
                                     <h5 class="font-bold text-gray-900 dark:text-white mb-1">Decade Questions</h5>
@@ -1281,13 +1281,29 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                         </div>
 
                         <div>
-                            <strong class="text-gray-900 dark:text-white block mb-1">Challenge & Share</strong>
+                            <div class="flex items-center gap-2 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600 dark:text-indigo-400"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                <strong class="text-gray-900 dark:text-white">Challenge & Share</strong>
+                            </div>
                             <p>At the end of a game, click "Share" to generate a unique Challenge Link. Send this to a friend, and they will play the <strong>exact same 10 matchups</strong> you just played. See who knows their history better!</p>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 dark:text-amber-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <strong class="text-gray-900 dark:text-white">Daily Challenge</strong>
+                            </div>
+                            <p>A new challenge is generated every day with preset settings (game mode, player pool, and era). Tap the calendar icon in the header to play. Compete on the daily leaderboard and compare your score with other players.</p>
                         </div>
 
                         <div>
                             <strong class="text-gray-900 dark:text-white block mb-1">Baseball Reference Links</strong>
                             <p>After a round is locked in, player names become clickable links. Tap any player's name to visit their official Baseball-Reference page and verify their stats.</p>
+                        </div>
+
+                        <div>
+                            <strong class="text-gray-900 dark:text-white block mb-1">Screen Name</strong>
+                            <p>Set a screen name to identify yourself on the main leaderboard, daily challenge leaderboard, and personal challenges. Your name persists across sessions, so you can track your scores over time.</p>
                         </div>
                     </div>
                 </details>
