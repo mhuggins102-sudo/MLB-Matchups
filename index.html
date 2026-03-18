@@ -2066,6 +2066,9 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         var eligText = { standard: 'Veteran', allStar: 'All Star', hof: 'Hall of Fame' };
         var poolText = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
         var eraText = settings.era === 'allEras' ? 'All Eras' : (settings.era === 'modern' ? 'Modern Era' : settings.decade + 's');
+        if (settings.mode === 'top10') {
+            return modeText[settings.mode] + ' \u2022 ' + poolText[settings.pool] + ' \u2022 ' + eraText;
+        }
         return modeText[settings.mode] + ' \u2022 ' + eligText[settings.elig] + ' \u2022 ' + poolText[settings.pool] + ' \u2022 ' + eraText;
     }
 
@@ -5389,7 +5392,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         overlay.innerHTML = '<div class="top10-miss-x">✕</div><div class="top10-miss-text">' + missText + '</div>';
         document.body.appendChild(overlay);
 
-        var fadeDelay = useAnimations ? 2250 : 600;
+        var fadeDelay = 2250;
         setTimeout(function() {
             overlay.classList.add('top10-miss-fadeout');
             setTimeout(function() {
@@ -5416,8 +5419,8 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         });
 
         // Wait for miss overlay to finish if last guess was a miss, then pause 0.5s
-        var missWait = (lastWasMiss && useAnimations) ? 2750 : 0; // 2250ms linger + 500ms fade
-        var pauseDelay = useAnimations ? 500 : 0;
+        var missWait = lastWasMiss ? 2750 : 0; // 2250ms linger + 500ms fade
+        var pauseDelay = 500;
         var totalPreDelay = missWait + pauseDelay;
         setTimeout(function() {
             // Cascade reveal unrevealed cells with BBREF links
