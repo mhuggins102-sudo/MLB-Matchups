@@ -435,26 +435,26 @@ html:not(.dark) .top10-miss-text { color: #b91c1c; }
     animation: top10-miss-out 0.5s ease-out forwards;
 }
 
-/* Search dropdown (opens upward since input is at bottom) */
+/* Search dropdown */
 .top10-search-dropdown {
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 0;
     right: 0;
     z-index: 50;
     background: #1f2937;
     border: 1px solid #374151;
     border-radius: 0.75rem;
-    margin-bottom: 0.25rem;
+    margin-top: 0.25rem;
     overflow: hidden;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     max-height: 16rem;
     overflow-y: auto;
 }
 html:not(.dark) .top10-search-dropdown {
     background: white;
     border-color: #d1d5db;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 .top10-search-item {
     padding: 0.5rem 0.75rem;
@@ -751,6 +751,13 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 <div id="ui-top10" class="w-full hidden">
     <div id="top10-question" class="text-center text-sm font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-3 mt-4"></div>
 
+    <!-- Search Input (above the board) -->
+    <div class="relative mb-3">
+        <input type="text" id="top10-search" placeholder="Type a player name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            class="w-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition">
+        <div id="top10-dropdown" class="top10-search-dropdown hidden"></div>
+    </div>
+
     <!-- Guess Counter -->
     <div class="flex justify-between items-center mb-2 px-1">
         <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Guesses: <span id="top10-guess-count" class="text-gray-700 dark:text-gray-200">0</span>/10</div>
@@ -759,13 +766,6 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
     <!-- The 10 Cells -->
     <div id="top10-board" class="flex flex-col gap-1 mb-3"></div>
-
-    <!-- Search Input (below the board) -->
-    <div class="relative mb-3">
-        <input type="text" id="top10-search" placeholder="Type a player name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-            class="w-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition">
-        <div id="top10-dropdown" class="top10-search-dropdown hidden"></div>
-    </div>
 </div>
 
             <div class="mt-2">
@@ -5283,7 +5283,8 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
         // Check if round is over
         if (top10State.guessesLeft <= 0 || top10State.hitCount >= 10) {
-            finishTop10Round();
+            var lastWasMiss = (foundIdx < 0);
+            finishTop10Round(lastWasMiss);
         } else {
             // Refocus search
             setTimeout(function() { dom.top10Search.focus(); }, 100);
@@ -5366,7 +5367,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         }, fadeDelay);
     }
 
-    function finishTop10Round() {
+    function finishTop10Round(lastWasMiss) {
         if (top10State.roundOver) return;
         top10State.roundOver = true;
         dom.top10Search.disabled = true;
@@ -5383,8 +5384,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             }
         });
 
-        // Pause 0.5s before cascade reveal
+        // Wait for miss overlay to finish if last guess was a miss, then pause 0.5s
+        var missWait = (lastWasMiss && useAnimations) ? 2750 : 0; // 2250ms linger + 500ms fade
         var pauseDelay = useAnimations ? 500 : 0;
+        var totalPreDelay = missWait + pauseDelay;
         setTimeout(function() {
             // Cascade reveal unrevealed cells with BBREF links
             var stepDelay = useAnimations ? 300 : 0;
@@ -5425,7 +5428,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                     hits: Array.from(top10State.revealedPositions)
                 });
             }, totalRevealTime);
-        }, pauseDelay);
+        }, totalPreDelay);
     }
 
     function startRoundTop10() {
@@ -5466,6 +5469,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         // Category label — just pool, no eligibility for Top 10
         var poolLabel = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
         setCatLabel(poolLabel[playerPool] || 'All Players');
+        dom.catLabel.className = 'text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wide mt-1';
 
         // Show disabled Next Round button (no Give Up in Top 10)
         dom.submitBtn.classList.add('hidden');
