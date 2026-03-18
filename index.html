@@ -309,7 +309,7 @@ html.dark .slider-adj-btn:active { background-color: #4b5563; }
 /* ═══ TOP 10 MODE ═══ */
 .top10-cell {
     display: grid;
-    grid-template-columns: 2rem 1fr 4rem;
+    grid-template-columns: 2rem 1fr 4rem 3rem;
     align-items: center;
     height: 2.5rem;
     border-radius: 0.75rem;
@@ -347,6 +347,18 @@ html:not(.dark) .top10-name { color: #9ca3af; }
     color: #6b7280;
 }
 html:not(.dark) .top10-value { color: #9ca3af; }
+.top10-pts {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-align: center;
+    color: transparent;
+}
+.top10-cell.revealed .top10-pts {
+    color: #fbbf24;
+}
+html:not(.dark) .top10-cell.revealed .top10-pts {
+    color: #d97706;
+}
 
 .top10-cell.revealed {
     background-color: rgba(20, 83, 45, 0.4);
@@ -423,24 +435,26 @@ html:not(.dark) .top10-miss-text { color: #b91c1c; }
     animation: top10-miss-out 0.5s ease-out forwards;
 }
 
-/* Search dropdown */
+/* Search dropdown (opens upward since input is at bottom) */
 .top10-search-dropdown {
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 0;
     right: 0;
     z-index: 50;
     background: #1f2937;
     border: 1px solid #374151;
     border-radius: 0.75rem;
-    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
     overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.3);
+    max-height: 16rem;
+    overflow-y: auto;
 }
 html:not(.dark) .top10-search-dropdown {
     background: white;
     border-color: #d1d5db;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
 }
 .top10-search-item {
     padding: 0.5rem 0.75rem;
@@ -737,13 +751,6 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 <div id="ui-top10" class="w-full hidden">
     <div id="top10-question" class="text-center text-sm font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-3 mt-4"></div>
 
-    <!-- Search Input -->
-    <div class="relative mb-3">
-        <input type="text" id="top10-search" placeholder="Type a player name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-            class="w-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition">
-        <div id="top10-dropdown" class="top10-search-dropdown hidden"></div>
-    </div>
-
     <!-- Guess Counter -->
     <div class="flex justify-between items-center mb-2 px-1">
         <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Guesses: <span id="top10-guess-count" class="text-gray-700 dark:text-gray-200">0</span>/10</div>
@@ -751,7 +758,14 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
     </div>
 
     <!-- The 10 Cells -->
-    <div id="top10-board" class="flex flex-col gap-1 mb-4"></div>
+    <div id="top10-board" class="flex flex-col gap-1 mb-3"></div>
+
+    <!-- Search Input (below the board) -->
+    <div class="relative mb-3">
+        <input type="text" id="top10-search" placeholder="Type a player name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            class="w-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition">
+        <div id="top10-dropdown" class="top10-search-dropdown hidden"></div>
+    </div>
 </div>
 
             <div class="mt-2">
@@ -3865,7 +3879,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             }
         });
 
-        // Reset eligibility buttons
+        // Reset eligibility buttons and re-enable them
         document.querySelectorAll('.elig-btn').forEach(function(b) {
             b.classList.remove('bg-blue-50','dark:bg-gray-700','text-blue-600','dark:text-white','shadow-sm','font-semibold');
             b.classList.add('text-gray-600','dark:text-gray-400');
@@ -3874,6 +3888,10 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 b.classList.remove('text-gray-600','dark:text-gray-400');
             }
         });
+        var eligContainer = document.querySelector('.elig-btn').parentElement;
+        var eligLabel = eligContainer.parentElement.querySelector('label');
+        eligContainer.classList.remove('opacity-40','pointer-events-none');
+        if (eligLabel) eligLabel.classList.remove('opacity-40');
 
         // Reset era buttons
         dom.eraDisplay.textContent = 'Modern';
@@ -4957,7 +4975,8 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         players.forEach(function(p) {
             if (!p.stats) return;
             if (p.type !== q.pType) return;
-            if (!passesGlobal(p)) return;
+            // Top 10 does NOT filter by eligibility — only pool and era
+            if (!eraPass(p)) return;
 
             // Letter filter
             if (q.letter) {
@@ -5007,26 +5026,68 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         return { top10: top10, allRanked: candidates };
     }
 
-    function buildTop10QuestionText(q) {
-        var catLabel = q.cat.label;
-        var typeLabel = q.pType === 'hitter' ? 'batters' : 'pitchers';
+    // Check if category is ambiguous (could be either batter or pitcher)
+    function top10CatIsAmbiguous(cat) {
+        var ambiguousKeys = ['careerWARBat','careerWARPit'];
+        if (cat.statKey && ambiguousKeys.includes(cat.statKey)) return true;
+        // Decade stats that share names across types
+        if (cat.key === 'BB' || cat.key === 'HR') return true;
+        return false;
+    }
+
+    // Map Top 10 cat keys to BASE_CATS keys for tooltip
+    function top10CatToBaseCatKey(cat) {
+        if (cat.statKey) return cat.statKey; // career cats map directly
+        // decade cats → closest career equivalent
+        var decadeMap = {
+            'HR': 'careerHR', 'H': 'careerH', 'RBI': 'careerRBI', 'SB': 'careerSB',
+            'BB': 'careerBB', 'BA': 'careerBA', 'OPS': 'careerOPS', 'XBH%': 'careerXBHRate',
+            'W': 'careerW', 'K': 'careerSO', 'ERA': 'careerERA', 'IP': 'careerIP'
+        };
+        return decadeMap[cat.key] || null;
+    }
+
+    function buildTop10QuestionHTML(q) {
         var isDecade = (q.qType === 'decade' || q.qType === 'combined');
         var isLetter = (q.qType === 'letter' || q.qType === 'combined');
 
-        var text = 'Top 10 ' + typeLabel;
+        // Category name (clickable for tooltip)
+        var catLabel = q.cat.label;
+        // For decade stats, use simpler label
+        if (isDecade) {
+            // Replace "Career" prefix if present
+            catLabel = catLabel.replace(/^Career\s+/, '');
+        }
+        var baseCatKey = top10CatToBaseCatKey(q.cat);
+        var catSpanHTML;
+        if (baseCatKey) {
+            catSpanHTML = '<span class="text-blue-600 dark:text-blue-400 font-black cursor-pointer underline decoration-dotted" data-cat-key="' + baseCatKey + '">' + catLabel + '</span>';
+        } else {
+            catSpanHTML = '<span class="font-black">' + catLabel + '</span>';
+        }
+
+        var html = 'Top 10 ';
 
         if (isLetter) {
             var nameType = q.letterType === 'first' ? 'first' : 'last';
-            text += ' with ' + nameType + ' name starting "' + q.letter + '"';
+            html += nameType + ' name "' + q.letter + '" in ';
         }
 
-        text += ' in ' + catLabel;
+        html += catSpanHTML;
 
+        // Suffix: type (if ambiguous) and/or decade
+        var suffixParts = [];
+        if (top10CatIsAmbiguous(q.cat)) {
+            suffixParts.push(q.pType === 'hitter' ? 'batters' : 'pitchers');
+        }
         if (isDecade) {
-            text += ' (' + q.decade + 's)';
+            suffixParts.push(q.decade + 's');
+        }
+        if (suffixParts.length > 0) {
+            html += ' (' + suffixParts.join('; ') + ')';
         }
 
-        return text;
+        return html;
     }
 
     function pregenTop10(rng) {
@@ -5034,12 +5095,11 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             var q = generateTop10Question(rng);
             var result = computeTop10Answer(q);
             if (result.top10.length >= 10) {
-                var displayText = buildTop10QuestionText(q);
                 return {
                     question: {
                         qType: q.qType, pType: q.pType, decade: q.decade,
                         cat: q.cat, letter: q.letter, letterType: q.letterType,
-                        displayText: displayText, lowerBetter: q.cat.lowerBetter || false
+                        lowerBetter: q.cat.lowerBetter || false
                     },
                     answer: result.top10,
                     allRanked: result.allRanked
@@ -5069,9 +5129,14 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
             valueDiv.className = 'top10-value';
             valueDiv.textContent = '';
 
+            var ptsDiv = document.createElement('div');
+            ptsDiv.className = 'top10-pts';
+            ptsDiv.textContent = '';
+
             cell.appendChild(rankDiv);
             cell.appendChild(nameDiv);
             cell.appendChild(valueDiv);
+            cell.appendChild(ptsDiv);
             board.appendChild(cell);
         }
     }
@@ -5184,6 +5249,13 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.guessedPlayerIDs.add(playerId);
         top10State.guessesLeft--;
 
+        // Disable reroll after first guess
+        if (top10State.guessedPlayerIDs.size === 1 && !hasUsedReroll) {
+            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+            dom.rerollBtn.classList.add('opacity-25','cursor-not-allowed');
+            dom.rerollBtn.disabled = true;
+        }
+
         // Clear search
         dom.top10Search.value = '';
         dom.top10Dropdown.classList.add('hidden');
@@ -5218,26 +5290,36 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         }
     }
 
-    function revealTop10Cell(idx, isPlayerGuess) {
+    function revealTop10Cell(idx, isPlayerGuess, useBBREFLinks) {
         var cells = dom.top10Board.querySelectorAll('.top10-cell');
         if (idx >= cells.length) return;
         var cell = cells[idx];
         var entry = top10State.answer[idx];
+        var p = players.get(entry.id);
+        var pts = isPlayerGuess ? ('+' + (TOP10_POINTS[idx] || 0)) : '';
+
+        var fillCell = function() {
+            var nameEl = cell.querySelector('.top10-name');
+            if (useBBREFLinks && p) {
+                nameEl.innerHTML = makeLink(p);
+            } else {
+                nameEl.textContent = entry.name;
+            }
+            cell.querySelector('.top10-value').textContent = formatTop10Value(entry.value, top10State.question.cat);
+            cell.querySelector('.top10-pts').textContent = pts;
+            cell.classList.add(isPlayerGuess ? 'revealed' : 'cascade-revealed');
+        };
 
         if (useAnimations) {
             cell.style.transform = 'rotateX(90deg)';
             cell.style.transition = 'transform 0.2s ease-in';
             setTimeout(function() {
-                cell.querySelector('.top10-name').textContent = entry.name;
-                cell.querySelector('.top10-value').textContent = formatTop10Value(entry.value, top10State.question.cat);
-                cell.classList.add(isPlayerGuess ? 'revealed' : 'cascade-revealed');
+                fillCell();
                 cell.style.transition = 'transform 0.2s ease-out';
                 cell.style.transform = 'rotateX(0deg)';
             }, 200);
         } else {
-            cell.querySelector('.top10-name').textContent = entry.name;
-            cell.querySelector('.top10-value').textContent = formatTop10Value(entry.value, top10State.question.cat);
-            cell.classList.add(isPlayerGuess ? 'revealed' : 'cascade-revealed');
+            fillCell();
         }
     }
 
@@ -5275,7 +5357,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         overlay.innerHTML = '<div class="top10-miss-x">✕</div><div class="top10-miss-text">' + missText + '</div>';
         document.body.appendChild(overlay);
 
-        var fadeDelay = useAnimations ? 1500 : 400;
+        var fadeDelay = useAnimations ? 2250 : 600;
         setTimeout(function() {
             overlay.classList.add('top10-miss-fadeout');
             setTimeout(function() {
@@ -5290,59 +5372,60 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         dom.top10Search.disabled = true;
         dom.top10Dropdown.classList.add('hidden');
 
-        // Cascade reveal unrevealed cells
-        var stepDelay = useAnimations ? 300 : 0;
-        var revealCount = 0;
-        for (var i = 0; i < 10; i++) {
-            if (!top10State.revealedPositions.has(i)) {
-                (function(idx, delay) {
-                    setTimeout(function() { revealTop10Cell(idx, false); }, delay);
-                })(i, revealCount * stepDelay);
-                revealCount++;
+        // Convert already-revealed cells to BBREF links
+        top10State.revealedPositions.forEach(function(idx) {
+            var cells = dom.top10Board.querySelectorAll('.top10-cell');
+            if (idx >= cells.length) return;
+            var entry = top10State.answer[idx];
+            var p = players.get(entry.id);
+            if (p) {
+                cells[idx].querySelector('.top10-name').innerHTML = makeLink(p);
             }
-        }
+        });
 
-        var totalRevealTime = revealCount * stepDelay + (useAnimations ? 400 : 0);
+        // Pause 0.5s before cascade reveal
+        var pauseDelay = useAnimations ? 500 : 0;
         setTimeout(function() {
-            // Calculate score
-            var roundScore = 0;
-            top10State.revealedPositions.forEach(function(idx) {
-                roundScore += TOP10_POINTS[idx] || 0;
-            });
+            // Cascade reveal unrevealed cells with BBREF links
+            var stepDelay = useAnimations ? 300 : 0;
+            var revealCount = 0;
+            for (var i = 0; i < 10; i++) {
+                if (!top10State.revealedPositions.has(i)) {
+                    (function(idx, delay) {
+                        setTimeout(function() { revealTop10Cell(idx, false, true); }, delay);
+                    })(i, revealCount * stepDelay);
+                    revealCount++;
+                }
+            }
 
-            // Emoji
-            var hits = top10State.hitCount;
-            var emoji;
-            if      (hits === 10) emoji = '\uD83D\uDC8E';
-            else if (hits >= 8)   emoji = '\uD83D\uDFE9';
-            else if (hits >= 6)   emoji = '\uD83D\uDFE7';
-            else if (hits >= 4)   emoji = '\uD83D\uDFE8';
-            else                  emoji = '\uD83D\uDFE5';
-            roundResults.push(emoji);
-            roundScores.push(roundScore);
+            var totalRevealTime = revealCount * stepDelay + (useAnimations ? 400 : 0);
+            setTimeout(function() {
+                // Calculate score
+                var roundScore = 0;
+                top10State.revealedPositions.forEach(function(idx) {
+                    roundScore += TOP10_POINTS[idx] || 0;
+                });
 
-            var oldScore = score;
-            score += roundScore;
-            var crossedThreshold = Math.floor(score / 1000) > Math.floor(oldScore / 1000);
-            animateValue(dom.scoreDisp, oldScore, score, 600, crossedThreshold);
+                roundResults.push(top10State.hitCount + '/10');
+                roundScores.push(roundScore);
 
-            // Feedback
-            dom.feedback.innerHTML = '<div class="text-center"><span class="text-2xl">' + emoji + '</span><div class="text-sm font-bold mt-1">+' + roundScore + ' pts (' + hits + '/10 correct)</div></div>';
+                var oldScore = score;
+                score += roundScore;
+                var crossedThreshold = Math.floor(score / 1000) > Math.floor(oldScore / 1000);
+                animateValue(dom.scoreDisp, oldScore, score, 600, crossedThreshold);
 
-            // Show next/finish button
-            dom.submitBtn.classList.add('hidden');
-            dom.nextBtn.classList.remove('hidden');
-            dom.nextBtn.disabled = false;
-            dom.nextBtn.textContent = (round >= 10) ? 'Finish Game' : 'Next Round';
+                // Enable next button
+                dom.nextBtn.disabled = false;
 
-            // Match history for challenges
-            matchHistory.push({
-                mode: 'top10',
-                question: top10State.question,
-                answer: top10State.answer.map(function(a) { return a.id; }),
-                hits: Array.from(top10State.revealedPositions)
-            });
-        }, totalRevealTime);
+                // Match history for challenges
+                matchHistory.push({
+                    mode: 'top10',
+                    question: top10State.question,
+                    answer: top10State.answer.map(function(a) { return a.id; }),
+                    hits: Array.from(top10State.revealedPositions)
+                });
+            }, totalRevealTime);
+        }, pauseDelay);
     }
 
     function startRoundTop10() {
@@ -5368,8 +5451,11 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         top10State.answer = pregen.answer;
         top10State.allRanked = pregen.allRanked;
 
-        // Render
-        dom.top10Question.textContent = pregen.question.displayText;
+        // Render question with same styling as How Much mode
+        dom.top10Question.innerHTML = buildTop10QuestionHTML(pregen.question);
+        dom.top10Question.className = 'text-center text-sm font-bold text-gray-700 dark:text-gray-400 mb-3 mt-4';
+        var catSpan = dom.top10Question.querySelector('[data-cat-key]');
+        if (catSpan) catSpan.addEventListener('click', function() { showCatTooltip(this.getAttribute('data-cat-key')); });
         renderTop10Board();
 
         dom.top10Search.disabled = false;
@@ -5377,16 +5463,15 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
         dom.top10GuessCount.textContent = '0';
         dom.top10HitCount.textContent = '0';
 
-        // Category label
+        // Category label — just pool, no eligibility for Top 10
         var poolLabel = { all: 'All Players', batters: 'Batters', pitchers: 'Pitchers' };
-        var eligLabel = { standard: 'Veteran', allStar: 'All Stars', hof: 'Hall of Fame', custom: 'Custom' };
-        setCatLabel((poolLabel[playerPool] || 'All') + ' \u2022 ' + (eligLabel[eligibility] || ''));
+        setCatLabel(poolLabel[playerPool] || 'All Players');
 
-        // Hide submit, show in Top 10 mode
-        dom.submitBtn.textContent = 'Give Up';
-        dom.submitBtn.disabled = false;
-        dom.submitBtn.classList.remove('hidden');
-        dom.nextBtn.classList.add('hidden');
+        // Show disabled Next Round button (no Give Up in Top 10)
+        dom.submitBtn.classList.add('hidden');
+        dom.nextBtn.classList.remove('hidden');
+        dom.nextBtn.disabled = true;
+        dom.nextBtn.textContent = (round >= 10) ? 'Finish Game' : 'Next Round';
 
         setTimeout(function() { dom.top10Search.focus(); }, 200);
     }
@@ -6452,6 +6537,16 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                 self.classList.remove('text-gray-600','dark:text-gray-400');
                 gameMode = self.dataset.mode;
 
+                // Dim/disable eligibility buttons in Top 10 mode
+                var eligContainer = document.querySelector('.elig-btn').parentElement;
+                var eligLabel = eligContainer.parentElement.querySelector('label');
+                if (gameMode === 'top10') {
+                    eligContainer.classList.add('opacity-40','pointer-events-none');
+                    if (eligLabel) eligLabel.classList.add('opacity-40');
+                } else {
+                    eligContainer.classList.remove('opacity-40','pointer-events-none');
+                    if (eligLabel) eligLabel.classList.remove('opacity-40');
+                }
             });
         });
 
@@ -6494,10 +6589,6 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
 
         // Submit / Next
         dom.submitBtn.addEventListener('click', function() {
-            if (gameMode === 'top10' && dom.submitBtn.textContent === 'Give Up') {
-                finishTop10Round();
-                return;
-            }
             if (dom.submitBtn.textContent === 'Lock In') {
                 if (gameMode === 'howMuch') submitGuess();
                 else submitSideBySide();
