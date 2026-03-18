@@ -1110,7 +1110,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                         <div>
                             <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown (Max 1,000 pts/round)</h4>
                             <p class="text-xs mb-2">Points are awarded based on the total number of correct selections (out of 10):</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                            <div class="grid grid-cols-2 gap-x-2 gap-y-2 text-xs font-medium" style="grid-auto-flow:column;grid-template-rows:repeat(3,auto)">
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>10/10 Correct</span> <span class="text-blue-600 font-bold">1,000 Pts</span></div>
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>9/10 Correct</span> <span class="text-green-600 font-bold">700 Pts</span></div>
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>8/10 Correct</span> <span class="text-green-600 font-bold">450 Pts</span></div>
@@ -1121,7 +1121,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                         </div>
                         <hr class="border-gray-200 dark:border-gray-800">
                         <div>
-                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Pick 'Em (Max 1,000+ pts/round)</h4>
+                            <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Pick 'Em (Max 1,000 pts/round)</h4>
                             <ul class="space-y-2">
                                 <li class="flex justify-between text-sm">
                                     <span><strong>1. Correct Pick</strong></span>
@@ -1146,7 +1146,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                         <div>
                             <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Top 10 (Max 1,000 pts/round)</h4>
                             <p class="text-xs mb-2">Points are awarded for each correct guess based on the rank of the player found:</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                            <div class="grid grid-cols-2 gap-x-2 gap-y-2 text-xs font-medium" style="grid-auto-flow:column;grid-template-rows:repeat(5,auto)">
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>#1</span> <span class="text-green-600 font-bold">200 Pts</span></div>
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>#2</span> <span class="text-green-600 font-bold">160 Pts</span></div>
                                 <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>#3</span> <span class="text-green-600 font-bold">130 Pts</span></div>
@@ -1170,7 +1170,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-4">
-                        <p>Players are filtered by <strong>Player Pool</strong>, <strong>Eligibility Tier</strong>, and <strong>Era</strong>, selected independently on the home screen. Note that Era does not apply to the Top 10 game mode.</p>
+                        <p>Players are filtered by <strong>Player Pool</strong>, <strong>Eligibility Tier</strong>, and <strong>Era</strong>, selected independently on the home screen. Note that Top 10 mode works a little differently (as detailed later in this section).</p>
 
                         <!-- Player Pool subsection -->
                         <div>
@@ -1218,14 +1218,6 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                                     <h5 class="font-bold text-gray-900 dark:text-white mb-1">Custom</h5>
                                     <p class="mb-1">Set your own stat thresholds. Add one or more filters from any statistical category and toggle between &ge; and &le; for each.</p>
                                 </div>
-
-                                <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
-                                    <p class="mb-1"><strong>Top 10 mode</strong> does not use the Eligibility Tier setting. Instead, eligibility is determined by the question type:</p>
-                                    <ul class="list-disc ml-4 space-y-1">
-                                        <li><strong>Career questions:</strong> All players with a recorded value for the stat are eligible. Rate stats (BA, OPS, XBH%, ERA) require minimums of 3,000 PA (hitters) or 1,000 IP (pitchers).</li>
-                                        <li><strong>Decade questions:</strong> All players active during the decade are eligible. Rate stats require minimums of 1,500 PA (hitters) or 500 IP (pitchers) within that decade.</li>
-                                    </ul>
-                                </div>
                             </div>
                         </div>
 
@@ -1236,8 +1228,23 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                                 <li><strong>Modern Era:</strong> Players who played a significant portion of their career from 1970 to present.</li>
                                 <li><strong>All Eras:</strong> Includes historical players dating back to 1871 (e.g., Ty Cobb, Cy Young).</li>
                                 <li><strong>Specific Decade:</strong> Players active during the selected decade (e.g., 1990s).</li>
-                                <li><strong>Top 10 decade questions:</strong> Any decade from the selected era may be used for the question prompt.</li>
                             </ul>
+                        </div>
+
+                        <!-- Top 10 subsection -->
+                        <div>
+                            <h4 class="font-black text-purple-600 dark:text-purple-400 uppercase text-xs tracking-widest mb-2">Top 10</h4>
+                            <p class="mb-2">Top 10 mode does not use the Eligibility Tier setting. Instead, eligibility is determined by the question type:</p>
+                            <div class="space-y-2">
+                                <div>
+                                    <h5 class="font-bold text-gray-900 dark:text-white mb-1">Career Questions</h5>
+                                    <p>All players with a recorded value for the stat are eligible. Rate stats (BA, OPS, XBH%, ERA) require minimums of 3,000 PA (hitters) or 1,000 IP (pitchers).</p>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-gray-900 dark:text-white mb-1">Decade Questions</h5>
+                                    <p>All players active during the decade are eligible. Rate stats require minimums of 1,500 PA (hitters) or 500 IP (pitchers) within that decade. Any decade from the selected era may be used for the question prompt.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </details>
@@ -1254,7 +1261,7 @@ html:not(.dark) .top10-search-item-name { color: #1f2937; }
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
                                 <strong class="text-gray-900 dark:text-white">The Reroll Die</strong>
                             </div>
-                            <p>Stumped by a matchup? Tap the die icon in the header to skip the current question and get a new one. You get <strong>one reroll per game</strong>. Using it does not penalize your score, but it cannot be undone.</p>
+                            <p>Stumped by a matchup? Tap the die icon in the header to skip the current question and get a new one. You get <strong>one reroll per game</strong>. Using it does not penalize your score, but it cannot be undone. Not available in challenge games.</p>
                         </div>
 
                         <div>
